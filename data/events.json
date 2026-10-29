@@ -79,7 +79,7 @@
       "tone": "funny",
       "route": "both",
       "title": "會場咖啡只有一台機器",
-      "text": "隊伍繞過三個海報架。你身邊是三位來自不同大陸的陌生人。",
+      "text": "隊伍繞過三個海報架。排在你前後的，是三位分別來自歐洲、南美和非洲的研究者。",
       "choices": [
         { "label": "邊等邊聊自己的題目", "effects": { "knowledge": 2, "energy": -1 }, "note": "三十分鐘換到兩個合作對象。", "social": true, "flags": { "network": true } },
         { "label": "先搶咖啡", "effects": { "energy": 2 }, "note": "咖啡因是學者的血液。" }
