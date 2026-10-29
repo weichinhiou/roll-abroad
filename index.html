@@ -39,6 +39,14 @@
       本遊戲供練習與理解，不取代正式規範；精確金額與期限請上無界任意門查詢。
     </footer>
 
+    <script>
+      // 直接雙擊 index.html（file://）時，瀏覽器會擋掉 ES module 與 fetch，畫面只剩空殼；改成顯示怎麼開。
+      if (location.protocol === "file:") {
+        document.getElementById("panel").innerHTML =
+          "<h2>請改用網址開啟</h2><p>直接雙擊 index.html 時，瀏覽器會擋住遊戲程式。</p>" +
+          "<p>請雙擊資料夾裡的 <b>start-game.cmd</b>，它會自動開啟 http://localhost:4181 。</p>";
+      }
+    </script>
     <script type="module" src="src/app.js"></script>
   </body>
 </html>

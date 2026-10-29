@@ -1,0 +1,10 @@
+{
+  "name": "roll-abroad",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check src/app.js && node --check src/engine.js && node --check src/render.js && node --check src/storage.js && node --check server.mjs"
+  }
+}

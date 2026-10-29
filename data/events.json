@@ -6,7 +6,7 @@
       "tone": "real",
       "route": "both",
       "title": "截稿前三天",
-      "text": "摘要還差一段方法与一首參考文獻。你還有幾個晚上可以用。",
+      "text": "摘要還差一段方法和幾篇參考文獻。你還有幾個晚上可以用。",
       "choices": [
         { "label": "開兩晚夜車趕完", "effects": { "energy": -2, "knowledge": 2 }, "note": "稿子踏實了，人也空了一點。" },
         { "label": "先交出去再說", "effects": { "time": 1, "knowledge": -1 }, "note": "準時送出，心裡有點虛。" }
@@ -32,8 +32,8 @@
       "title": "系統說附件格式不對",
       "text": "上傳到最後一步跳出紅字，離截稿只剩兩小時。",
       "choices": [
-        { "label": "自己從頭轉檔研究", "effects": { "time": -2, "energy": -1 }, "note": "学会了一个没人想学的技能。" },
-        { "label": "請資訊同事帮忙", "effects": { "energy": 1, "penalty": { "time": -1 } }, "note": "有人幫忙就是快。" }
+        { "label": "自己從頭轉檔研究", "effects": { "time": -2, "energy": -1 }, "note": "學會了一個沒人想學的技能。" },
+        { "label": "請資訊同事幫忙", "effects": { "energy": 1, "penalty": { "time": -1 } }, "note": "有人幫忙就是快。" }
       ]
     },
     {
@@ -54,7 +54,7 @@
       "tone": "real",
       "route": "both",
       "title": "補助要自行先墊",
-      "text": "機票要先刷卡，回来再核銷。你的額度還夠嗎。",
+      "text": "機票要先刷卡，回來再核銷。你的額度還夠嗎。",
       "choices": [
         { "label": "訂直飛的", "effects": { "money": -3, "time": 2 }, "note": "貴但省了一整天。" },
         { "label": "轉機省一點", "effects": { "money": -1, "energy": -2 }, "note": "省了錢，在機場走兩萬步。" },
@@ -93,7 +93,7 @@
       "title": "臨時有人想換時段",
       "text": "你的場次和另一場完全重疊，對方希望你配合。",
       "choices": [
-        { "label": "答應換場", "effects": { "time": -1, "energy": -1, "knowledge": 1 }, "note": "换了时段，聽眾少一半但問題更深。" },
+        { "label": "答應換場", "effects": { "time": -1, "energy": -1, "knowledge": 1 }, "note": "換了時段，聽眾少一半但問題更深。" },
         { "label": "維持原時段", "effects": { "knowledge": 1 }, "note": "照原計畫走，心安。" }
       ]
     },
@@ -106,7 +106,7 @@
       "text": "一隻黑貓叼走了你的入場證，往後門跑去。（純屬虛構）",
       "choices": [
         { "label": "追上去", "effects": { "energy": -1, "knowledge": 2 }, "note": "證找回來了，還誤入一場小型研討會。" },
-        { "label": "請服務台補發", "effects": { "time": -1 }, "note": "補發要排隊，貓不见了。" }
+        { "label": "請服務台補發", "effects": { "time": -1 }, "note": "補發要排隊，貓不見了。" }
       ]
     },
     {
@@ -165,7 +165,7 @@
       "route": "both",
       "requires": "network",
       "title": "會後的一封 Email",
-      "text": "茶敘認識的團隊問你願不願意丟一個跨國_collaboration案。",
+      "text": "茶敘認識的團隊問你願不願意一起提一個跨國合作案。",
       "choices": [
         { "label": "接下來", "effects": { "knowledge": 3, "energy": -2 }, "note": "新的工作量，也是新的開始。" },
         { "label": "先從共同投稿開始", "effects": { "knowledge": 1, "time": -1 }, "note": "小步試水溫。" }
@@ -176,8 +176,8 @@
       "deck": "fate",
       "tone": "real",
       "route": "both",
-      "title": "回程延误六小時",
-      "text": "廣播用你聽不太懂的口音解釋原因。屏幕上改成隔天。",
+      "title": "回程延誤六小時",
+      "text": "廣播用你聽不太懂的口音解釋原因。螢幕上改成隔天。",
       "choices": [
         { "label": "從容找個位置寫報告", "effects": { "time": -1, "knowledge": 2 }, "note": "六小時寫出心得大綱。" },
         { "label": "補眠", "effects": { "energy": 3 }, "note": "回國那晚精神好得詭異。" }
@@ -191,7 +191,7 @@
       "title": "心得報告與核銷",
       "text": "回院後兩週內要交報告，收據還在一張疊一張。",
       "choices": [
-        { "label": "當天全部處理完", "effects": { "time": -2, "knowledge": 1 }, "note": "檔案清爽，噩梦結束。" },
+        { "label": "當天全部處理完", "effects": { "time": -2, "knowledge": 1 }, "note": "檔案清爽，噩夢結束。" },
         { "label": "拖到最後一天", "effects": { "energy": -2, "penalty": { "knowledge": -1 } }, "note": "凌晨兩點還在貼收據。" }
       ]
     },
@@ -203,7 +203,7 @@
       "title": "科會報告你的所見",
       "text": "主管說：「順便跟大家分享一下好了，五分鐘。」",
       "choices": [
-        { "label": "認真做十頁", "effects": { "time": -2, "knowledge": 2 }, "note": "兩位同事當場來問怎么參加。" },
+        { "label": "認真做十頁", "effects": { "time": -2, "knowledge": 2 }, "note": "兩位同事當場來問怎麼參加。" },
         { "label": "用講的不上片", "effects": { "energy": -1, "knowledge": 1 }, "note": "講到一半被問到深處。" }
       ]
     },
@@ -215,7 +215,7 @@
       "title": "時差把你的生物鐘改了",
       "text": "凌晨四點醒來，腦子清楚得像剛喝了三杯咖啡。",
       "choices": [
-        { "label": "起來整理筆記", "effects": { "knowledge": 2, "energy": -1 }, "note": "那几天的筆記最整齊。" },
+        { "label": "起來整理筆記", "effects": { "knowledge": 2, "energy": -1 }, "note": "那幾天的筆記最整齊。" },
         { "label": "硬躺回去", "effects": { "energy": 1 }, "note": "贏了身體，輸了上午。" }
       ]
     },
@@ -240,7 +240,7 @@
       "text": "隔壁廳有一場跟你的題目高度相關的大師演講，但你答應同事一起吃晚飯。",
       "choices": [
         { "label": "去聽演講", "effects": { "knowledge": 2, "penalty": { "energy": -1 } }, "note": "晚飯改約，但拿到一頁筆記。" },
-        { "label": "遵守約定吃飯", "effects": { "energy": 1, "knowledge": 1 }, "note": "人脈也是收獲。" }
+        { "label": "遵守約定吃飯", "effects": { "energy": 1, "knowledge": 1 }, "note": "人脈也是收穫。" }
       ]
     }
   ]
