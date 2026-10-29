@@ -78,6 +78,13 @@ function renderPanel(state) {
     const p = document.createElement("p");
     p.textContent = block.text;
     panel.appendChild(p);
+    // 真實改編：和虛構劇本分開，讓玩家知道「這麼戲劇，竟然是真的」
+    if (block.trueStory) {
+      const t = document.createElement("p");
+      t.className = "truestory";
+      t.innerHTML = `<b>📌 真實改編</b>${block.trueStory}`;
+      panel.appendChild(t);
+    }
     if (block.tone === "fantasy") {
       const f = document.createElement("p");
       f.className = "fantasy";

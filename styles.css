@@ -201,6 +201,25 @@ button {
   font-size: 12px;
   color: #8a5a00;
 }
+.panel .truestory {
+  margin: 8px 0 4px;
+  padding: 8px 10px;
+  border-left: 4px solid #b4432a;
+  background: #fbefe9;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #5a2416;
+}
+.panel .truestory b {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #b4432a;
+}
+.lg-true {
+  color: #b4432a;
+}
 .choice,
 .roll {
   display: block;

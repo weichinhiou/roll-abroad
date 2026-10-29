@@ -114,8 +114,9 @@
       "deck": "fate",
       "tone": "real",
       "route": "both",
-      "title": "檔案打不開",
-      "text": "輪到你之前三分鐘，簡報在筆電上變成一堆問號。",
+      "title": "隨身碟讀不出來",
+      "text": "輪到你之前三分鐘，會場電腦讀不出你隨身碟裡的檔案——存檔格式不相容。",
+      "trueStory": "院內同仁真的遇過：上台前隨身碟因為存檔格式讀不出來，最後一刻靠同行的台灣朋友幫忙才順利報告。",
       "choices": [
         { "label": "用口頭講完全部", "effects": { "energy": -2, "knowledge": 1, "flagLoss": true }, "note": "沒有投影片，全靠一張嘴。" },
         { "label": "當場重傳", "effects": { "time": -2, "knowledge": -1 }, "note": "輪到時剛好上傳完成。" }
@@ -241,6 +242,58 @@
       "choices": [
         { "label": "去聽演講", "effects": { "knowledge": 2, "penalty": { "energy": -1 } }, "note": "晚飯改約，但拿到一頁筆記。" },
         { "label": "遵守約定吃飯", "effects": { "energy": 1, "knowledge": 1 }, "note": "人脈也是收穫。" }
+      ]
+    },
+    {
+      "id": "T01",
+      "deck": "fate",
+      "tone": "real",
+      "route": "poster",
+      "title": "機場被颱風關閉了",
+      "text": "出發前幾天，目的地機場因颱風淹水全面關閉。同科一起要去的同事改不到機位，傳訊息問你：「我的壁報可以幫我一起貼嗎？」",
+      "trueStory": "院內同仁真的遇過：颱風讓會議城市的機場淹水關閉，同事去不了，當事人在會場幫忙把同事的壁報一起貼上。",
+      "choices": [
+        { "label": "幫忙貼，拍照傳回去", "effects": { "energy": -1, "knowledge": 1 }, "note": "兩張壁報都準時上架，同事在台灣遠端回覆了留言。" },
+        { "label": "婉拒，先顧好自己的", "effects": { "energy": 1 }, "note": "你的壁報顧得很好，同事那張只能等下次。" }
+      ]
+    },
+    {
+      "id": "T02",
+      "deck": "fate",
+      "tone": "real",
+      "route": "oral",
+      "title": "議程只在 App 上改了",
+      "text": "抵達會場才發現：大會臨時更動了你那場口報的時間和地點，只在官方 App 上公告，門口的紙本議程還是舊的。",
+      "trueStory": "院內同仁真的遇過：大會臨時改議程卻只在 App 上更新；因為提早一天抵達、立刻找主辦確認，才順利完成兩場口報。",
+      "choices": [
+        { "label": "立刻找主辦單位確認", "effects": { "time": -1, "knowledge": 1 }, "note": "確認了新時段，口報順利完成。" },
+        { "label": "照紙本議程走", "effects": { "energy": -2, "knowledge": -1 }, "note": "走到原場地空無一人，一路小跑趕到新會場。" }
+      ]
+    },
+    {
+      "id": "T03",
+      "deck": "fate",
+      "tone": "real",
+      "route": "both",
+      "title": "全市罷工",
+      "text": "會議第一天早上，整座城市的地鐵和公車因為罷工停駛。距離開幕還有一小時。",
+      "trueStory": "院內同仁真的遇過：會議當天碰上全市罷工、地鐵和巴士停擺；當事人回國後建議醫院派員出國要有差旅風險管理。",
+      "choices": [
+        { "label": "提早出門，走路加計程車", "effects": { "energy": -2, "money": -1, "knowledge": 1 }, "note": "滿身大汗，趕上了開幕。" },
+        { "label": "先在飯店看線上直播", "effects": { "energy": 1, "knowledge": -1 }, "note": "內容沒錯過，走廊上的交流錯過了。" }
+      ]
+    },
+    {
+      "id": "T04",
+      "deck": "fate",
+      "tone": "real",
+      "route": "both",
+      "title": "公文被退回了？",
+      "text": "出發前兩天，你以為申請早就核准了。其實公文被退回要修改，只是沒有人通知你。",
+      "trueStory": "院內同仁真的遇過：直到上了飛機才知道公文被退回修改，已經來不及補救。",
+      "choices": [
+        { "label": "出發前主動追蹤簽核進度", "effects": { "time": -1 }, "note": "發現被退件，趕在出發前補正完成。" },
+        { "label": "應該沒問題吧", "effects": { "penalty": { "money": -2, "knowledge": -1 } }, "note": "回國才發現手續沒完成，補件補到頭昏。" }
       ]
     }
   ]

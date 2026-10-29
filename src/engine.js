@@ -141,7 +141,15 @@ function enterEvent(state, card) {
   const next = clone(state);
   next.drawn.push(card.id);
   next.status = "event";
-  next.pendingEvent = { id: card.id, title: card.title, text: card.text, tone: card.tone, choices: card.choices };
+  next.pendingEvent = {
+    id: card.id,
+    title: card.title,
+    text: card.text,
+    tone: card.tone,
+    social: card.social || false,
+    trueStory: card.trueStory || null,
+    choices: card.choices,
+  };
   next.log.push({ kind: "card", text: `【${card.deck === "fate" ? "命運" : "機會"}】${card.title}` });
   return next;
 }
@@ -167,13 +175,14 @@ export function applyChoice(state, card, choice, data) {
   const notes = [];
 
   if (eff.penalty) {
-    const p = { ...eff };
+    const p = eff.penalty;
     delete eff.penalty;
     if (next.items.consult > 0) {
       next.items.consult -= 1;
       notes.push("使用「承辦人諮詢」：免去這次行政懲罰。");
     } else {
-      Object.assign(eff, p);
+      // 懲罰的數值加進效果裡（原本整包塞回 eff，扣分從未生效）
+      for (const [k, v] of Object.entries(p)) eff[k] = (eff[k] || 0) + v;
     }
   }
   if (eff.flagLoss && next.items.usb > 0 && card.id === "F-usb") {
@@ -181,7 +190,9 @@ export function applyChoice(state, card, choice, data) {
     delete eff.flagLoss;
     notes.push("使用「備份隨身碟」：檔案補得上來。");
   }
-  if (eff.knowledge && card.social && next.items.badge > 0) {
+  // social 標在選項上（例如咖啡卡「邊等邊聊」）；名片是一次性道具，用掉要扣
+  if (eff.knowledge > 0 && (choice.social || card.social) && next.items.badge > 0) {
+    next.items.badge -= 1;
     eff.knowledge *= 2;
     notes.push("使用「名片」：交流收穫加倍。");
   }
@@ -191,7 +202,7 @@ export function applyChoice(state, card, choice, data) {
   }
   next.res = clampRes(next.res);
 
-  // 資源歸零：不判死，勉強撐過但學術收穫扣分（保证 0 死局）
+  // 資源歸零：不判死，勉強撐過但學術收穫扣分（保證 0 死局）
   for (const k of RES_KEYS) {
     if (next.res[k] === 0) {
       next.res[k] = 1;
@@ -216,6 +227,7 @@ export function applyChoice(state, card, choice, data) {
   if (delta >= 2) next.keyChoices.push({ card: card.title, choice: choice.label, note: choice.note || "" });
 
   next.log.push({ kind: "choice", text: `選擇「${choice.label}」— ${choice.note || "（效果已結算）"}` });
+  if (card.trueStory) next.log.push({ kind: "true", text: `📌 真實改編｜${card.trueStory}` });
   for (const n of notes) next.log.push({ kind: "note", text: n });
   next.pendingEvent = null;
   next.pendingCheckpoint = null;
