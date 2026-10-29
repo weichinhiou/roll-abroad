@@ -23,6 +23,7 @@
     - 路線：壁報 511、口報 489。
     - 20 張卡**都抽得到過**，每局平均抽 9.2 張。
     - 結局：steady 639、stage 280、wild 78、**safe 只有 3**。
+- 2026-10-29 晚上 Jean 回報「好像無法玩」。原因是**直接雙擊 `index.html`（`file://`）時，瀏覽器會擋掉 ES module 和 `fetch`**，遊戲本身沒有問題。改法（`8bb2fdf`）：新增 `server.mjs`（Node 靜態伺服器，埠 4181）、`start-game.cmd`（雙擊後啟動伺服器並打開瀏覽器）、`npm start`；用 `file://` 打開時，畫面會顯示改用網址開的提示。同時修正 events.json 裡 13 處簡體字和錯字（例如「学会了一个」「延误」「屏幕」「_collaboration」）。用 http 開啟，已經用 `demo-1109`、`jean-test` 兩個 seed 在瀏覽器玩完整局，console 沒有錯誤。**`start-game.cmd` 本身還沒實際雙擊測試過**（當時預覽伺服器占用 4181 埠）。
 - 兩台電腦的 JJ 母資料夾路徑不一樣：這台是 `D:\Git\AI-Agent`；另一台是 `D:\Git\jj-agent-core`，草稿放在隨身碟 `J:\`（另一台已經把 `AGENTS.md`、`plan.md` 的路徑改過）。
 
 ## Decisions
