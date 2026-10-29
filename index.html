@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>大赴翁 Roll Abroad</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>大赴翁 <span>Roll Abroad</span></h1>
+      <div class="toolbar">
+        <label>seed <input id="seed" value="demo-1109" size="10" /></label>
+        <button id="restart" class="ghost">重新開始</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="left">
+        <div id="res" class="resbar"></div>
+        <p id="rollinfo" class="rollinfo"></p>
+        <div id="board" class="board"></div>
+        <div id="items" class="items"></div>
+        <div id="forced" class="forced" hidden>
+          指定點數：
+          <button data-face="1">1</button><button data-face="2">2</button><button data-face="3">3</button>
+        </div>
+      </section>
+
+      <section id="panel" class="panel"></section>
+
+      <section class="logbox">
+        <h2>行程紀錄</h2>
+        <ul id="log"></ul>
+      </section>
+    </main>
+
+    <footer>
+      本遊戲供練習與理解，不取代正式規範；精確金額與期限請上無界任意門查詢。
+    </footer>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

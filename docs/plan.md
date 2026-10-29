@@ -1,6 +1,6 @@
 # 大赴翁 Roll Abroad：開發計畫
 
-> 建立：2026-10-29。來源包括：Jean 的構想、ChatGPT 的 Creative GDD v0.1（2026-10-28，1,361 行，下稱 GDD）、JJ 的評審團分析（`D:\Git\AI-Agent\100_Todo\drafts\ai-dev\2026-10-29_roll-abroad-plan.md`）。
+> 建立：2026-10-29。來源包括：Jean 的構想、ChatGPT 的 Creative GDD v0.1（2026-10-28，1,361 行，下稱 GDD）、JJ 的評審團分析（`J:\Git\jj-agent-core\100_Todo\drafts\ai-dev\2026-10-29_roll-abroad-plan.md`；這台的 `D:\Git\jj-agent-core` clone 沒有 `100_Todo`，草稿在隨身碟工作區）。
 > 本文件是範圍與決定的 SSOT；GDD 是創意素材庫，不是必做清單。
 
 ## 1. 已定案的決定

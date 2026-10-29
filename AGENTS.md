@@ -1,6 +1,6 @@
 # 大赴翁 Roll Abroad 開發規範
 
-開始工作前讀取 `D:\Git\AI-Agent\CORE_RULES.md`（若存在），遵守其中的身份、SSOT 與跨專案協作規則。本檔補充這個專案的技術規則。
+開始工作前讀取 `D:\Git\jj-agent-core\CORE_RULES.md`（若存在，舊路徑名 `D:\Git\AI-Agent`），遵守其中的身份、SSOT 與跨專案協作規則。本檔補充這個專案的技術規則。
 
 ## 文件入口
 

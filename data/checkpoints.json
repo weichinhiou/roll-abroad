@@ -1,0 +1,36 @@
+{
+  "checkpoints": {
+    "route": {
+      "title": "第一章：投稿確認",
+      "text": "接受通知寫著你被允許發壁報，也提到可以申請改為口頭報告。走哪條路，之後會遇到完全不同的事。",
+      "choices": [
+        { "label": "走壁報路線", "route": "poster", "effects": { "knowledge": 1 }, "note": "選擇壁報：近距離、輪流解說。" },
+        { "label": "改申請口頭報告", "route": "oral", "effects": { "knowledge": 2, "energy": -1 }, "note": "選擇口報：八分鐘、全場聽你講。" }
+      ]
+    },
+    "gate": {
+      "title": "第二章：出發核准",
+      "text": "出國申請送出去了。承辦回報：文件齊全，只差一個小簽章。",
+      "choices": [
+        { "label": "親自跑一趟補件", "effects": { "time": -1, "energy": -1, "knowledge": 1 }, "note": "簽章補上了，也搞懂了流程。" },
+        { "label": "請同事協辦", "effects": { "penalty": { "money": -1 }, "energy": 1 }, "note": "你留下來處理簡報。" }
+      ]
+    },
+    "session": {
+      "title": "第三章：場次結束",
+      "text": "你的場次結束了。講者室的白燈亮著，你手邊還剩一點力氣。",
+      "choices": [
+        { "label": "留下來聽完整的 session", "effects": { "energy": -2, "knowledge": 2 }, "note": "多聽兩場，腦中全是想法。" },
+        { "label": "回飯店整理 today 的筆記", "effects": { "energy": 1, "knowledge": 1 }, "note": "睡一覺，明天還有力氣。" }
+      ]
+    },
+    "final": {
+      "title": "第四章：旅程結算",
+      "text": "行李、收據、筆記摊在桌上。這一趟到底換到了什麼。",
+      "choices": [
+        { "label": "把這趟寫成一份好報告", "effects": { "time": -1, "knowledge": 1 }, "note": "報告交出去了。" },
+        { "label": "直接結帳", "effects": { "energy": 1 }, "note": "先休息，報告再說。" }
+      ]
+    }
+  }
+}

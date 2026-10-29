@@ -1,0 +1,79 @@
+// 狀態流程：intro → ready →(擲骰)→ moving → event/checkpoint → result
+// 只負責接 engine 與 render，不寫規則。
+import * as E from "./engine.js";
+import { render } from "./render.js";
+import { save, load, clearSave } from "./storage.js";
+
+let DATA = null;
+let S = null;
+let forced = null;
+
+async function boot() {
+  const [board, events, items, cps] = await Promise.all(
+    ["board", "events", "items", "checkpoints"].map((f) => fetch(`data/${f}.json`).then((r) => r.json()))
+  );
+  DATA = { board, events, items, checkpoints: cps.checkpoints };
+  const saved = load();
+  if (saved) {
+    S = saved;
+  } else {
+    startGame(document.getElementById("seed").value || "demo-1109");
+  }
+  wire();
+  draw();
+}
+
+function startGame(seed) {
+  S = E.initialState({ seed });
+  S.log = [{ kind: "info", text: "旅程開始：從第 0 格出發，目標是走完 24 格。" }];
+  save(S);
+}
+
+function draw() {
+  render(S, DATA.board, DATA.items);
+  document.getElementById("forced").hidden = !S.items.plan;
+  save(S);
+}
+
+function roll(face) {
+  if (S.status !== "ready") return;
+  let s = face ? E.forcedRoll(S, face) : E.rollDie(S);
+  if (!s) return;
+  forced = null;
+  s = E.applyMove(s, DATA.board);
+  const sq = DATA.board.squares.find((x) => x.n === s.pos);
+  if (sq.kind === "milestone") s = E.checkpointAt(s, DATA.board, DATA);
+  else s = E.drawCard(s, DATA.board, DATA.events, sq);
+  S = s;
+  draw();
+}
+
+function choose(i) {
+  const block = S.pendingEvent || S.pendingCheckpoint;
+  if (!block) return;
+  S = E.applyChoice(S, block, block.choices[i], DATA);
+  if (S.status === "done") clearSave();
+  draw();
+}
+
+function wire() {
+  document.body.addEventListener("click", (ev) => {
+    const t = ev.target.closest("button");
+    if (!t) return;
+    if (t.classList.contains("roll")) return roll(null);
+    if (t.dataset.choice !== undefined) return choose(Number(t.dataset.choice));
+    if (t.dataset.item === "plan") return (document.getElementById("forced").hidden = false);
+    if (t.dataset.face) {
+      forced = Number(t.dataset.face);
+      document.getElementById("forced").hidden = true;
+      return roll(forced);
+    }
+    if (t.id === "restart") {
+      clearSave();
+      startGame(document.getElementById("seed").value || "demo-1109");
+      draw();
+    }
+  });
+}
+
+boot();

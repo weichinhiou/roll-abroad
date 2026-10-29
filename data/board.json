@@ -1,0 +1,32 @@
+{
+  "milestones": [6, 12, 18, 24],
+  "squares": [
+    { "n": 1, "chapter": 1, "kind": "chance", "label": "選定會議" },
+    { "n": 2, "chapter": 1, "kind": "fate", "label": "摘要截稿" },
+    { "n": 3, "chapter": 1, "kind": "chance", "label": "共同作者" },
+    { "n": 4, "chapter": 1, "kind": "fate", "label": "格式退件" },
+    { "n": 5, "chapter": 1, "kind": "chance", "label": "投稿送出" },
+    { "n": 6, "chapter": 1, "kind": "milestone", "label": "投稿確認", "milestone": "route" },
+
+    { "n": 7, "chapter": 2, "kind": "chance", "label": "審查意見" },
+    { "n": 8, "chapter": 2, "kind": "fate", "label": "申請補助" },
+    { "n": 9, "chapter": 2, "kind": "chance", "label": "機票比價" },
+    { "n": 10, "chapter": 2, "kind": "fate", "label": "簽證時間" },
+    { "n": 11, "chapter": 2, "kind": "chance", "label": "行程排定" },
+    { "n": 12, "chapter": 2, "kind": "milestone", "label": "出發核准", "milestone": "gate" },
+
+    { "n": 13, "chapter": 3, "kind": "chance", "label": "抵達報到" },
+    { "n": 14, "chapter": 3, "kind": "route", "label": "正式登場" },
+    { "n": 15, "chapter": 3, "kind": "chance", "label": "茶敘交流" },
+    { "n": 16, "chapter": 3, "kind": "fate", "label": "臨時提問" },
+    { "n": 17, "chapter": 3, "kind": "chance", "label": "海報問答" },
+    { "n": 18, "chapter": 3, "kind": "milestone", "label": "場次結束", "milestone": "session" },
+
+    { "n": 19, "chapter": 4, "kind": "fate", "label": "返程延誤" },
+    { "n": 20, "chapter": 4, "kind": "chance", "label": "會後聯絡" },
+    { "n": 21, "chapter": 4, "kind": "fate", "label": "心得撰寫" },
+    { "n": 22, "chapter": 4, "kind": "chance", "label": "核銷文件" },
+    { "n": 23, "chapter": 4, "kind": "chance", "label": "分享同事" },
+    { "n": 24, "chapter": 4, "kind": "milestone", "label": "旅程結算", "milestone": "final" }
+  ]
+}

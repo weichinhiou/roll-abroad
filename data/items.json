@@ -1,0 +1,9 @@
+{
+  "items": [
+    { "id": "plan", "name": "提前規劃", "kind": "dice", "desc": "指定這一次擲出的點數（1–3）。", "once": true },
+    { "id": "consult", "name": "承辦人諮詢", "kind": "shield", "desc": "免掉一次行政懲罰。", "once": true },
+    { "id": "door", "name": "任意門", "kind": "link", "desc": "查精確的金額與期限（連到無界任意門）。", "once": false },
+    { "id": "usb", "name": "備份隨身碟", "kind": "flag", "desc": "檔案出問題時不受罰。", "once": true },
+    { "id": "badge", "name": "名片", "kind": "mult", "desc": "交流類事件的學術收穫加倍。", "once": true }
+  ]
+}
