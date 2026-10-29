@@ -4,7 +4,7 @@
 
 ## 文件入口
 
-- 開工先讀 [README](README.md) 與 [docs/plan.md](docs/plan.md)。plan 是範圍與決定的 SSOT；標「不做」的項目不要自行加進來。
+- 開工先讀 [docs/AI_HANDOFF.md](docs/AI_HANDOFF.md)（目前進度與下一步），再讀 [README](README.md) 與 [docs/plan.md](docs/plan.md)。收工前更新交接檔。plan 是範圍與決定的 SSOT；標「不做」的項目不要自行加進來。
 - 複雜的決定與測試結果寫進 `docs/plan.md` 的決策紀錄，或另開 `docs/` 主題文件。
 
 ## 技術邊界
