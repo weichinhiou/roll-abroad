@@ -54,7 +54,10 @@ let visible = true;
 let lastT = 0;
 
 // 把棋子／骰子跟鏡頭關係存起來，讓每 frame 更新
-const camPos = new THREE.Vector3(0, 14, 12);
+const CAM_Y = 11.5;
+const CAM_Z = 9; // 鏡頭離棋盤的距離：越小越近、字越大
+let camScale = 1; // 畫面越窄，鏡頭退得越遠，避免棋盤被切掉
+const camPos = new THREE.Vector3(0, CAM_Y, CAM_Z);
 const camLook = new THREE.Vector3(0, 0.8, 0);
 const tmpV = new THREE.Vector3();
 
@@ -692,7 +695,7 @@ function tick(t) {
   if (pawnGroup && camera) {
     const k = 1 - Math.pow(0.0008, dt);   // 追蹤的阻尼
     camPos.x += (pawnGroup.position.x * 0.32 - camPos.x) * k;
-    camPos.z += ((12 + pawnGroup.position.z * 0.22) - camPos.z) * k;
+    camPos.z += ((CAM_Z * camScale + pawnGroup.position.z * 0.22) - camPos.z) * k;
     camLook.x += (pawnGroup.position.x * 0.28 - camLook.x) * k;
     camLook.z += (pawnGroup.position.z * 0.24 - camLook.z) * k;
     camera.position.copy(camPos);
@@ -765,6 +768,8 @@ export function initBoard3d(container_, board) {
     const h = wrap.clientHeight || 1;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
+    camScale = Math.max(1, 1.55 / camera.aspect);
+    camPos.y = CAM_Y * camScale;
     camera.updateProjectionMatrix();
   };
   wrap.innerHTML = "";
