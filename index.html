@@ -6,20 +6,27 @@
     <title>大赴翁 Roll Abroad</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f6d5f'/%3E%3Ctext x='16' y='23' font-size='18' text-anchor='middle' fill='%23f7f4ec' font-family='sans-serif'%3E%E8%B5%B4%3C/text%3E%3C/svg%3E" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="game-art.css" />
   </head>
   <body>
-    <header>
+    <header class="game-brand">
+      <img class="traveler-portrait" src="assets/art/traveler.webp" alt="帶著背包的學術旅人" width="100" height="100" />
       <h1>大赴翁 <span>Roll Abroad</span></h1>
-      <div class="toolbar">
-        <label>seed <input id="seed" value="demo-1109" size="10" /></label>
-        <button id="restart" class="ghost">重新開始</button>
-      </div>
     </header>
+    <div class="chapter-ribbon" id="chapter" aria-live="polite">第一章・投稿</div>
+    <details class="settings">
+      <summary>⚙ 設定</summary>
+      <div class="toolbar">
+        <label>旅程代碼 <input id="seed" value="demo-1109" size="12" /></label>
+        <button id="restart" class="ghost">重新開始</button>
+        <small>相同代碼與選擇，可以重現同一趟旅程。</small>
+      </div>
+    </details>
 
     <main>
       <section id="left">
-        <div id="res" class="resbar"></div>
-        <p id="rollinfo" class="rollinfo"></p>
+        <div id="res" class="resbar" aria-label="旅人資源"></div>
+        <p id="rollinfo" class="rollinfo" aria-live="polite"></p>
         <div id="board3d" class="board3d"></div>
         <div id="board" class="board"></div>
         <div id="items" class="items"></div>
@@ -31,10 +38,14 @@
 
       <section id="panel" class="panel"></section>
 
-      <section class="logbox">
-        <h2>行程紀錄</h2>
+      <details class="logbox">
+        <summary>📜 行程紀錄</summary>
         <ul id="log"></ul>
-      </section>
+      </details>
+      <aside class="travel-companion" aria-label="黑貓旅伴">
+        <p id="companion-note">行李帶好了嗎？<br>點中央骰子，出發！</p>
+        <img src="assets/art/black-cat.webp" alt="黑貓旅伴" width="120" height="120" />
+      </aside>
     </main>
 
     <dialog id="modal" class="modal" tabindex="-1" aria-label="事件與結果"></dialog>

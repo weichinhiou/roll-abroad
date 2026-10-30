@@ -3,6 +3,7 @@
 // 骰子：3D 播動畫；2D 或減少動態效果只在面板顯一行「擲出 X」。
 import { MILESTONES, resName } from "./engine.js";
 import { initBoard3d, updateBoard3d, rollDice, teleportPawn, onDieClick } from "./board3d.js";
+import { ART } from "./art.js";
 
 const CH_NAMES = { 1: "投稿", 2: "出國準備", 3: "國際會議", 4: "返國" };
 const REDUCED_MQ = "(prefers-reduced-motion: reduce)";
@@ -98,6 +99,7 @@ export function clearDiceBadge() {
 export function render(state, board, items, lastResult = null) {
   if (mode !== "3d") renderBoard2d(state, board);
   renderResources(state);
+  renderJourney(state, board);
   renderItems(state, items);
   renderPanel(state, lastResult);
   renderDialog(state, lastResult);
@@ -109,8 +111,8 @@ function renderBoard2d(state, board) {
   const wrap = $("#board");
   wrap.innerHTML = "";
   for (const sq of board.squares) {
-    const cell = document.createElement("button");
-    cell.type = "button";
+    // 格子只有資訊展示，避免鍵盤玩家每次先跳過 24 個無作用按鈕。
+    const cell = document.createElement("div");
     cell.className = [
       "cell",
       `ch${sq.chapter}`,
@@ -125,32 +127,49 @@ function renderBoard2d(state, board) {
 }
 
 function renderResources(state) {
+  const iconIndex = {time:0,money:1,energy:2,knowledge:3};
+  const colors = {time:"#2e9ce4",money:"#eba72b",energy:"#32b878",knowledge:"#9b6be1"};
   const box = $("#res");
   box.innerHTML = "";
   for (const k of ["time", "money", "energy", "knowledge"]) {
     const v = state.res[k];
     const row = document.createElement("div");
-    row.className = "res";
+    row.className = `res${k !== "knowledge" && v <= 2 ? " low" : ""}`;
+    row.style.setProperty("--resource-color", colors[k]);
     const max = k === "knowledge" ? 20 : 10;
-    row.innerHTML = `<span class="rk">${resName(k)}</span><span class="rv">${v}</span>
+    row.innerHTML = `<span class="res-icon hud-icon hud-${iconIndex[k]}" aria-hidden="true"></span><span class="rk">${resName(k)}</span><span class="rv">${v}</span>
       <span class="bar"><i style="width:${Math.min(100, (v / max) * 100)}%"></i></span>`;
     box.appendChild(row);
   }
-  $("#rollinfo").textContent = `擲骰 ${state.rolls} 次｜位置 ${state.pos}/24｜seed ${state.seed}`;
+}
+
+function renderJourney(state, board) {
+  const square = board.squares.find((s) => s.n === state.pos);
+  const chapter = square?.chapter || 1;
+  $("#chapter").textContent = `第${["一","二","三","四"][chapter-1]}章・${CH_NAMES[chapter]}`;
+  $("#rollinfo").textContent = `${state.pos === 0 ? "起點・準備出發" : `第 ${state.pos}/24 格・${square.label}`}　｜　擲骰 ${state.rolls} 次`;
+  const note = $("#companion-note");
+  note.textContent = state.status === "done" ? "旅程完成！這些收穫，帶回去分享吧。" :
+    state.status === "checkpoint" ? "重要的一站！做個好決定，再出發。" :
+    state.status === "event" ? "旅途總有新發現，你會怎麼選？" :
+    mode === "3d" ? "點中央骰子，看看下一站！" : "準備好了，就按擲骰出發！";
 }
 
 function renderItems(state, items) {
+  const iconIndex = {plan:4,consult:5,door:6,usb:7,badge:8};
   const box = $("#items");
   box.innerHTML = "";
   for (const it of items.items) {
     const n = state.items[it.id] || 0;
     if (n <= 0 && it.once) continue;
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "item";
-    b.disabled = it.kind !== "dice" || n <= 0;
+    const active = it.kind === "dice" && n > 0;
+    const b = document.createElement(active ? "button" : "div");
+    if (active) b.type = "button";
+    b.className = `item${active ? "" : it.kind === "link" ? " unavailable" : " passive"}`;
     b.dataset.item = it.id;
-    b.innerHTML = `<b>${it.name}</b>${it.once ? ` ×${n}` : ""}<small>${it.desc}</small>`;
+    b.title = it.desc;
+    const label = active ? "指定步數" : it.kind === "link" ? "查詢尚未開放" : "自動生效";
+    b.innerHTML = `<span class="item-icon hud-icon hud-${iconIndex[it.id]}" aria-hidden="true"></span><b>${it.name}</b>${it.once ? `<span class="item-count">${n}</span>` : ""}<small>${label}</small>`;
     box.appendChild(b);
   }
 }
@@ -191,6 +210,11 @@ function renderDialog(state, lastResult) {
   dialog.innerHTML = "";
   const block = state.pendingEvent || state.pendingCheckpoint;
   if (state.status === "done") {
+    const cat = document.createElement("img");
+    cat.src = ART.cat;
+    cat.alt = "黑貓旅伴陪你完成旅程";
+    cat.className = "ending-cat";
+    dialog.appendChild(cat);
     if (lastResult) dialog.appendChild(resultBox(lastResult));
     const end = document.createElement("div");
     end.innerHTML = `<h2>${state.ending.title}</h2><p>${state.ending.text}</p>
@@ -198,7 +222,7 @@ function renderDialog(state, lastResult) {
     dialog.appendChild(end);
     dialog.appendChild(actionButton("再玩一次", "restart"));
   } else if (block) {
-    fillEvent(dialog, block);
+    fillEvent(dialog, block, Math.max(1, Math.ceil(state.pos / 6)));
   } else if (lastResult) {
     dialog.appendChild(resultBox(lastResult));
     dialog.appendChild(actionButton("繼續", "continue"));
@@ -222,7 +246,21 @@ function actionButton(text, action) {
   return b;
 }
 
-function fillEvent(dialog, block) {
+function fillEvent(dialog, block, currentChapter) {
+  const tag = document.createElement("div");
+  tag.className = "modal-eyebrow";
+  tag.textContent = block.deck === "chance" ? "✦ 機會・旅途的新發現" : block.deck === "fate" ? "✦ 命運・迎接挑戰" : "✦ 旅程里程碑";
+  dialog.appendChild(tag);
+  // 只使用四章共用圖像；本輪不製作個別機會／命運事件圖。
+  if (!block.deck) {
+    const emblem = document.createElement("span");
+    emblem.className = "chapter-emblem";
+    const chapter = Math.max(0, Math.min(3, currentChapter - 1));
+    emblem.style.backgroundPosition = `${chapter % 2 ? "100%" : "0%"} ${chapter > 1 ? "100%" : "0%"}`;
+    emblem.setAttribute("role", "img");
+    emblem.setAttribute("aria-label", `${CH_NAMES[chapter+1]}章節徽章`);
+    dialog.appendChild(emblem);
+  }
   const h = document.createElement("h2");
   h.textContent = block.title;
   dialog.appendChild(h);

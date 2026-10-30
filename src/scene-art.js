@@ -1,0 +1,80 @@
+// 棋盤共用美術：圖片貼圖與簡單 3D 旅行場景。規則留在 engine。
+import * as THREE from "../vendor/three.module.js";
+import { artImage } from "./art.js";
+export const CHAPTER_COLORS = {1:0x35c58c,2:0x38aff0,3:0xffc536,4:0xa775e1};
+const font = '"Microsoft JhengHei",system-ui,sans-serif';
+const emoji = '"Segoe UI Emoji","Apple Color Emoji",sans-serif';
+const icons = ["🌐","📝","🤝","📑","📨","🧭","💡","📋","🎟️","🛂","🗓️","✈️","🏷️","🎤","☕","💬","📊","🏆","🧳","📧","✍️","📂","💡","🏠"];
+const cssColor = (n) => `#${n.toString(16).padStart(6,"0")}`;
+function canvas(w,h) { const c=document.createElement("canvas");c.width=w;c.height=h;return c; }
+function texture(c) { const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t; }
+function round(ctx,x,y,w,h,r) {ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
+
+export function tileArt(sq, milestone, shape) {
+  const w=Math.round((shape==="h"?1.2:1.8)*240),h=Math.round((shape==="v"?1.2:1.8)*240);
+  const c=canvas(w,h),ctx=c.getContext("2d"),color=cssColor(CHAPTER_COLORS[sq.chapter]);
+  ctx.fillStyle=color;ctx.fillRect(0,0,w,h);
+  ctx.fillStyle="#ffffff";round(ctx,10,10,w-20,h-20,22);ctx.fill();
+  ctx.fillStyle=color;ctx.globalAlpha=.18;round(ctx,18,18,w-36,h*.65,17);ctx.fill();ctx.globalAlpha=1;
+  const atlas=artImage("chapters");
+  if(milestone && atlas){
+    const i=sq.chapter-1,sw=atlas.naturalWidth/2,sh=atlas.naturalHeight/2,size=Math.min(w,h)*.61;
+    ctx.drawImage(atlas,(i%2)*sw,Math.floor(i/2)*sh,sw,sh,(w-size)/2,h*.07,size,size);
+  } else {
+    ctx.font=`${Math.round(Math.min(w,h)*.38)}px ${emoji}`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(icons[sq.n-1],w/2,h*.35);
+  }
+  ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle="#223f60";
+  const label=String(sq.label),fs=Math.floor(Math.min(w*.155,h*.16));ctx.font=`900 ${fs}px ${font}`;
+  if(shape==="h") { const cut=Math.ceil(label.length/2);ctx.fillText(label.slice(0,cut),w/2,h*.7,w*.85);ctx.fillText(label.slice(cut),w/2,h*.7+fs*1.1,w*.85); }
+  else ctx.fillText(label,w/2,h*.77,w*.86);
+  ctx.font=`700 ${Math.round(Math.min(w,h)*.075)}px ${font}`;ctx.fillStyle="#39597a";
+  ctx.fillText(`${sq.n}${milestone ? "・必停" : sq.kind==="fate" ? "・命運" : sq.kind==="route" ? "・路線" : "・機會"}`,w/2,h*.93);
+  return texture(c);
+}
+
+const materials=new Map();
+function mat(color){if(!materials.has(color))materials.set(color,new THREE.MeshStandardMaterial({color,roughness:.75}));return materials.get(color);}
+function box(group,x,y,z,w,h,d,color){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
+function ball(group,x,y,z,r,color){const m=new THREE.Mesh(new THREE.SphereGeometry(r,12,8),mat(color));m.position.set(x,y,z);m.castShadow=true;group.add(m);return m;}
+function sign(group,text,x,y,z,w,color){
+  const c=canvas(512,128),ctx=c.getContext("2d");ctx.fillStyle=cssColor(color);ctx.fillRect(0,0,512,128);ctx.fillStyle="#ffffff";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font=`900 66px ${font}`;ctx.fillText(text,256,66,470);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:texture(c),side:THREE.DoubleSide}));m.position.set(x,y,z);group.add(m);
+}
+
+export function buildTravelTable(scene, outer, inner, topY) {
+  const group=new THREE.Group();
+  box(group,0,-.08,0,outer*2+.35,.32,outer*2+.35,0x218cc1);
+  box(group,0,.1,0,outer*2+.12,.1,outer*2+.12,0xd1f1ff);
+  box(group,0,.15,0,inner*2,.12,inner*2,0x5dc9a2);
+  const img=artImage("board"),t=img ? texture(img) : null;
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(inner*2-.12,inner*2-.12),new THREE.MeshStandardMaterial({map:t,color:t?0xffffff:0xfff3d0,roughness:1}));
+  floor.rotation.x=-Math.PI/2;floor.position.y=topY;floor.receiveShadow=true;group.add(floor);
+  // 中央骰子周圍留空；模型放在後側，不遮住落地與點擊。
+  const city=new THREE.Group();city.position.y=topY;
+  // 機場：藍玻璃航廈、黃屋頂、塔台。
+  box(city,-1.45,.38,-1.95,1.85,.75,.9,0x52c5ed);
+  box(city,-1.45,.8,-1.95,2.03,.12,1.04,0xffca43);
+  for(let i=0;i<5;i++)box(city,-2.18+i*.37,.42,-1.48,.045,.65,.03,0xf3fcff);
+  box(city,-2.4,.85,-2.05,.25,1.7,.25,0xfff1d2);box(city,-2.4,1.73,-2.05,.62,.28,.5,0x218ad0);
+  sign(city,"出發航廈",-1.45,.83,-1.41,1.5,0xe9a51d);
+  // 會場：紫色屋頂、講台、海報。
+  box(city,1.45,.43,-1.95,1.85,.85,.9,0x7667d3);box(city,1.45,.9,-1.95,2.02,.1,1.05,0x9f8bf3);
+  for(let i=0;i<4;i++)box(city,.77+i*.45,.38,-1.48,.32,.6,.035,0x97e1f8);
+  sign(city,"國際會場",1.45,.85,-1.4,1.6,0x6651b6);
+  // 小飛機：固定模型，不引入額外隨機或下載模型。
+  const plane=new THREE.Group();plane.position.set(0,.98,-2.05);plane.rotation.y=-.3;
+  const fuselage=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.7,4,12),mat(0xf6fbff));fuselage.rotation.x=Math.PI/2;plane.add(fuselage);
+  box(plane,0,0,0,1.05,.055,.2,0xeaf7ff);box(plane,0,.18,-.36,.06,.32,.27,0xff804d);box(plane,0,.04,-.38,.5,.05,.12,0xffbc3e);city.add(plane);
+  // 樹、路燈與海報架，少量共用幾何形狀維持輕量。
+  for(const [x,z] of [[-2.35,-.6],[2.35,-.6],[-2.35,1.85],[2.35,1.85]]){
+    box(city,x,.2,z,.45,.14,.45,0xf5d27b);box(city,x,.45,z,.09,.5,.09,0x947149);ball(city,x,.8,z,.3,0x45ba78);ball(city,x-.15,.68,z,.2,0x79ce53);
+  }
+  for(const [x,color] of [[-1.55,0x1ca9d0],[1.55,0xffa43e]]){
+    box(city,x,.21,.75,.45,.07,.36,0xb4dbe8);box(city,x,.6,.75,.04,.75,.04,0xffffff);box(city,x,.9,.75,.5,.5,.06,color);
+    sign(city,x<0?"研究":"交流",x,.92,.79,.43,color);
+  }
+  // 地面大標題位於骰子前方，將中央留給操作。
+  const title=canvas(768,180),ctx=title.getContext("2d");ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle="#23648a";ctx.font=`900 115px ${font}`;ctx.fillText("大赴翁",384,70);ctx.font=`700 36px ${font}`;ctx.fillText("ROLL ABROAD",384,145);
+  const logo=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.56),new THREE.MeshBasicMaterial({map:texture(title),transparent:true,depthWrite:false}));logo.rotation.x=-Math.PI/2;logo.position.set(0,topY+.008,1.8);group.add(logo);
+  group.add(city);scene.add(group);return group;
+}

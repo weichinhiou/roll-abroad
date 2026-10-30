@@ -1,6 +1,6 @@
 // 3D 環形棋盤 + 骰子畫面（plan D10 + 美術與骰子）。
 // three.js 固定版本放 vendor/，執行時不連 CDN、不下載圖片／字型。
-// 所有貼圖都用 canvas 現畫（格子號碼／短標籤、木紋桌布、骰子點數、中央標題）。
+// 共用插圖由本機 assets/art 載入；文字、骰子與場景仍是真正可互動的渲染。
 //
 // 對外函式：
 //   initBoard3d(container, board)  建立場景與環形棋盤，回 true（WebGL 失敗或減少動態效果回 false）
@@ -11,10 +11,11 @@
 //
 // 規則（格子順序、位置、里程碑、骰子點數）由 engine / data/board.json 決定，這裡不寫規則。
 import * as THREE from "../vendor/three.module.js";
+import { CHAPTER_COLORS, tileArt, buildTravelTable } from "./scene-art.js";
 
 // ── 顏色與版面 ─────────────────────────────────────────────────────
 // 四章色系比 2D 版稍微沉一點，一起用在格子、中央標題、章節旗上，視覺才一致。
-const CH_COLOR = { 1: 0x8fb891, 2: 0x8fa9d4, 3: 0xd5a875, 4: 0xb391bd };
+const CH_COLOR = CHAPTER_COLORS;
 const CH_SIGIL = { 1: "稿", 2: "行", 3: "會", 4: "結" };
 const CH_NAME = { 1: "投稿", 2: "出國準備", 3: "國際會議", 4: "返國結案" };
 const MILESTONE_GOLD = 0xe1b56a;
@@ -63,13 +64,14 @@ let lastT = 0;
 
 // 鏡頭固定在棋盤正前上方，距離依畫面比例自動算，整個棋盤一定框得進來、不會歪
 const CAM_TILT = (56 * Math.PI) / 180; // 仰角：越大越像從正上方看
-const CAM_FIT = 0.93;                  // 留白比例：越小越近、字越大
+const CAM_FIT = 1.1;                   // 斜角視圖保留邊界，前排與角落不裁切
 const camPos = new THREE.Vector3(0, 11, 8);
 const camLook = new THREE.Vector3(0, 0, 0.35);
 // 玩家拖曳轉動的視角：左右轉（yaw）、上下仰角（tilt）、遠近（zoom）。fitDist 是自動算出的基準距離
 const TILT_MIN = (28 * Math.PI) / 180;
 const TILT_MAX = (86 * Math.PI) / 180;
-const view = { yaw: 0, tilt: CAM_TILT, zoom: 1, fitDist: 14 };
+const view = { yaw: 0.24, tilt: CAM_TILT, zoom: 1, fitDist: 14 };
+let layoutMobile = null;
 
 function applyCamera() {
   if (!camera) return;
@@ -84,8 +86,8 @@ function applyCamera() {
 }
 
 export function resetView() {
-  view.yaw = 0;
-  view.tilt = CAM_TILT;
+  view.yaw = isMobile() ? 0 : 0.24;
+  view.tilt = isMobile() ? Math.PI * 0.38 : CAM_TILT;
   view.zoom = 1;
   applyCamera();
 }
@@ -195,90 +197,6 @@ function hexLerp(hex, target, k) {
   return a.getHex();
 }
 
-// 木紋桌布：用 canvas 走一種斜向年輪 + 雜訊點的樣子，比純色有質感。
-function woodTexture(baseHex, size = 512) {
-  const c = makeCanvas(size, size);
-  const ctx = c.getContext("2d");
-  const base = new THREE.Color(baseHex);
-
-  ctx.fillStyle = base.getStyle();
-  ctx.fillRect(0, 0, size, size);
-
-  // 大量淡曲線做出「木紋流向」
-  ctx.lineCap = "round";
-  for (let i = 0; i < 140; i++) {
-    const t = i / 140;
-    const y0 = (t * size * 1.6) - size * 0.3;
-    const stroke = base.clone().lerp(new THREE.Color(t % 2 ? 0x2e2216 : 0xd1b38a), 0.18 + (i % 5) * 0.02);
-    ctx.strokeStyle = stroke.getStyle();
-    ctx.globalAlpha = 0.36 - (i % 4) * 0.04;
-    ctx.lineWidth = 1.4 + (i % 3) * 0.8;
-    ctx.beginPath();
-    for (let x = -20; x <= size + 20; x += 20) {
-      const wob = Math.sin((x * 0.010) + i * 0.62) * 18 + Math.sin(x * 0.029 + i * 1.7) * 8;
-      const yy = y0 + wob + (x * 0.06);
-      if (x === -20) ctx.moveTo(x, yy);
-      else ctx.lineTo(x, yy);
-    }
-    ctx.stroke();
-  }
-
-  // 亮部與暗部微光
-  const g = ctx.createLinearGradient(0, 0, size, size);
-  g.addColorStop(0, "rgba(255,241,215,0.22)");
-  g.addColorStop(0.45, "rgba(0,0,0,0)");
-  g.addColorStop(1, "rgba(0,0,0,0.10)");
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, size, size);
-
-  // 一些年輪節眼
-  for (let i = 0; i < 8; i++) {
-    const x = Math.random() * size;
-    const y = Math.random() * size;
-    const rad = 12 + Math.random() * 22;
-    for (let j = 5; j >= 1; j--) {
-      ctx.beginPath();
-      ctx.arc(x, y, rad * j / 5, 0, Math.PI * 2);
-      ctx.strokeStyle = base.clone().lerp(new THREE.Color(0x2b2119), 0.18).getStyle();
-      ctx.globalAlpha = 0.18;
-      ctx.lineWidth = 1.6;
-      ctx.stroke();
-    }
-  }
-  ctx.globalAlpha = 1;
-
-  const tex = toTexture(c);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  return tex;
-}
-
-function fabricTexture(baseHex, size = 512) {
-  const c = makeCanvas(size, size);
-  const ctx = c.getContext("2d");
-  ctx.fillStyle = hexCSS(baseHex);
-  ctx.fillRect(0, 0, size, size);
-  ctx.globalAlpha = 0.18;
-  for (let y = 0; y < size; y += 3) {
-    ctx.strokeStyle = y % 6 === 0 ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.16)";
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(size, y);
-    ctx.stroke();
-  }
-  for (let x = 0; x < size; x += 3) {
-    ctx.strokeStyle = x % 6 === 0 ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.12)";
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, size);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  const tex = toTexture(c);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  return tex;
-}
-
 // 格子卡面（桌遊卡片風格）：米白卡底＋上方章節色帶＋號碼＋短標籤＋格子類型標籤。
 // 角落里程碑：深色底、金框、大圖示、「必停」。
 // shape 決定畫布比例，和格子頂面一樣，字才不會被拉扁。
@@ -292,165 +210,7 @@ const KIND_TAG = {
 const FONT = '"Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif';
 const EMOJI = '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
 
-function cellTexture(sq, milestone, shape = "h") {
-  const U = 120; // 每 1 單位長度的像素
-  const W = Math.round((shape === "v" || shape === "corner" ? TILE_D : TILE_W) * U * 2);
-  const H = Math.round((shape === "h" || shape === "corner" ? TILE_D : TILE_W) * U * 2);
-  const c = makeCanvas(W, H);
-  const ctx = c.getContext("2d");
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  if (milestone) {
-    const g = ctx.createRadialGradient(W / 2, H / 2, W * 0.1, W / 2, H / 2, W * 0.75);
-    g.addColorStop(0, "#4a3f33");
-    g.addColorStop(1, "#231c16");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = hexCSS(MILESTONE_GOLD);
-    roundedRect(ctx, 12, 12, W - 24, H - 24, 22);
-    ctx.stroke();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(225,181,106,0.5)";
-    roundedRect(ctx, 30, 30, W - 60, H - 60, 16);
-    ctx.stroke();
-
-    ctx.font = `110px ${EMOJI}`;
-    ctx.fillText(MS_ICON[sq.milestone] || "🚩", W / 2, H * 0.3);
-    ctx.fillStyle = hexCSS(MILESTONE_GOLD);
-    ctx.font = `bold 64px ${FONT}`;
-    ctx.fillText(`${sq.n}．${sq.label}`, W / 2, H * 0.58);
-
-    const tag = sq.n === 24 ? "起點／終點" : "必停";
-    ctx.font = `bold 40px ${FONT}`;
-    const tw = ctx.measureText(tag).width + 48;
-    ctx.fillStyle = hexCSS(MILESTONE_GOLD);
-    roundedRect(ctx, (W - tw) / 2, H * 0.74, tw, 60, 30);
-    ctx.fill();
-    ctx.fillStyle = "#2a2118";
-    ctx.fillText(tag, W / 2, H * 0.74 + 31);
-    return toTexture(c);
-  }
-
-  // 卡底
-  ctx.fillStyle = "#fbf5e6";
-  ctx.fillRect(0, 0, W, H);
-  // 上方章節色帶
-  const band = Math.round(Math.min(W, H) * 0.3);
-  ctx.fillStyle = hexCSS(CH_COLOR[sq.chapter]);
-  ctx.fillRect(0, 0, W, band);
-  ctx.fillStyle = "rgba(0,0,0,0.12)";
-  ctx.fillRect(0, band - 6, W, 6);
-  // 外框
-  ctx.lineWidth = 8;
-  ctx.strokeStyle = "#5a4330";
-  ctx.strokeRect(4, 4, W - 8, H - 8);
-
-  // 色帶上：章節圖示＋號碼
-  ctx.font = `${Math.round(band * 0.55)}px ${EMOJI}`;
-  ctx.fillText(CH_ICON[sq.chapter], W * 0.28, band / 2 + 2);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `bold ${Math.round(band * 0.62)}px ${FONT}`;
-  ctx.fillText(String(sq.n), W * 0.66, band / 2 + 2);
-
-  // 標籤：直立卡排兩行，橫卡排一行
-  const label = String(sq.label || "");
-  ctx.fillStyle = "#2a2118";
-  const rest = H - band;
-  if (shape === "h" && label.length > 2) {
-    const fs = Math.round(W * 0.3);
-    ctx.font = `bold ${fs}px ${FONT}`;
-    const cut = Math.ceil(label.length / 2);
-    ctx.fillText(label.slice(0, cut), W / 2, band + rest * 0.27);
-    ctx.fillText(label.slice(cut), W / 2, band + rest * 0.27 + fs * 1.1);
-  } else {
-    const fs = Math.round(Math.min(W / (label.length + 0.6), rest * 0.38));
-    ctx.font = `bold ${fs}px ${FONT}`;
-    ctx.fillText(label, W / 2, band + rest * 0.36);
-  }
-
-  // 底部類型標籤
-  const kt = KIND_TAG[sq.kind];
-  if (kt) {
-    const fs = Math.round(Math.min(W, H) * 0.15);
-    ctx.font = `bold ${fs}px ${FONT}`;
-    const tw = ctx.measureText(kt.text).width + fs * 1.1;
-    const th = fs * 1.5;
-    const ty = H - th - Math.min(W, H) * 0.08;
-    ctx.fillStyle = kt.color;
-    roundedRect(ctx, (W - tw) / 2, ty, tw, th, th / 2);
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(kt.text, W / 2, ty + th / 2 + 1);
-  }
-
-  return toTexture(c);
-}
-
-
-// 中央標題板：遊戲名 + 四章名
-function centerTexture() {
-  const S = 1024;
-  const c = makeCanvas(S, S);
-  const ctx = c.getContext("2d");
-
-  const bg = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S * 0.72);
-  bg.addColorStop(0, "#efe2c1");
-  bg.addColorStop(1, "#d6c69b");
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, S, S);
-
-  // 外框 + 內框
-  ctx.lineWidth = 12;
-  ctx.strokeStyle = "#8f6b3a";
-  roundedRect(ctx, 24, 24, S - 48, S - 48, 28);
-  ctx.stroke();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = "rgba(143,107,58,0.55)";
-  roundedRect(ctx, 52, 52, S - 104, S - 104, 22);
-  ctx.stroke();
-
-  // 遊戲名
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "#3b2512";
-  ctx.font = "bold 132px system-ui, sans-serif";
-  ctx.fillText("大赴翁", S / 2, S * 0.34);
-  ctx.font = "600 58px system-ui, sans-serif";
-  ctx.fillStyle = "#7c562b";
-  ctx.fillText("ROLL ABROAD", S / 2, S * 0.48);
-
-  // 分隔線
-  ctx.beginPath();
-  ctx.moveTo(S * 0.28, S * 0.56);
-  ctx.lineTo(S * 0.72, S * 0.56);
-  ctx.strokeStyle = "rgba(143,107,58,0.55)";
-  ctx.lineWidth = 3;
-  ctx.stroke();
-
-  // 四章名依序排
-  const order = [1, 2, 3, 4];
-  order.forEach((ch, i) => {
-    const x = S * (0.24 + (i % 2) * 0.34);
-    const y = S * (0.68 + Math.floor(i / 2) * 0.14);
-    const dot = document.createElement("canvas");
-    // 用章節色畫小方章
-    ctx.fillStyle = hexCSS(CH_COLOR[ch]);
-    roundedRect(ctx, x - 82, y - 34, 64, 68, 10);
-    ctx.fill();
-    ctx.fillStyle = "#2a2116";
-    ctx.font = "bold 40px system-ui, sans-serif";
-    ctx.textAlign = "left";
-    ctx.fillText(CH_SIGIL[ch], x - 70, y);
-    ctx.font = "600 42px system-ui, sans-serif";
-    ctx.fillStyle = "#3b2512";
-    ctx.textAlign = "left";
-    ctx.fillText(CH_NAME[ch], x - 4, y);
-  });
-
-  return toTexture(c);
-}
+function cellTexture(sq, milestone, shape) { return tileArt(sq, milestone, shape); }
 
 // 骰子點數：畫黑圓點在白底上。回傳貼圖與該面的 value。
 function dieFaceTexture(pips) {
@@ -460,7 +220,7 @@ function dieFaceTexture(pips) {
   // 白底
   const g = ctx.createLinearGradient(0, 0, S, S);
   g.addColorStop(0, "#ffffff");
-  g.addColorStop(1, "#ece2cd");
+  g.addColorStop(1, "#d9f2ff");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, S, S);
 
@@ -486,8 +246,8 @@ function dieFaceTexture(pips) {
     const x = S / 2 + gx * cellW;
     const y = S / 2 + gy * cellW;
     const grad = ctx.createRadialGradient(x - 8, y - 8, 2, x, y, 34);
-    grad.addColorStop(0, "#3a332b");
-    grad.addColorStop(1, "#171310");
+    grad.addColorStop(0, "#3382c7");
+    grad.addColorStop(1, "#163c74");
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(x, y, 32, 0, Math.PI * 2);
@@ -545,11 +305,11 @@ function reduced() {
 // ── 場景建立 ─────────────────────────────────────────────────────
 function buildLights() {
   // 暖色環境：上方天光 + 側前方主光 + 一點補光
-  const hemi = new THREE.HemisphereLight(0xfff5e2, 0x8a765a, 1.05);
+  const hemi = new THREE.HemisphereLight(0xe8f7ff, 0x70a7aa, 1.65);
   hemi.position.set(0, 18, 0);
   scene.add(hemi);
 
-  keyLight = new THREE.DirectionalLight(0xfff2df, 1.2);
+  keyLight = new THREE.DirectionalLight(0xffffff, 2.1);
   keyLight.position.set(-7, 14, 8);
   keyLight.castShadow = true;
   const shadowSize = isMobile() ? 512 : 1024;
@@ -572,67 +332,10 @@ function buildLights() {
   rim.position.set(8, 4, 12);
   scene.add(rim);
 
-  scene.fog = new THREE.Fog(0xd9cba7, 26, 70);
+  // 保持背景透明，讓本機旅行世界圖與 3D 棋盤整合。
 }
 
-function buildTable() {
-  tableGroup = new THREE.Group();
-
-  // 圓桌底
-  const tableTex = woodTexture(0x8a5a33, 512);
-  tableTex.repeat.set(2, 2);
-  const table = new THREE.Mesh(
-    new THREE.CylinderGeometry(15, 15.2, 0.7, 96),
-    new THREE.MeshStandardMaterial({ map: tableTex, roughness: 0.85, metalness: 0.02, color: 0xb5824f })
-  );
-  table.position.y = -0.55;
-  table.receiveShadow = true;
-  table.castShadow = true;
-  tableGroup.add(table);
-
-  // 一層「桌布」墊在棋盤底下（細織紋，比桌板細，一眼看出是鋪在上面的一塊墊）
-  const clothTex = fabricTexture(0xefe2c0, 256);
-  clothTex.repeat.set(4, 4);
-  const cloth = new THREE.Mesh(
-    new THREE.BoxGeometry(2 * OUTER + 1.4, 0.12, 2 * OUTER + 1.4),
-    new THREE.MeshStandardMaterial({ map: clothTex, roughness: 0.98 })
-  );
-  cloth.position.y = -0.18;
-  cloth.receiveShadow = true;
-  tableGroup.add(cloth);
-
-  // 棋盤本體：外框木框 + 內層麻布
-  const boardTex = woodTexture(0x8c562c, 256);
-  boardTex.repeat.set(2, 2);
-  const frame = new THREE.Mesh(
-    new THREE.BoxGeometry(2 * OUTER + 0.4, 0.22, 2 * OUTER + 0.4),
-    new THREE.MeshStandardMaterial({ map: boardTex, roughness: 0.8, color: 0x9a6234 })
-  );
-  frame.position.y = 0;
-  frame.receiveShadow = true;
-  frame.castShadow = true;
-  tableGroup.add(frame);
-
-  const innerCloth = new THREE.Mesh(
-    new THREE.BoxGeometry(2 * INNER - 0.1, 0.16, 2 * INNER - 0.1),
-    new THREE.MeshStandardMaterial({ map: fabricTexture(0xeadfc2, 256), roughness: 1 })
-  );
-  innerCloth.position.y = 0.12;
-  innerCloth.receiveShadow = true;
-  tableGroup.add(innerCloth);
-
-  // 中央標題板
-  const centerPlane = new THREE.Mesh(
-    new THREE.PlaneGeometry(2 * INNER - 0.5, 2 * INNER - 0.5),
-    new THREE.MeshStandardMaterial({ map: centerTexture(), roughness: 0.75, transparent: true, opacity: 0.97 })
-  );
-  centerPlane.rotation.x = -Math.PI / 2;
-  centerPlane.position.set(0, BOARD_TOP_Y, 0);
-  centerPlane.receiveShadow = true;
-  tableGroup.add(centerPlane);
-
-  scene.add(tableGroup);
-}
+function buildTable() { tableGroup = buildTravelTable(scene, OUTER, INNER, BOARD_TOP_Y); }
 
 function buildRing(board) {
   ringGroup = new THREE.Group();
@@ -651,7 +354,7 @@ function buildRing(board) {
 
     // 只有頂面貼卡面，側面用章節色的深色邊，避免字重複出現在側面
     const sideMat = new THREE.MeshStandardMaterial({
-      color: ms ? 0x2a231d : hexLerp(CH_COLOR[sq.chapter], 0x3a2a1a, 0.35),
+      color: hexLerp(CH_COLOR[sq.chapter], 0x164a82, 0.18),
       roughness: 0.8,
     });
     const topMat = new THREE.MeshStandardMaterial({
@@ -720,7 +423,7 @@ function buildPawn() {
   // 身體：稍微內收的梯形
   const body = new THREE.Mesh(
     new THREE.CylinderGeometry(0.16, 0.28, 0.56, 20),
-    new THREE.MeshStandardMaterial({ color: 0xc74f34, roughness: 0.5, metalness: 0.05 })
+    new THREE.MeshStandardMaterial({ color: 0x13a8b5, roughness: 0.5, metalness: 0.05 })
   );
   body.position.y = 0.38;
 
@@ -750,7 +453,7 @@ function buildPawn() {
 
   // 手（兩根棍子）
   const armGeo = new THREE.CapsuleGeometry(0.06, 0.28, 4, 8);
-  const armMat = new THREE.MeshStandardMaterial({ color: 0xc74f34, roughness: 0.5 });
+  const armMat = new THREE.MeshStandardMaterial({ color: 0x13a8b5, roughness: 0.5 });
   const armL = new THREE.Mesh(armGeo, armMat);
   armL.position.set(-0.24, 0.42, 0);
   armL.rotation.z = 0.35;
@@ -759,13 +462,25 @@ function buildPawn() {
   armR.rotation.z = -0.35;
 
   pawn.add(base, body, collar, head, hair, armL, armR);
+  // 與共用旅人頭像一致：青色外套、黃色背包與有表情的臉。
+  for (const x of [-0.085, 0.085]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.032, 10, 8), new THREE.MeshStandardMaterial({color:0x26364b}));
+    eye.position.set(x, 0.88, 0.22);
+    pawn.add(eye);
+    const strap = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.35, 0.035), new THREE.MeshStandardMaterial({color:0xffcc43}));
+    strap.position.set(x, 0.43, 0.2);
+    pawn.add(strap);
+  }
+  const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.36, 0.18), new THREE.MeshStandardMaterial({color:0xffc743}));
+  backpack.position.set(0, 0.4, -0.21);
+  pawn.add(backpack);
   pawn.traverse((o) => { if (o.isMesh) o.castShadow = true; });
 
   // 行李箱：一顆小箱在棋子側邊
   suitcase = new THREE.Group();
   const caseBody = new THREE.Mesh(
     new THREE.BoxGeometry(0.28, 0.22, 0.14),
-    new THREE.MeshStandardMaterial({ color: 0x2c4a68, roughness: 0.6, metalness: 0.1 })
+    new THREE.MeshStandardMaterial({ color: 0xff8851, roughness: 0.6, metalness: 0.1 })
   );
   const caseHandle = new THREE.Mesh(
     new THREE.TorusGeometry(0.07, 0.018, 8, 16),
@@ -872,7 +587,7 @@ export function initBoard3d(container_, board) {
   if (reduced()) return false;
 
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: !isMobile(), alpha: false });
+    renderer = new THREE.WebGLRenderer({ antialias: !isMobile(), alpha: true });
     if (!renderer) return false;
     const gl = renderer.getContext();
     if (!gl) return false;
@@ -890,7 +605,7 @@ export function initBoard3d(container_, board) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xd9cba7);
+  renderer.setClearColor(0x000000, 0);
   camera = new THREE.PerspectiveCamera(36, 1, 0.1, 120);
   camera.position.copy(camPos);
   camera.lookAt(camLook);
@@ -908,12 +623,18 @@ export function initBoard3d(container_, board) {
     const h = wrap.clientHeight || 1;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
+    if (layoutMobile !== isMobile()) {
+      layoutMobile = isMobile();
+      view.yaw = layoutMobile ? 0 : 0.24;
+      view.tilt = layoutMobile ? Math.PI * 0.38 : CAM_TILT;
+      view.zoom = 1;
+    }
     // 依水平／垂直視角較窄的那一邊，算出能框住整個棋盤的距離
     const halfV = (camera.fov * Math.PI) / 360;
     const halfH = Math.atan(Math.tan(halfV) * camera.aspect);
-    const r = OUTER + 0.5;
+    const r = OUTER + 0.65;
     // 左右用 1.12 倍保險：靠近鏡頭的下排因透視會比較寬
-    const dist = Math.max(((r * Math.sin(CAM_TILT) * 1.08) / Math.tan(halfV)) * CAM_FIT, (r * 1.12) / Math.tan(halfH));
+    const dist = Math.max(((r * Math.sin(view.tilt) * 1.08) / Math.tan(halfV)) * CAM_FIT, (r * (layoutMobile ? 1.08 : 1.26)) / Math.tan(halfH));
     view.fitDist = dist;
     applyCamera();
     camera.updateProjectionMatrix();

@@ -12,6 +12,7 @@ import {
   setDieClick,
 } from "./render.js";
 import { save, load, clearSave } from "./storage.js";
+import { loadBoardArt } from "./art.js";
 
 let DATA = null;
 let S = null;
@@ -23,6 +24,7 @@ async function boot() {
     ["board", "events", "items", "checkpoints"].map((f) => fetch(`data/${f}.json`).then((r) => r.json()))
   );
   DATA = { board, events, items, checkpoints: cps.checkpoints };
+  await loadBoardArt();
   initBoard(DATA.board);
   const saved = load();
   if (saved) {
@@ -45,7 +47,7 @@ function startGame(seed) {
 
 function draw() {
   render(S, DATA.board, DATA.items, lastResult);
-  document.getElementById("forced").hidden = !S.items.plan;
+  document.getElementById("forced").hidden = true;
   save(S);
 }
 
