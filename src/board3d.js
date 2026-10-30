@@ -19,10 +19,14 @@ const CH_NAME = { 1: "投稿", 2: "出國準備", 3: "國際會議", 4: "返國�
 const MILESTONE_GOLD = 0xe1b56a;
 const MILESTONE_FILL = 0x35302a;
 
-const HALF = 4.0;      // 環形半邊長
-const CELL = 1.35;     // 每格寬
-const CELL_H = 0.3;    // 一般格高度
-const CELL_H_MS = 0.8; // 里程碑格高度
+// 桌遊式方形棋盤：四個角是里程碑（6／12／18／24），每邊中間 5 格長方形卡片格
+const TILE_W = 1.2;              // 一般格沿著邊的寬度
+const TILE_D = 1.8;              // 一般格往內的深度（也是角落格的邊長）
+const INNER = 2.5 * TILE_W;      // 內圈半邊長（5 格寬的一半）
+const SIDE = INNER + TILE_D / 2; // 每一邊格子中心線的位置
+const OUTER = INNER + TILE_D;    // 棋盤外緣半邊長
+const CELL_H = 0.2;    // 一般格高度
+const CELL_H_MS = 0.34; // 里程碑（角落）格高度
 const REDUCED_MQ = "(prefers-reduced-motion: reduce)";
 
 const DIE_SIZE = 0.95;
@@ -53,12 +57,11 @@ let frameId = 0;
 let visible = true;
 let lastT = 0;
 
-// 把棋子／骰子跟鏡頭關係存起來，讓每 frame 更新
-const CAM_Y = 11.5;
-const CAM_Z = 9; // 鏡頭離棋盤的距離：越小越近、字越大
-let camScale = 1; // 畫面越窄，鏡頭退得越遠，避免棋盤被切掉
-const camPos = new THREE.Vector3(0, CAM_Y, CAM_Z);
-const camLook = new THREE.Vector3(0, 0.8, 0);
+// 鏡頭固定在棋盤正前上方，距離依畫面比例自動算，整個棋盤一定框得進來、不會歪
+const CAM_TILT = (56 * Math.PI) / 180; // 仰角：越大越像從正上方看
+const CAM_FIT = 0.93;                  // 留白比例：越小越近、字越大
+const camPos = new THREE.Vector3(0, 11, 8);
+const camLook = new THREE.Vector3(0, 0, 0.35);
 const tmpV = new THREE.Vector3();
 
 // ── 純工具（Canvas 貼圖） ─────────────────────────────────────────
@@ -185,69 +188,115 @@ function fabricTexture(baseHex, size = 512) {
   return tex;
 }
 
-// 格子貼圖：號碼 + 短標籤 + 章節底色。里程碑特別金邊＋章節印記。
-function cellTexture(sq, milestone) {
-  const S = 256;
-  const c = makeCanvas(S, S);
+// 格子卡面（桌遊卡片風格）：米白卡底＋上方章節色帶＋號碼＋短標籤＋格子類型標籤。
+// 角落里程碑：深色底、金框、大圖示、「必停」。
+// shape 決定畫布比例，和格子頂面一樣，字才不會被拉扁。
+const CH_ICON = { 1: "📝", 2: "🧳", 3: "🎤", 4: "🏠" };
+const MS_ICON = { route: "🧭", gate: "✈️", session: "🏆", final: "🏁" };
+const KIND_TAG = {
+  chance: { text: "機會", color: "#2f7d4f" },
+  fate: { text: "命運", color: "#b4432a" },
+  route: { text: "路線", color: "#2f5d9a" },
+};
+const FONT = '"Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif';
+const EMOJI = '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+
+function cellTexture(sq, milestone, shape = "h") {
+  const U = 120; // 每 1 單位長度的像素
+  const W = Math.round((shape === "v" || shape === "corner" ? TILE_D : TILE_W) * U * 2);
+  const H = Math.round((shape === "h" || shape === "corner" ? TILE_D : TILE_W) * U * 2);
+  const c = makeCanvas(W, H);
   const ctx = c.getContext("2d");
-
-  const fill = milestone ? MILESTONE_FILL : CH_COLOR[sq.chapter];
-  const ink = milestone ? 0xf6efe0 : 0x211c17;
-  ctx.fillStyle = hexCSS(fill);
-  ctx.fillRect(0, 0, S, S);
-
-  if (milestone) {
-    // 金屬環
-    const g = ctx.createRadialGradient(S / 2, S / 2, S * 0.18, S / 2, S / 2, S * 0.72);
-    g.addColorStop(0, "rgba(255,228,174,0.28)");
-    g.addColorStop(0.6, "rgba(0,0,0,0)");
-    g.addColorStop(1, "rgba(0,0,0,0.35)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, S, S);
-  } else {
-    const g = ctx.createLinearGradient(0, 0, 0, S);
-    g.addColorStop(0, "rgba(255,255,255,0.16)");
-    g.addColorStop(0.5, "rgba(255,255,255,0)");
-    g.addColorStop(1, "rgba(0,0,0,0.18)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, S, S);
-  }
-
-  // 外框
-  ctx.lineWidth = 6;
-  ctx.strokeStyle = milestone ? hexCSS(MILESTONE_GOLD) : "rgba(27,21,15,0.22)";
-  roundedRect(ctx, 5, 5, S - 10, S - 10, 18);
-  ctx.stroke();
-
-  // 號碼
-  ctx.fillStyle = hexCSS(milestone ? MILESTONE_GOLD : ink);
-  ctx.font = "bold 84px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(String(sq.n), S / 2, S * 0.32);
 
-  // 短標籤
-  const label = String(sq.label || "");
-  const fontSize = label.length > 6 ? 30 : 36;
-  ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
-  ctx.fillStyle = hexCSS(milestone ? 0xf2e7cf : ink);
-  // 如果標籤太長，切成兩段
-  if (label.length > 6) {
-    const cut = Math.ceil(label.length / 2);
-    ctx.fillText(label.slice(0, cut), S / 2, S * 0.62);
-    ctx.fillText(label.slice(cut), S / 2, S * 0.62 + fontSize * 1.15);
-  } else {
-    ctx.fillText(label, S / 2, S * 0.64);
+  if (milestone) {
+    const g = ctx.createRadialGradient(W / 2, H / 2, W * 0.1, W / 2, H / 2, W * 0.75);
+    g.addColorStop(0, "#4a3f33");
+    g.addColorStop(1, "#231c16");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = hexCSS(MILESTONE_GOLD);
+    roundedRect(ctx, 12, 12, W - 24, H - 24, 22);
+    ctx.stroke();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(225,181,106,0.5)";
+    roundedRect(ctx, 30, 30, W - 60, H - 60, 16);
+    ctx.stroke();
+
+    ctx.font = `110px ${EMOJI}`;
+    ctx.fillText(MS_ICON[sq.milestone] || "🚩", W / 2, H * 0.3);
+    ctx.fillStyle = hexCSS(MILESTONE_GOLD);
+    ctx.font = `bold 64px ${FONT}`;
+    ctx.fillText(`${sq.n}．${sq.label}`, W / 2, H * 0.58);
+
+    const tag = sq.n === 24 ? "起點／終點" : "必停";
+    ctx.font = `bold 40px ${FONT}`;
+    const tw = ctx.measureText(tag).width + 48;
+    ctx.fillStyle = hexCSS(MILESTONE_GOLD);
+    roundedRect(ctx, (W - tw) / 2, H * 0.74, tw, 60, 30);
+    ctx.fill();
+    ctx.fillStyle = "#2a2118";
+    ctx.fillText(tag, W / 2, H * 0.74 + 31);
+    return toTexture(c);
   }
 
-  // 底部章節印記
-  const sigil = milestone ? "◆" : CH_SIGIL[sq.chapter];
-  ctx.font = "bold 26px system-ui, sans-serif";
-  ctx.fillStyle = milestone ? hexCSS(MILESTONE_GOLD) : "rgba(33,28,23,0.55)";
-  ctx.fillText(sigil, S / 2, S * 0.88);
+  // 卡底
+  ctx.fillStyle = "#fbf5e6";
+  ctx.fillRect(0, 0, W, H);
+  // 上方章節色帶
+  const band = Math.round(Math.min(W, H) * 0.3);
+  ctx.fillStyle = hexCSS(CH_COLOR[sq.chapter]);
+  ctx.fillRect(0, 0, W, band);
+  ctx.fillStyle = "rgba(0,0,0,0.12)";
+  ctx.fillRect(0, band - 6, W, 6);
+  // 外框
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = "#5a4330";
+  ctx.strokeRect(4, 4, W - 8, H - 8);
+
+  // 色帶上：章節圖示＋號碼
+  ctx.font = `${Math.round(band * 0.55)}px ${EMOJI}`;
+  ctx.fillText(CH_ICON[sq.chapter], W * 0.28, band / 2 + 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `bold ${Math.round(band * 0.62)}px ${FONT}`;
+  ctx.fillText(String(sq.n), W * 0.66, band / 2 + 2);
+
+  // 標籤：直立卡排兩行，橫卡排一行
+  const label = String(sq.label || "");
+  ctx.fillStyle = "#2a2118";
+  const rest = H - band;
+  if (shape === "h" && label.length > 2) {
+    const fs = Math.round(W * 0.3);
+    ctx.font = `bold ${fs}px ${FONT}`;
+    const cut = Math.ceil(label.length / 2);
+    ctx.fillText(label.slice(0, cut), W / 2, band + rest * 0.27);
+    ctx.fillText(label.slice(cut), W / 2, band + rest * 0.27 + fs * 1.1);
+  } else {
+    const fs = Math.round(Math.min(W / (label.length + 0.6), rest * 0.38));
+    ctx.font = `bold ${fs}px ${FONT}`;
+    ctx.fillText(label, W / 2, band + rest * 0.36);
+  }
+
+  // 底部類型標籤
+  const kt = KIND_TAG[sq.kind];
+  if (kt) {
+    const fs = Math.round(Math.min(W, H) * 0.15);
+    ctx.font = `bold ${fs}px ${FONT}`;
+    const tw = ctx.measureText(kt.text).width + fs * 1.1;
+    const th = fs * 1.5;
+    const ty = H - th - Math.min(W, H) * 0.08;
+    ctx.fillStyle = kt.color;
+    roundedRect(ctx, (W - tw) / 2, ty, tw, th, th / 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(kt.text, W / 2, ty + th / 2 + 1);
+  }
 
   return toTexture(c);
 }
+
 
 // 中央標題板：遊戲名 + 四章名
 function centerTexture() {
@@ -362,13 +411,21 @@ function dieFaceTexture(pips) {
 }
 
 // ── 環形格子佈局 ───────────────────────────────────────────────
+// n = 0..23（第 n+1 格）。每邊前 5 格是卡片格，第 6 格是角落（里程碑）。
+// 下邊由左往右 1–5、右下角 6；右邊往上 7–11、右上角 12；上邊往左 13–17、左上角 18；左邊往下 19–23、左下角 24。
+// shape：corner 是正方形；h 是上下兩邊的直立卡（寬 TILE_W、深 TILE_D）；v 是左右兩邊的橫卡。
 function ringPos(n) {
   const side = Math.floor(n / 6);
-  const t = ((n % 6) + 0.5) / 6;
-  if (side === 0) return { x: -HALF + 2 * HALF * t, z: HALF };
-  if (side === 1) return { x: HALF, z: HALF - 2 * HALF * t };
-  if (side === 2) return { x: HALF - 2 * HALF * t, z: -HALF };
-  return { x: -HALF, z: -HALF + 2 * HALF * t };
+  const k = n % 6;
+  const off = INNER - TILE_W * (k + 0.5);
+  if (k === 5) {
+    const corners = [[SIDE, SIDE], [SIDE, -SIDE], [-SIDE, -SIDE], [-SIDE, SIDE]];
+    return { x: corners[side][0], z: corners[side][1], shape: "corner" };
+  }
+  if (side === 0) return { x: -off, z: SIDE, shape: "h" };
+  if (side === 1) return { x: SIDE, z: off, shape: "v" };
+  if (side === 2) return { x: off, z: -SIDE, shape: "h" };
+  return { x: -SIDE, z: -off, shape: "v" };
 }
 
 function cellHeight(sq) {
@@ -446,7 +503,7 @@ function buildTable() {
   const clothTex = fabricTexture(0xefe2c0, 256);
   clothTex.repeat.set(4, 4);
   const cloth = new THREE.Mesh(
-    new THREE.BoxGeometry(2 * HALF + CELL + 1.6, 0.12, 2 * HALF + CELL + 1.6),
+    new THREE.BoxGeometry(2 * OUTER + 1.4, 0.12, 2 * OUTER + 1.4),
     new THREE.MeshStandardMaterial({ map: clothTex, roughness: 0.98 })
   );
   cloth.position.y = -0.18;
@@ -457,7 +514,7 @@ function buildTable() {
   const boardTex = woodTexture(0x8c562c, 256);
   boardTex.repeat.set(2, 2);
   const frame = new THREE.Mesh(
-    new THREE.BoxGeometry(2 * HALF + CELL + 0.6, 0.22, 2 * HALF + CELL + 0.6),
+    new THREE.BoxGeometry(2 * OUTER + 0.4, 0.22, 2 * OUTER + 0.4),
     new THREE.MeshStandardMaterial({ map: boardTex, roughness: 0.8, color: 0x9a6234 })
   );
   frame.position.y = 0;
@@ -466,7 +523,7 @@ function buildTable() {
   tableGroup.add(frame);
 
   const innerCloth = new THREE.Mesh(
-    new THREE.BoxGeometry(2 * HALF - CELL - 0.25, 0.16, 2 * HALF - CELL - 0.25),
+    new THREE.BoxGeometry(2 * INNER - 0.1, 0.16, 2 * INNER - 0.1),
     new THREE.MeshStandardMaterial({ map: fabricTexture(0xeadfc2, 256), roughness: 1 })
   );
   innerCloth.position.y = 0.12;
@@ -475,7 +532,7 @@ function buildTable() {
 
   // 中央標題板
   const centerPlane = new THREE.Mesh(
-    new THREE.PlaneGeometry(2 * HALF - CELL - 0.75, 2 * HALF - CELL - 0.75),
+    new THREE.PlaneGeometry(2 * INNER - 0.5, 2 * INNER - 0.5),
     new THREE.MeshStandardMaterial({ map: centerTexture(), roughness: 0.75, transparent: true, opacity: 0.97 })
   );
   centerPlane.rotation.x = -Math.PI / 2;
@@ -488,44 +545,48 @@ function buildTable() {
 
 function buildRing(board) {
   ringGroup = new THREE.Group();
-  const boxGeo = new THREE.BoxGeometry(CELL, 1, CELL);
-  const edgeGeo = new THREE.BoxGeometry(CELL + 0.05, 1, CELL + 0.05);
+  const GAP = 0.06; // 格子之間留一條細縫，看起來像一張張卡片
+  const dims = {
+    corner: [TILE_D - GAP, TILE_D - GAP],
+    h: [TILE_W - GAP, TILE_D - GAP],
+    v: [TILE_D - GAP, TILE_W - GAP],
+  };
 
   board.squares.forEach((sq) => {
     const p = ringPos(sq.n - 1);
     const ms = sq.kind === "milestone";
     const h = cellHeight(sq);
+    const [w, d] = dims[p.shape];
 
-    // 主體格
-    const mesh = new THREE.Mesh(boxGeo, new THREE.MeshStandardMaterial({
-      map: cellTexture(sq, ms),
-      roughness: ms ? 0.6 : 0.82,
-      metalness: ms ? 0.15 : 0.0,
-    }));
+    // 只有頂面貼卡面，側面用章節色的深色邊，避免字重複出現在側面
+    const sideMat = new THREE.MeshStandardMaterial({
+      color: ms ? 0x2a231d : hexLerp(CH_COLOR[sq.chapter], 0x3a2a1a, 0.35),
+      roughness: 0.8,
+    });
+    const topMat = new THREE.MeshStandardMaterial({
+      map: cellTexture(sq, ms, p.shape),
+      roughness: ms ? 0.55 : 0.78,
+      metalness: ms ? 0.12 : 0.0,
+    });
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(w, h, d),
+      [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]
+    );
     mesh.position.set(p.x, 0.22 + h / 2, p.z);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     ringGroup.add(mesh);
 
     if (ms) {
-      // 里程碑：加一層發光金邊（用略放大的透明盒疊上去）
-      const glow = new THREE.Mesh(edgeGeo, new THREE.MeshStandardMaterial({
-        color: MILESTONE_GOLD,
-        emissive: MILESTONE_GOLD,
-        emissiveIntensity: 0.6,
-        transparent: true,
-        opacity: 0.32,
-        roughness: 0.4,
-      }));
-      glow.position.set(p.x, 0.32 + h / 2, p.z);
-      ringGroup.add(glow);
-
-      // 里程碑小旗
+      // 里程碑小旗：插在角落格的外角，不擋到格子上的字
+      const sx = Math.sign(p.x), sz = Math.sign(p.z);
       const pole = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.045, 0.045, 1.55, 12),
+        new THREE.CylinderGeometry(0.035, 0.035, 1.0, 12),
         new THREE.MeshStandardMaterial({ color: 0xefe0bd, roughness: 0.7, metalness: 0.15 })
       );
-      pole.position.set(p.x - 0.32, 0.48 + h + 0.6, p.z);
+      p.x += sx * 0.62;
+      p.z += sz * 0.62;
+      pole.position.set(p.x - 0.32, 0.22 + h + 0.5, p.z);
       pole.castShadow = true;
       ringGroup.add(pole);
 
@@ -542,10 +603,10 @@ function buildRing(board) {
       fc.strokeStyle = "rgba(0,0,0,0.18)";
       fc.stroke();
       const flag = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.6, 0.42),
+        new THREE.PlaneGeometry(0.5, 0.35),
         new THREE.MeshStandardMaterial({ map: toTexture(flagCanvas), transparent: true, side: THREE.DoubleSide, roughness: 0.85 })
       );
-      flag.position.set(p.x + 0.06, 0.48 + h + 1.12, p.z);
+      flag.position.set(p.x - 0.06, 0.22 + h + 0.86, p.z);
       flag.castShadow = true;
       ringGroup.add(flag);
     }
@@ -638,10 +699,9 @@ function buildPawn() {
 
 function resetPawnGroup() {
   if (!pawnGroup) return;
-  const target = pos <= 0
-    ? { x: 0, z: HALF + CELL * 1.7 }
-    : ringPos(Math.max(0, Math.min(23, pos - 1)));
-  const sq = pos > 0 && data ? data.board.squares[pos - 1] : null;
+  // 第 0 格（出發）就站在第 24 格「起點／終點」那個角落
+  const target = ringPos(pos <= 0 ? 23 : Math.min(23, pos - 1));
+  const sq = data ? data.board.squares[pos <= 0 ? 23 : Math.min(23, pos - 1)] : null;
   const y = 0.30 + (sq ? cellHeight(sq) : 0);
   pawnGroup.position.set(target.x, y, target.z);
   if (suitcase) suitcase.position.set(0.36, 0.16, 0.08);
@@ -689,17 +749,6 @@ function tick(t) {
     pawn.scale.setScalar(s);
     if (pawnHead) pawnHead.rotation.y = Math.sin(t * 0.0016) * 0.16;
     if (suitcase) suitcase.rotation.z = Math.sin(t * 0.0013 + 0.7) * 0.04;
-  }
-
-  // 鏡頭平順地跟著棋子
-  if (pawnGroup && camera) {
-    const k = 1 - Math.pow(0.0008, dt);   // 追蹤的阻尼
-    camPos.x += (pawnGroup.position.x * 0.32 - camPos.x) * k;
-    camPos.z += ((CAM_Z * camScale + pawnGroup.position.z * 0.22) - camPos.z) * k;
-    camLook.x += (pawnGroup.position.x * 0.28 - camLook.x) * k;
-    camLook.z += (pawnGroup.position.z * 0.24 - camLook.z) * k;
-    camera.position.copy(camPos);
-    camera.lookAt(camLook);
   }
 
   renderer.render(scene, camera);
@@ -768,8 +817,15 @@ export function initBoard3d(container_, board) {
     const h = wrap.clientHeight || 1;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    camScale = Math.max(1, 1.55 / camera.aspect);
-    camPos.y = CAM_Y * camScale;
+    // 依水平／垂直視角較窄的那一邊，算出能框住整個棋盤的距離
+    const halfV = (camera.fov * Math.PI) / 360;
+    const halfH = Math.atan(Math.tan(halfV) * camera.aspect);
+    const r = OUTER + 0.5;
+    // 左右用 1.12 倍保險：靠近鏡頭的下排因透視會比較寬
+    const dist = Math.max(((r * Math.sin(CAM_TILT) * 1.08) / Math.tan(halfV)) * CAM_FIT, (r * 1.12) / Math.tan(halfH));
+    camPos.set(0, camLook.y + dist * Math.sin(CAM_TILT), camLook.z + dist * Math.cos(CAM_TILT));
+    camera.position.copy(camPos);
+    camera.lookAt(camLook);
     camera.updateProjectionMatrix();
   };
   wrap.innerHTML = "";
