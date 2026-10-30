@@ -2,7 +2,7 @@
 // 3D 棋盤是畫面的「棋盤那一層」；WebGL 不可用或「減少動態效果」時退回 2D。
 // 骰子：3D 播動畫；2D 或減少動態效果只在面板顯一行「擲出 X」。
 import { MILESTONES, resName } from "./engine.js";
-import { initBoard3d, updateBoard3d, rollDice, teleportPawn } from "./board3d.js";
+import { initBoard3d, updateBoard3d, rollDice, teleportPawn, onDieClick } from "./board3d.js";
 
 const CH_NAMES = { 1: "投稿", 2: "出國準備", 3: "國際會議", 4: "返國" };
 const REDUCED_MQ = "(prefers-reduced-motion: reduce)";
@@ -31,6 +31,12 @@ export function initBoard(board) {
     if (ok) {
       mode = "3d";
       wrap2d.hidden = true;
+      document.body.classList.add("mode-3d");
+      const hint = document.createElement("p");
+      hint.id = "die-hint";
+      hint.className = "die-hint";
+      hint.textContent = "點骰子擲骰";
+      wrap3d.appendChild(hint);
       return;
     }
   } catch {
@@ -38,6 +44,10 @@ export function initBoard(board) {
   }
   mode = "2d";
   wrap3d.hidden = true;
+}
+
+export function setDieClick(fn) {
+  if (mode === "3d") onDieClick(fn);
 }
 
 export function getMode() {
@@ -68,10 +78,10 @@ export function relocatePiece(n) {
 // 2D 的「擲出 X」視覺補丁
 let pendingDice = null;
 function renderDiceBadge() {
-  const panel = $("#panel");
+  const dialog = $("#modal");
+  const panel = dialog?.open ? dialog : $("#panel");
   if (!panel) return;
-  const old = panel.querySelector(".dice-badge");
-  if (old) old.remove();
+  for (const old of document.querySelectorAll(".dice-badge")) old.remove();
   if (pendingDice == null) return;
   const b = document.createElement("div");
   b.className = "dice-badge";
@@ -90,6 +100,7 @@ export function render(state, board, items, lastResult = null) {
   renderResources(state);
   renderItems(state, items);
   renderPanel(state, lastResult);
+  renderDialog(state, lastResult);
   renderLog(state);
   renderDiceBadge();
 }
@@ -159,54 +170,86 @@ function resultBox(r) {
   return box;
 }
 
+// 3D 時玩家點骰子就擲，這顆只給鍵盤使用（取得焦點才看得到）；2D 沒有骰子可點，正常顯示
 function renderPanel(state, lastResult) {
   const panel = $("#panel");
   panel.innerHTML = "";
-  if (state.status === "done") {
-    panel.innerHTML = `<h2>${state.ending.title}</h2><p>${state.ending.text}</p>
-      <p class="hint">本局關鍵抉擇：${state.keyChoices.map((k) => `${k.card}→${k.choice}`).join("、") || "尚無"}</p>`;
-    if (lastResult) panel.prepend(resultBox(lastResult));
-    return;
-  }
-  const block = state.pendingEvent || state.pendingCheckpoint;
-  if (block) {
-    const h = document.createElement("h2");
-    h.textContent = block.title;
-    panel.appendChild(h);
-    const p = document.createElement("p");
-    p.textContent = block.text;
-    panel.appendChild(p);
-    // 真實改編：和虛構劇本分開，讓玩家知道「這麼戲劇，竟然是真的」
-    if (block.trueStory) {
-      const t = document.createElement("p");
-      t.className = "truestory";
-      t.innerHTML = `<b>📌 真實改編</b>${block.trueStory}`;
-      panel.appendChild(t);
-    }
-    if (block.tone === "fantasy") {
-      const f = document.createElement("p");
-      f.className = "fantasy";
-      f.textContent = "純屬虛構";
-      panel.appendChild(f);
-    }
-    block.choices.forEach((c, i) => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "choice";
-      b.dataset.choice = i;
-      b.textContent = c.label;
-      panel.appendChild(b);
-    });
-    return;
-  }
-  if (state.status === "ready") {
-    if (lastResult) panel.appendChild(resultBox(lastResult));
+  if (state.status === "ready" && !lastResult) {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "roll";
     b.textContent = "擲骰";
-    $("#panel").appendChild(b);
+    panel.appendChild(b);
   }
+  const hint = $("#die-hint");
+  if (hint) hint.hidden = state.status !== "ready" || !!lastResult;
+}
+
+// 事件、結果、結局都放在畫面正中間的跳出視窗，不用上下捲動找
+function renderDialog(state, lastResult) {
+  const dialog = $("#modal");
+  dialog.innerHTML = "";
+  const block = state.pendingEvent || state.pendingCheckpoint;
+  if (state.status === "done") {
+    if (lastResult) dialog.appendChild(resultBox(lastResult));
+    const end = document.createElement("div");
+    end.innerHTML = `<h2>${state.ending.title}</h2><p>${state.ending.text}</p>
+      <p class="hint">本局關鍵抉擇：${state.keyChoices.map((k) => `${k.card}→${k.choice}`).join("、") || "尚無"}</p>`;
+    dialog.appendChild(end);
+    dialog.appendChild(actionButton("再玩一次", "restart"));
+  } else if (block) {
+    fillEvent(dialog, block);
+  } else if (lastResult) {
+    dialog.appendChild(resultBox(lastResult));
+    dialog.appendChild(actionButton("繼續", "continue"));
+  } else {
+    if (dialog.open) dialog.close();
+    return;
+  }
+  if (!dialog.open) dialog.showModal();
+  dialog.scrollTop = 0;
+  // 焦點放在視窗本身，避免按 Enter 誤選第一個選項
+  if (block) dialog.focus();
+  else dialog.querySelector("button")?.focus();
+}
+
+function actionButton(text, action) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "roll";
+  b.dataset.action = action;
+  b.textContent = text;
+  return b;
+}
+
+function fillEvent(dialog, block) {
+  const h = document.createElement("h2");
+  h.textContent = block.title;
+  dialog.appendChild(h);
+  const p = document.createElement("p");
+  p.textContent = block.text;
+  dialog.appendChild(p);
+  // 真實改編：和虛構劇本分開，讓玩家知道「這麼戲劇，竟然是真的」
+  if (block.trueStory) {
+    const t = document.createElement("p");
+    t.className = "truestory";
+    t.innerHTML = `<b>📌 真實改編</b>${block.trueStory}`;
+    dialog.appendChild(t);
+  }
+  if (block.tone === "fantasy") {
+    const f = document.createElement("p");
+    f.className = "fantasy";
+    f.textContent = "純屬虛構";
+    dialog.appendChild(f);
+  }
+  block.choices.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "choice";
+    b.dataset.choice = i;
+    b.textContent = c.label;
+    dialog.appendChild(b);
+  });
 }
 
 function renderLog(state) {

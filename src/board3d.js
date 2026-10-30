@@ -2,9 +2,10 @@
 // three.js 固定版本放 vendor/，執行時不連 CDN、不下載圖片／字型。
 // 所有貼圖都用 canvas 現畫（格子號碼／短標籤、木紋桌布、骰子點數、中央標題）。
 //
-// 對外三支函式：
+// 對外函式：
 //   initBoard3d(container, board)  建立場景與環形棋盤，回 true（WebGL 失敗或減少動態效果回 false）
-//   rollDice(value)                骰子演出：落到棋盤中央、彈跳約 1 秒停在 value 面。回 Promise。
+//   onDieClick(fn)                 玩家點到桌上的骰子時呼叫 fn（拖曳轉鏡頭不算）
+//   rollDice(value)                骰子演出：落到棋盤中央、彈跳約 1 秒停在 value 面，之後留在桌上。回 Promise。
 //                                  value 只是「演出」，engine 早就擲好了，這裡不會再擲一次隨機數。
 //   updateBoard3d(state)           棋子一格一格跳過去。回 Promise，跳完才 resolve。
 //
@@ -50,6 +51,7 @@ let renderer, scene, camera, clock;
 let pawn, pawnGroup, suitcase, pawnHead;
 let ringGroup, tableGroup;
 let die, dieTexList;
+let dieClickHandler = null;
 let keyLight;
 let yawCounter = 0;               // 每次擲骰的偏航角，用單調計數做，不碰隨機
 let pos = 0;                      // 棋子目前顯示的格子編號（0 = 出發）
@@ -88,19 +90,41 @@ export function resetView() {
   applyCamera();
 }
 
-// 滑鼠拖曳／單指拖曳：轉動；滾輪／雙指捏合：縮放；雙擊：回正
+// 螢幕座標是否點中骰子；用球形判定放寬範圍，手機上比較好點
+const DIE_PICK_RADIUS = 1.1;
+const pickRay = new THREE.Raycaster();
+const pickNdc = new THREE.Vector2();
+function hitsDie(canvas, e) {
+  if (!die || !die.visible) return false;
+  const r = canvas.getBoundingClientRect();
+  pickNdc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  pickRay.setFromCamera(pickNdc, camera);
+  return pickRay.ray.distanceToPoint(die.position) < DIE_PICK_RADIUS;
+}
+
+export function onDieClick(fn) {
+  dieClickHandler = fn;
+}
+
+// 滑鼠拖曳／單指拖曳：轉動；滾輪／雙指捏合：縮放；雙擊：回正；點骰子：擲骰
 function bindOrbit(canvas) {
   const pts = new Map();
   let pinch = 0;
+  let press = null; // 這次按下的起點；移動太多就當成拖曳，不算點擊
   canvas.style.touchAction = "none";
   canvas.addEventListener("pointerdown", (e) => {
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    press = pts.size === 1 ? { x: e.clientX, y: e.clientY } : null;
     canvas.setPointerCapture(e.pointerId);
     canvas.classList.add("dragging");
   });
   canvas.addEventListener("pointermove", (e) => {
     const prev = pts.get(e.pointerId);
-    if (!prev) return;
+    if (!prev) {
+      canvas.style.cursor = hitsDie(canvas, e) ? "pointer" : "";
+      return;
+    }
+    if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 6) press = null;
     const cur = { x: e.clientX, y: e.clientY };
     pts.set(e.pointerId, cur);
     if (pts.size === 1) {
@@ -115,6 +139,7 @@ function bindOrbit(canvas) {
     applyCamera();
   });
   const end = (e) => {
+    if (e.type === "pointerup" && press && pts.size === 1 && hitsDie(canvas, e)) dieClickHandler?.();
     pts.delete(e.pointerId);
     if (pts.size < 2) pinch = 0;
     if (pts.size === 0) canvas.classList.remove("dragging");
@@ -794,7 +819,7 @@ function buildDie() {
   die.castShadow = true;
   die.receiveShadow = true;
   die.position.set(0, dieRestY(die.quaternion), 0);
-  die.visible = false;
+  die.visible = true; // 平常就放在桌布中間，點它就擲
   scene.add(die);
 }
 
@@ -1039,26 +1064,11 @@ export function rollDice(value) {
         requestAnimationFrame(frame);
         return;
       }
-      // 落定在桌板上，停久一點讓玩家看清楚再收掉
+      // 落定在桌板上，停一下讓玩家看清楚；之後骰子留在原地，等下一次點擊
       die.quaternion.copy(finalQ);
       die.position.set(0, dieRestY(finalQ), 0);
       if (typeof window !== "undefined") window.__dieSettledValue = topFaceValue(die.quaternion);
-      setTimeout(() => {
-        const fadeStart = performance.now();
-        const fade = () => {
-          const kk = Math.min(1, (performance.now() - fadeStart) / 220);
-          const scale = 1 - kk * 0.55;
-          die.scale.setScalar(scale);
-          die.position.y = dieRestY(finalQ, scale); // 縮小時底部仍貼著桌板
-          if (kk < 1) requestAnimationFrame(fade);
-          else {
-            die.visible = false;
-            die.scale.setScalar(1);
-            resolve();
-          }
-        };
-        requestAnimationFrame(fade);
-      }, 800);
+      setTimeout(resolve, 800);
     };
     requestAnimationFrame(frame);
   });

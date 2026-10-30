@@ -9,6 +9,7 @@ import {
   relocatePiece,
   showDice,
   clearDiceBadge,
+  setDieClick,
 } from "./render.js";
 import { save, load, clearSave } from "./storage.js";
 
@@ -30,6 +31,7 @@ async function boot() {
     startGame(document.getElementById("seed").value || "demo-1109");
   }
   wire();
+  setDieClick(() => roll(null));
   draw();
   // 讀到存檔時，棋子直接出現在存下來的那一格（不播動畫）
   relocatePiece(S.pos);
@@ -58,7 +60,7 @@ function setBusy(on) {
 }
 
 async function roll(face) {
-  if (S.status !== "ready" || rolling) return;
+  if (S.status !== "ready" || rolling || lastResult) return;
   rolling = true;
   setBusy(true);
   lastResult = null;
@@ -107,6 +109,19 @@ function wire() {
   document.body.addEventListener("click", (ev) => {
     const t = ev.target.closest("button");
     if (!t || rolling) return;
+    if (t.dataset.action === "continue") {
+      lastResult = null;
+      clearDiceBadge();
+      return draw();
+    }
+    if (t.id === "restart" || t.dataset.action === "restart") {
+      clearSave();
+      lastResult = null;
+      clearDiceBadge();
+      startGame(document.getElementById("seed").value || "demo-1109");
+      relocatePiece(S.pos);
+      return draw();
+    }
     if (t.classList.contains("roll")) return roll(null);
     if (t.dataset.choice !== undefined) return choose(Number(t.dataset.choice));
     if (t.dataset.item === "plan") return (document.getElementById("forced").hidden = false);
@@ -114,15 +129,9 @@ function wire() {
       document.getElementById("forced").hidden = true;
       return roll(Number(t.dataset.face));
     }
-    if (t.id === "restart") {
-      clearSave();
-      lastResult = null;
-      clearDiceBadge();
-      startGame(document.getElementById("seed").value || "demo-1109");
-      relocatePiece(S.pos);
-      draw();
-    }
   });
+  // 事件要做選擇才能往下，Esc 不關閉視窗
+  document.getElementById("modal").addEventListener("cancel", (ev) => ev.preventDefault());
 }
 
 boot();
