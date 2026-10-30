@@ -4,7 +4,7 @@
 //
 // 對外三支函式：
 //   initBoard3d(container, board)  建立場景與環形棋盤，回 true（WebGL 失敗或減少動態效果回 false）
-//   rollDice(value)                骰子演出：在棋盤中央滾 ~1 秒停在 value 面。回 Promise。
+//   rollDice(value)                骰子演出：落到棋盤中央、彈跳約 1 秒停在 value 面。回 Promise。
 //                                  value 只是「演出」，engine 早就擲好了，這裡不會再擲一次隨機數。
 //   updateBoard3d(state)           棋子一格一格跳過去。回 Promise，跳完才 resolve。
 //
@@ -30,6 +30,8 @@ const CELL_H_MS = 0.34; // 里程碑（角落）格高度
 const REDUCED_MQ = "(prefers-reduced-motion: reduce)";
 
 const DIE_SIZE = 0.95;
+export const DIE_HALF = (DIE_SIZE / 2) * (1 - 0.12 * 0.06); // 扣掉 buildDie 的倒角縮放
+export const BOARD_TOP_Y = 0.22;        // 中央標題板的高度，骰子落在這個平面上
 // 六個面分配到 1/1/2/2/3/3（共用一個骰子不是公平骰，規則骰面由 engine 決定）
 // 相對面配 (1,3)、(2,2)、(1,3)：任意兩面不會貼著同值，看起來比較自然。
 const DIE_FACES = [
@@ -600,7 +602,7 @@ function buildTable() {
     new THREE.MeshStandardMaterial({ map: centerTexture(), roughness: 0.75, transparent: true, opacity: 0.97 })
   );
   centerPlane.rotation.x = -Math.PI / 2;
-  centerPlane.position.set(0, 0.22, 0);
+  centerPlane.position.set(0, BOARD_TOP_Y, 0);
   centerPlane.receiveShadow = true;
   tableGroup.add(centerPlane);
 
@@ -791,7 +793,7 @@ function buildDie() {
   die = new THREE.Mesh(geo, materials);
   die.castShadow = true;
   die.receiveShadow = true;
-  die.position.set(0, 2.2, 0);   // 懸空於棋盤中央
+  die.position.set(0, dieRestY(die.quaternion), 0);
   die.visible = false;
   scene.add(die);
 }
@@ -969,6 +971,30 @@ export function topFaceValue(quaternion) {
   return best.value;
 }
 
+// 骰子貼著桌板時的中心高度：依目前朝向算最低的角，翻滾中也不會穿進桌板
+export function dieRestY(quaternion, scale = 1) {
+  const e = new THREE.Matrix4().makeRotationFromQuaternion(quaternion).elements;
+  const extent = DIE_HALF * scale * (Math.abs(e[1]) + Math.abs(e[5]) + Math.abs(e[9]));
+  return BOARD_TOP_Y + extent;
+}
+
+// 落下加兩次彈跳，回傳離桌板的高度；t 是 0–1，超過 0.86 之後貼在桌板上
+function dieHopHeight(t) {
+  if (t < 0.5) {
+    const k = t / 0.5;
+    return 4.2 * (1 - k * k);
+  }
+  if (t < 0.72) {
+    const k = (t - 0.5) / 0.22;
+    return 0.9 * 4 * k * (1 - k);
+  }
+  if (t < 0.86) {
+    const k = (t - 0.72) / 0.14;
+    return 0.25 * 4 * k * (1 - k);
+  }
+  return 0;
+}
+
 // 骰子演出：擲骰只是演出，value 是 engine 已經算好的結果
 export function rollDice(value) {
   return new Promise((resolve) => {
@@ -983,87 +1009,56 @@ export function rollDice(value) {
 
     die.visible = true;
     die.scale.setScalar(1);
-    die.position.set(0, 2.2, 0);
     if (typeof window !== "undefined") window.__dieTargetValue = value;
     window.__dieSettledValue = null;
-    const startQ = die.quaternion.clone();
-    // 起手就亂轉（不進 RNG，只是看的），用 yawBias 派生
+    // 翻滾軸與起點都由 yawBias 派生（不進 RNG，只是看的）
     const spinAxis = new THREE.Vector3(
       Math.sin(yawBias * 1.3),
-      0.85,
+      0.5,
       Math.cos(yawBias * 1.1)
     ).normalize();
-    const spinTurns = (4.6 + (value % 3) * 0.7);
-    const pq = new THREE.Quaternion().setFromAxisAngle(spinAxis, spinTurns * Math.PI * 2);
-    startQ.premultiply(pq);
-    die.quaternion.copy(startQ);
+    const spinTurns = 3 + (value % 3) * 0.5;
+    const startX = Math.sin(yawBias) * 1.6;
+    const startZ = Math.cos(yawBias) * 1.6;
+    const spinQ = new THREE.Quaternion();
 
     const DUR = 1000;
-    const ZOOM_START = 0.72;   // 0.72 ~ 1 是最後「放大顯示點數」那段
+    const SPIN_END = 0.8;   // 第二次彈跳前翻完，之後朝上的面就不變了
     const t0 = performance.now();
 
     const frame = (now) => {
       const raw = Math.min(1, (now - t0) / DUR);
-      // 前段快速旋轉消失；後段貼齊 finalQ
-      const easeOut = 1 - Math.pow(1 - raw, 2.2);
-      // quaternion 用球面插值：在中途切到 finalQ 之前先留在 startQ 附近
-      if (raw < ZOOM_START) {
-        const slerpQ = new THREE.Quaternion();
-        const k = easeOut / ZOOM_START * 0.85;
-        slerpQ.copy(startQ).slerp(finalQ, Math.min(1, k));
-        die.quaternion.copy(slerpQ);
-      } else {
-        die.quaternion.copy(finalQ);
-      }
-      // 拋物線軌跡：起點高一點，中段往上翻，最後落到中央偏上
-      const arc = Math.sin(easeOut * Math.PI) * 2.4;
-      die.position.y = 1.6 + arc + (raw > ZOOM_START ? (raw - ZOOM_START) / (1 - ZOOM_START) * 0.6 : 0);
-      die.position.x = Math.sin(easeOut * Math.PI * 2) * 0.6 * (1 - raw);
-      die.position.z = -Math.cos(easeOut * Math.PI * 1.7) * 0.6 * (1 - raw);
-      die.rotation.x += 0;     // 保留：旋轉全靠 quaternion，這裡不做累加，避免漂
-
-      // 最後階段：放大顯示點數
-      if (raw > ZOOM_START) {
-        const k = (raw - ZOOM_START) / (1 - ZOOM_START);
-        die.scale.setScalar(1 + Math.sin(k * Math.PI) * 0.55 + k * 0.15);
-      }
+      const k = Math.min(1, raw / SPIN_END);
+      const remain = Math.pow(1 - k, 2);
+      spinQ.setFromAxisAngle(spinAxis, remain * spinTurns * Math.PI * 2);
+      die.quaternion.copy(spinQ).multiply(finalQ);
+      const slide = Math.pow(1 - k, 2);
+      die.position.set(startX * slide, dieRestY(die.quaternion) + dieHopHeight(raw), startZ * slide);
 
       if (raw < 1) {
         requestAnimationFrame(frame);
-      } else {
-        // 落地：骰子停在原地、scale 回正常、輕微上下彈一下
-        const settleStart = now;
-        if (typeof window !== "undefined") window.__dieSettledValue = topFaceValue(die.quaternion);
-        const settle = () => {
-          const k = Math.min(1, (performance.now() - settleStart) / 260);
-          die.quaternion.copy(finalQ);
-          die.position.set(0, 1.85 + (1 - k) * 0.2 * Math.sin(k * Math.PI * 3), 0);
-          die.scale.setScalar(1 + Math.sin(k * Math.PI) * 0.18);
-          if (k < 1) requestAnimationFrame(settle);
+        return;
+      }
+      // 落定在桌板上，停久一點讓玩家看清楚再收掉
+      die.quaternion.copy(finalQ);
+      die.position.set(0, dieRestY(finalQ), 0);
+      if (typeof window !== "undefined") window.__dieSettledValue = topFaceValue(die.quaternion);
+      setTimeout(() => {
+        const fadeStart = performance.now();
+        const fade = () => {
+          const kk = Math.min(1, (performance.now() - fadeStart) / 220);
+          const scale = 1 - kk * 0.55;
+          die.scale.setScalar(scale);
+          die.position.y = dieRestY(finalQ, scale); // 縮小時底部仍貼著桌板
+          if (kk < 1) requestAnimationFrame(fade);
           else {
-            die.position.set(0, 1.85, 0);
+            die.visible = false;
             die.scale.setScalar(1);
-            // 短暫停頓讓玩家看清，然後淡出
-            setTimeout(() => {
-              const fadeStart = performance.now();
-              const fade = () => {
-                const kk = Math.min(1, (performance.now() - fadeStart) / 220);
-                die.scale.setScalar(1 - kk * 0.55);
-                die.position.y = 1.85 - kk * 0.6;
-                if (kk < 1) requestAnimationFrame(fade);
-                else {
-                  die.visible = false;
-                  die.scale.setScalar(1);
-                  die.position.set(0, 2.2, 0);
-                  resolve();
-                }
-              };
-              requestAnimationFrame(fade);
-            }, 220);
+            resolve();
           }
         };
-        settle();
-      }
+        requestAnimationFrame(fade);
+      }, 800);
     };
     requestAnimationFrame(frame);
   });
