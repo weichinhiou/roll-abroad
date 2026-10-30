@@ -16,6 +16,7 @@
 | D7 | 期限是 **2026-11-09 黑客松**；同時在 KIDE 的報告中提到這款遊戲已經放進任務實驗室 | — | — | Jean，10/29 |
 | D8 | 計畫文件放在本 repo，不寫進任意門 | 寫進任意門的 `docs/features/` | Jean：「獨立出來」 | Jean，10/29 |
 | D9 | MVP 事件卡做 24 張，不做 GDD 的 40 張 | 40 張 | 11 天內做不完，品質優先 | JJ 建議，Jean 採納 PLAN |
+| D10 | 棋盤畫面改成 **3D 環形桌面**（棋子繞著方形棋盤走），參考 `https://tmuh.ai/u/jc2jc/or-game-3d/` 的感覺；**規則不變**，仍是 24 格走完一圈結束。只換 `render.js` 的棋盤那一層，engine 不動。three.js 下載固定版本放進 repo（`vendor/`），不在執行時連 CDN；WebGL 不可用或「減少動態效果」時退回 2D 棋盤。交給院內 OpenCode 實作（任務見 [AI_HANDOFF.md](AI_HANDOFF.md) Task 7） | 規則一起改成可以跑很多圈；維持 2D SVG | Jean 覺得 3D 跑圈比較有趣；只改畫面可以沿用 engine 與 1,000 局模擬結果，不動 MVP 範圍。參考網站只當風格參考，不複製它的程式或素材 | Jean，10/30 |
 
 ## 2. 遊戲設計（MVP）
 
@@ -38,7 +39,9 @@
 index.html
 src/engine.js    純函式：擲骰(seed)、移動＋防跳關、適用條件、抽卡、效果、道具、連鎖排程、結算
 src/app.js       狀態流程：intro → ready → moving → event/checkpoint → result
-src/render.js    DOM＋SVG 棋盤、資源列、事件卡、黑貓回饋
+src/render.js    DOM 棋盤（2D 備援）、資源列、事件卡、黑貓回饋
+src/board3d.js   3D 棋盤（three.js，D10）
+vendor/          three.js 固定版本（D10）
 src/storage.js   localStorage
 data/board.json  24 格
 data/events.json 事件卡（沿用 GDD §12.4 的格式，加 deck: chance|fate|milestone）
@@ -68,3 +71,4 @@ test/*.test.js   node --test：單元測試＋1,000 局模擬
 - 一局要玩多久、平均擲幾次骰子、資源平衡，目前都是估計。
 - 「大富翁」的商標狀況沒有查。
 - 心得報告改編的卡片，沒有問過原作者。
+- 3D 棋盤（D10）在院內電腦、手機上的效能與 WebGL 支援都還沒測；黑客松現場若用院內電腦 demo，要先實機確認。

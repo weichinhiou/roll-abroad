@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-10-29 20:25（台灣時間），Claude Code 撰寫，對應 commit `c5dfa48`。
+> 更新：2026-10-30（台灣時間），Claude Code 加上 Task 7（3D 棋盤），對應 commit `4b044f9` 之後。前一版：2026-10-29 20:25，對應 `c5dfa48`。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -86,6 +86,24 @@ plan 要求固定 seed、約 3 分鐘走完精華。目前只有預設 seed `dem
 ### Task 6：美術、OG 分享圖、上線（11/6–11/7）
 黑貓表情、章節插圖、OG 分享圖。上線前要先請 Jean 同意把 repo 改成公開並開 Pages，然後在任意門的 `src/data/missions.ts` 加一筆卡片（任意門 `main` 的 push 需要 Jean 明說）。
 
+### Task 7：3D 環形棋盤（plan D10，交給院內 OpenCode）
+2026-10-30 Jean 決定：棋盤畫面改成 3D，棋子繞著方形棋盤走，感覺參考 https://tmuh.ai/u/jc2jc/or-game-3d/ （只參考風格，不複製它的程式或素材）。**規則不變**：24 格、走完一圈結束、里程碑 6／12／18／24 強制停。
+
+做法：
+1. 開新分支 `feature/3d-board`，從最新 `main` 開。
+2. 下載 three.js 的固定版本（module 版）放進 `vendor/`，在檔案開頭註明版本與授權（MIT）；不在執行時連 CDN（院內網路與離線 demo 都要能跑）。
+3. 新增 `src/board3d.js`：建立場景、把 `data/board.json` 的 24 格排成方形一圈（每邊 6 格，四章用不同顏色，里程碑格加高或加標記），放一顆棋子；對外只提供 `initBoard3d(container, board)` 和 `updateBoard3d(state)` 兩個函式。
+4. 擲骰後棋子**一格一格跳過去**（不是瞬間移動），鏡頭略為跟著棋子；動畫結束後才顯示事件卡。這段等待的流程放在 `src/app.js`，`src/engine.js` 不動。
+5. `src/render.js` 的 `renderBoard`：WebGL 可用且沒有開「減少動態效果」時用 3D，否則沿用現在的 2D 棋盤。
+6. 手機 375 寬要能看到整個棋盤和事件卡；畫面不能擋住資源列和道具按鈕。
+
+驗收：
+- 用 `start-game.cmd`（http://localhost:4181）以 seed `demo-1109` 玩完一局，console 沒有錯誤。
+- 桌機與手機寬度都截圖；在瀏覽器關掉 WebGL 或開啟減少動態效果時，確認會退回 2D。
+- `node --check src/*.js` 通過；engine 的測試／模擬結果不變（engine 沒改，結果要一樣）。
+- 在這份交接檔回報：驗證過什麼、沒驗證什麼（例如院內電腦的效能）。
+- 完成後 commit 到 `feature/3d-board`；**push 和合併進 `main` 要等 Jean 明說**。
+
 ## Acceptance Criteria
 
 - `npm test`（或 `node --test`）全部通過，包括 1,000 局模擬：死局 0、每張卡都抽得到、四種結局都會出現。
@@ -96,7 +114,7 @@ plan 要求固定 seed、約 3 分鐘走完精華。目前只有預設 seed `dem
 ## Do Not Change
 
 - `src/engine.js` 不能引入 DOM 或瀏覽器 API。
-- 不加 npm 套件或建置工具；不連外部 API；不收姓名。
+- 不加 npm 套件或建置工具；不連外部 API；不收姓名。three.js 只能以放進 `vendor/` 的單一檔案引入（plan D10）。
 - 《公文旅行》repo 先放著。任意門的 `main` 不要動，除非 Jean 明說。
 - 不把 repo 改成公開、不開 Pages，除非 Jean 同意。
 
