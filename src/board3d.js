@@ -62,6 +62,70 @@ const CAM_TILT = (56 * Math.PI) / 180; // 仰角：越大越像從正上方看
 const CAM_FIT = 0.93;                  // 留白比例：越小越近、字越大
 const camPos = new THREE.Vector3(0, 11, 8);
 const camLook = new THREE.Vector3(0, 0, 0.35);
+// 玩家拖曳轉動的視角：左右轉（yaw）、上下仰角（tilt）、遠近（zoom）。fitDist 是自動算出的基準距離
+const TILT_MIN = (28 * Math.PI) / 180;
+const TILT_MAX = (86 * Math.PI) / 180;
+const view = { yaw: 0, tilt: CAM_TILT, zoom: 1, fitDist: 14 };
+
+function applyCamera() {
+  if (!camera) return;
+  const d = view.fitDist * view.zoom;
+  camPos.set(
+    camLook.x + d * Math.cos(view.tilt) * Math.sin(view.yaw),
+    camLook.y + d * Math.sin(view.tilt),
+    camLook.z + d * Math.cos(view.tilt) * Math.cos(view.yaw)
+  );
+  camera.position.copy(camPos);
+  camera.lookAt(camLook);
+}
+
+export function resetView() {
+  view.yaw = 0;
+  view.tilt = CAM_TILT;
+  view.zoom = 1;
+  applyCamera();
+}
+
+// 滑鼠拖曳／單指拖曳：轉動；滾輪／雙指捏合：縮放；雙擊：回正
+function bindOrbit(canvas) {
+  const pts = new Map();
+  let pinch = 0;
+  canvas.style.touchAction = "none";
+  canvas.addEventListener("pointerdown", (e) => {
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    canvas.setPointerCapture(e.pointerId);
+    canvas.classList.add("dragging");
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    const prev = pts.get(e.pointerId);
+    if (!prev) return;
+    const cur = { x: e.clientX, y: e.clientY };
+    pts.set(e.pointerId, cur);
+    if (pts.size === 1) {
+      view.yaw -= (cur.x - prev.x) * 0.008;
+      view.tilt = Math.min(TILT_MAX, Math.max(TILT_MIN, view.tilt + (cur.y - prev.y) * 0.006));
+    } else if (pts.size === 2) {
+      const [a, b] = [...pts.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch) view.zoom = Math.min(1.5, Math.max(0.55, view.zoom * (pinch / dist)));
+      pinch = dist;
+    }
+    applyCamera();
+  });
+  const end = (e) => {
+    pts.delete(e.pointerId);
+    if (pts.size < 2) pinch = 0;
+    if (pts.size === 0) canvas.classList.remove("dragging");
+  };
+  canvas.addEventListener("pointerup", end);
+  canvas.addEventListener("pointercancel", end);
+  canvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    view.zoom = Math.min(1.5, Math.max(0.55, view.zoom * (e.deltaY > 0 ? 1.08 : 0.93)));
+    applyCamera();
+  }, { passive: false });
+  canvas.addEventListener("dblclick", resetView);
+}
 const tmpV = new THREE.Vector3();
 
 // ── 純工具（Canvas 貼圖） ─────────────────────────────────────────
@@ -823,16 +887,26 @@ export function initBoard3d(container_, board) {
     const r = OUTER + 0.5;
     // 左右用 1.12 倍保險：靠近鏡頭的下排因透視會比較寬
     const dist = Math.max(((r * Math.sin(CAM_TILT) * 1.08) / Math.tan(halfV)) * CAM_FIT, (r * 1.12) / Math.tan(halfH));
-    camPos.set(0, camLook.y + dist * Math.sin(CAM_TILT), camLook.z + dist * Math.cos(CAM_TILT));
-    camera.position.copy(camPos);
-    camera.lookAt(camLook);
+    view.fitDist = dist;
+    applyCamera();
     camera.updateProjectionMatrix();
   };
   wrap.innerHTML = "";
   const canvas = renderer.domElement;
   canvas.classList.add("board3d-canvas");
-  canvas.setAttribute("aria-label", "3D 環形棋盤");
+  canvas.setAttribute("aria-label", "3D 環形棋盤：拖曳可轉動，滾輪可縮放，雙擊回正");
   wrap.appendChild(canvas);
+  bindOrbit(canvas);
+  const resetBtn = document.createElement("button");
+  resetBtn.type = "button";
+  resetBtn.className = "view-reset";
+  resetBtn.textContent = "回正視角";
+  resetBtn.addEventListener("click", resetView);
+  wrap.appendChild(resetBtn);
+  const hint = document.createElement("p");
+  hint.className = "view-hint";
+  hint.textContent = "拖曳轉動・滾輪縮放";
+  wrap.appendChild(hint);
   fit();
 
   if (typeof ResizeObserver === "function") {
