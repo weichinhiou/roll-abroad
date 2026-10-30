@@ -1,4 +1,4 @@
-// 本機試玩用的靜態伺服器：node server.mjs（預設 http://localhost:4181）
+// 本機試玩用的靜態伺服器：node server.mjs（預設 http://localhost:4191）
 // 直接雙擊 index.html 會以 file:// 開啟，瀏覽器會擋掉 ES module 與 fetch，所以需要用網址開。
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
@@ -6,7 +6,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
-const port = Number(process.env.PORT) || 4181;
+const port = Number(process.env.PORT) || 4191;
 const types = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
