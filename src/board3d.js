@@ -941,7 +941,7 @@ export function initBoard3d(container_, board) {
 }
 
 // 計算要把 value 面轉到上方的 quaternion
-function orientationFor(value, yawBias) {
+export function orientationFor(value, yawBias) {
   // 從 DIE_FACES 裡找到第一個 value 對應的面法線
   const face = DIE_FACES.find((f) => f.value === value) || DIE_FACES[2];
   const q = new THREE.Quaternion();
@@ -949,8 +949,24 @@ function orientationFor(value, yawBias) {
   q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), yawBias);
   // 把該面的法線旋到 +Y：用 setFromUnitVectors
   const toUp = new THREE.Quaternion().setFromUnitVectors(face.normal, new THREE.Vector3(0, 1, 0));
-  q.premultiply(toUp);
+  // 順序：先把該面翻到上方，再繞世界 Y 偏航（反過來的話，偏航會把骰面轉開，翻不到正上方）
+  q.multiply(toUp);
   return q;
+}
+
+// 從骰子實際朝向算出朝上的點數，驗證畫面和 engine 的點數一致
+export function topFaceValue(quaternion) {
+  const up = new THREE.Vector3(0, 1, 0);
+  let best = DIE_FACES[0];
+  let bestDot = -Infinity;
+  for (const f of DIE_FACES) {
+    const dot = f.normal.clone().applyQuaternion(quaternion).dot(up);
+    if (dot > bestDot) {
+      bestDot = dot;
+      best = f;
+    }
+  }
+  return best.value;
 }
 
 // 骰子演出：擲骰只是演出，value 是 engine 已經算好的結果
@@ -1017,7 +1033,7 @@ export function rollDice(value) {
       } else {
         // 落地：骰子停在原地、scale 回正常、輕微上下彈一下
         const settleStart = now;
-        if (typeof window !== "undefined") window.__dieSettledValue = value;
+        if (typeof window !== "undefined") window.__dieSettledValue = topFaceValue(die.quaternion);
         const settle = () => {
           const k = Math.min(1, (performance.now() - settleStart) / 260);
           die.quaternion.copy(finalQ);
