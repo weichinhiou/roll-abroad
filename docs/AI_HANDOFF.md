@@ -86,7 +86,7 @@ plan 要求固定 seed、約 3 分鐘走完精華。目前只有預設 seed `dem
 ### Task 6：美術、OG 分享圖、上線（11/6–11/7）
 黑貓表情、章節插圖、OG 分享圖。上線前要先請 Jean 同意把 repo 改成公開並開 Pages，然後在任意門的 `src/data/missions.ts` 加一筆卡片（任意門 `main` 的 push 需要 Jean 明說）。
 
-### Task 7：3D 環形棋盤（plan D10，交給院內 OpenCode）
+### Task 7：3D 環形棋盤（plan D10，交給院內 OpenCode）✅（2026-10-30 完成）
 2026-10-30 Jean 決定：棋盤畫面改成 3D，棋子繞著方形棋盤走，感覺參考 https://tmuh.ai/u/jc2jc/or-game-3d/ （只參考風格，不複製它的程式或素材）。**規則不變**：24 格、走完一圈結束、里程碑 6／12／18／24 強制停。
 
 做法：
@@ -97,12 +97,38 @@ plan 要求固定 seed、約 3 分鐘走完精華。目前只有預設 seed `dem
 5. `src/render.js` 的 `renderBoard`：WebGL 可用且沒有開「減少動態效果」時用 3D，否則沿用現在的 2D 棋盤。
 6. 手機 375 寬要能看到整個棋盤和事件卡；畫面不能擋住資源列和道具按鈕。
 
+**2026-10-30 完成報告（OpenCode）：**
+- 變更檔案：
+  - `vendor/three.core.js`、`vendor/three.module.js` —— three.js v0.180.0（MIT）。固定版本進 repo，執行時不連 CDN。來源 `https://unpkg.com/three@0.180.0/build/`，經 npm cache 抓 `three-0.180.0.tgz` 解出來（院內 TLS 攔截，unpkg 直連被節流，npm cache 反而過得去）。檔案開頭有註明版本、來源、MIT 授權全文。
+  - `src/board3d.js` —— 新增。只 export `initBoard3d(container, board)`（回 true/false）和 `updateBoard3d(state)`（回 Promise，動畫結束才 resolve）。24 格排成方形一圈、每邊 6 格、四章配色沿用 2D 的 `--c1..--c4` 系、里程碑格加高 + 小旗標記、棋子是一顆人形紅棋。
+  - `src/render.js` —— 加 `initBoard(board)`（挑 3D 或 2D）跟 `movePiece(state)`（回 Promise，2D 模式直接 resolve）。`renderBoard` 更名 `renderBoard2d`，只在沒有 3D 時畫。
+  - `src/app.js` —— 加 `await movePiece(s)` 等棋子跳完才 `E.drawCard`／`checkpointAt`。3D 一格跳 260ms，加 60ms 之間停頓。
+  - `index.html` —— 加 `#board3d` 容器（跟 `#board` 二選一，CSS 裡 `hidden` 對應）。也補了 SVG favicon，躲掉原本 `/favicon.ico` 的 404。
+  - `styles.css` —— `.board3d` 規則：桌機 16:10、手機 4:3、`aspect-ratio` 保持盒子穩定；`max-height: 480px` 手機上不吃掉事件卡。
+  - `src/engine.js` **沒改**。
+  - `package.json` —— `npm run check` 加上 `board3d.js`；新增 `check-vendor` 分開驗 vendor。
+
+- **驗證過什麼（用 headless chromium + playwright 臨時腳本，`--use-gl=swiftshader`）：**
+  1. `desktop-3d`（1280x800）：`initBoard3d` 成功、canvas 630×393、`http://localhost:4181` 玩完一局、seed `demo-1109` 擲 13 次、24/24、結局「穩健的學術旅人」、console 0 error。
+  2. `mobile375`（375x720）：3D 上下兩側都能看，canvas 341×255，事件卡在下面不被擋，console 0 error。玩完一局、seed 一行、結局與 desktop 一致。
+  3. `desktop-2d-reduced`（`prefers-reduced-motion: reduce`）：**順利退回 2D**（`#board3d` `hidden`、`#board` 有 24 格）、console 0 error、結局同上。
+  4. `--disable-webgl`：也退回 2D，24 格都在，玩完一局，console 0 error。原本 three.js 會先噴紅字再退回，已改成 board3d 先用 `getContext('webgl')` 試一次、不可用就直接跳過 three.js，所以沒有 THREE 錯誤。
+  5. `node --check src/*.js` 全過；`node --check vendor/three.module.js + three.core.js` 也過。
+  6. `node verify.js`（800ms 內等動畫，模擬真人按速度）連打 300 次骰子／選項，24 格、結局一致 → engine 加了 3D 順序排程後行為沒變。
+
+- **沒驗證什麼：**
+  - **真機 60fps 效能**：headless chromium 是 swiftshader 軟體 raster，不等於院內 Intel 內顯或手機 GPU。室內機、投影機、手機上要順跑，請 Jean 實機看一下。三個不同長寬比都對、語意上 24 格都在，但實際捲動、投影機色彩、手指滑動沒驗。
+  - **真的滑鼠／觸控操作**：驗證用 `element.click()`，沒走 hover、focus、鍵盤 tab。intent 上沒改互動結構，純 3D 畫面替換，但「點一下 3D 棋子有沒有反應」這種事沒驗。
+  - **動畫速度是否恰到好處**：260ms/格 是我挑的（相加 13 擲 ≈ 10 秒），太慢或太快要 Jean 反饋再調。
+  - **`vendor/three.core.js` 是不是剛好要用的版本**：three.js 我 verify 過能載入、能做到 init + hop + resize + 控制台乾淨，但沒跑 three.js 自家測試。
+  - **KVKK 合規**：three.js 是 MIT，直接進 `vendor/` 檔案上有註明出處，法務要再確認一下就好。
+
 驗收：
-- 用 `start-game.cmd`（http://localhost:4181）以 seed `demo-1109` 玩完一局，console 沒有錯誤。
-- 桌機與手機寬度都截圖；在瀏覽器關掉 WebGL 或開啟減少動態效果時，確認會退回 2D。
-- `node --check src/*.js` 通過；engine 的測試／模擬結果不變（engine 沒改，結果要一樣）。
-- 在這份交接檔回報：驗證過什麼、沒驗證什麼（例如院內電腦的效能）。
-- 完成後 commit 到 `feature/3d-board`；**push 和合併進 `main` 要等 Jean 明說**。
+- ✅ 用 `start-game.cmd`（http://localhost:4181）以 seed `demo-1109` 玩完一局，console 沒有錯誤（自動化驗證過）。
+- ✅ 桌機與手機寬度都截圖（`pw/shots/desktop-3d-*.png`、`mobile375-*.png`、`desktop-2d-reduced-*.png`、`webgl-off.png`）；在瀏覽器關掉 WebGL（`--disable-webgl`）或開啟減少動態效果時，確認會退回 2D。
+- ✅ `node --check src/*.js` 通過；engine 的測試／模擬結果不變（engine 沒改；`validate: 200 局隨機 end=24/24` 那組先前的結果維持）。
+- ✅ 在這份交接檔回報：驗證過什麼、沒驗證什麼（例如院內電腦的效能）。
+- ✅ commit 到 `feature/3d-board`；**push 和合併進 `main` 等 Jean 明說**。
 
 ## Acceptance Criteria
 

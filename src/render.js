@@ -1,18 +1,60 @@
 // 渲染層：把 state 畫到 DOM。不做判斷、不碰規則。
+// 3D 棋盤是畫面的「棋盤那一層」；WebGL 不可用或「減少動態效果」時退回 2D。
 import { MILESTONES, resName } from "./engine.js";
+import { initBoard3d, updateBoard3d } from "./board3d.js";
 
 const CH_NAMES = { 1: "投稿", 2: "出國準備", 3: "國際會議", 4: "返國" };
+const REDUCED_MQ = "(prefers-reduced-motion: reduce)";
 const $ = (sel) => document.querySelector(sel);
 
+let mode = null; // "3d" | "2d"
+
+function prefersReducedMotion() {
+  return typeof matchMedia === "function" && matchMedia(REDUCED_MQ).matches;
+}
+
+export function initBoard(board) {
+  const wrap3d = $("#board3d");
+  const wrap2d = $("#board");
+  if (!wrap3d || !wrap2d) {
+    mode = "2d";
+    return;
+  }
+  if (prefersReducedMotion()) {
+    mode = "2d";
+    wrap3d.hidden = true;
+    return;
+  }
+  try {
+    const ok = initBoard3d(wrap3d, board);
+    if (ok) {
+      mode = "3d";
+      wrap2d.hidden = true;
+      return;
+    }
+  } catch {
+    // 3D 建不起來，退回 2D。
+  }
+  mode = "2d";
+  wrap3d.hidden = true;
+}
+
+// 擲骰後，棋子一格一格跳過去；動畫結束 Promise 才 resolve，
+// app.js 接著才會顯示事件卡。
+export function movePiece(state) {
+  if (mode !== "3d") return Promise.resolve();
+  return updateBoard3d(state);
+}
+
 export function render(state, board, items) {
-  renderBoard(state, board);
+  if (mode !== "3d") renderBoard2d(state, board);
   renderResources(state);
   renderItems(state, items);
   renderPanel(state);
   renderLog(state);
 }
 
-function renderBoard(state, board) {
+function renderBoard2d(state, board) {
   const wrap = $("#board");
   wrap.innerHTML = "";
   for (const sq of board.squares) {

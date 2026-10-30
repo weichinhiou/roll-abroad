@@ -109,6 +109,26 @@ button {
   grid-template-columns: repeat(6, 1fr);
   gap: 4px;
 }
+.board3d {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  min-height: 220px;
+  max-height: 480px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--c4);
+}
+.board3d canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+@media (min-width: 760px) {
+  .board3d {
+    aspect-ratio: 16 / 10;
+  }
+}
 .cell {
   border: 1px solid var(--line);
   background: #fff;

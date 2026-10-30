@@ -1,18 +1,20 @@
 // 狀態流程：intro → ready →(擲骰)→ moving → event/checkpoint → result
 // 只負責接 engine 與 render，不寫規則。
+// 3D 棋盤：擲骰後棋子一格一格跳過去，動畫結束才顯示事件卡。
 import * as E from "./engine.js";
-import { render } from "./render.js";
+import { render, initBoard, movePiece } from "./render.js";
 import { save, load, clearSave } from "./storage.js";
 
 let DATA = null;
 let S = null;
-let forced = null;
+let rolling = false;
 
 async function boot() {
   const [board, events, items, cps] = await Promise.all(
     ["board", "events", "items", "checkpoints"].map((f) => fetch(`data/${f}.json`).then((r) => r.json()))
   );
   DATA = { board, events, items, checkpoints: cps.checkpoints };
+  initBoard(DATA.board);
   const saved = load();
   if (saved) {
     S = saved;
@@ -21,6 +23,8 @@ async function boot() {
   }
   wire();
   draw();
+  // 讀到存檔時，棋子要直接出現在存下來的那一格
+  await movePiece(S);
 }
 
 function startGame(seed) {
@@ -35,17 +39,24 @@ function draw() {
   save(S);
 }
 
-function roll(face) {
-  if (S.status !== "ready") return;
-  let s = face ? E.forcedRoll(S, face) : E.rollDie(S);
-  if (!s) return;
-  forced = null;
-  s = E.applyMove(s, DATA.board);
-  const sq = DATA.board.squares.find((x) => x.n === s.pos);
-  if (sq.kind === "milestone") s = E.checkpointAt(s, DATA.board, DATA);
-  else s = E.drawCard(s, DATA.board, DATA.events, sq);
-  S = s;
-  draw();
+async function roll(face) {
+  if (S.status !== "ready" || rolling) return;
+  rolling = true;
+  try {
+    let s = face ? E.forcedRoll(S, face) : E.rollDie(S);
+    if (!s) return;
+    s = E.applyMove(s, DATA.board);
+    S = s;
+    // 先把棋子一格一格跳完，才抽卡、顯示事件
+    await movePiece(s);
+    const sq = DATA.board.squares.find((x) => x.n === s.pos);
+    if (sq.kind === "milestone") s = E.checkpointAt(s, DATA.board, DATA);
+    else s = E.drawCard(s, DATA.board, DATA.events, sq);
+    S = s;
+  } finally {
+    rolling = false;
+    draw();
+  }
 }
 
 function choose(i) {
@@ -64,9 +75,8 @@ function wire() {
     if (t.dataset.choice !== undefined) return choose(Number(t.dataset.choice));
     if (t.dataset.item === "plan") return (document.getElementById("forced").hidden = false);
     if (t.dataset.face) {
-      forced = Number(t.dataset.face);
       document.getElementById("forced").hidden = true;
-      return roll(forced);
+      return roll(Number(t.dataset.face));
     }
     if (t.id === "restart") {
       clearSave();
