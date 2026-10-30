@@ -240,6 +240,48 @@ button {
 .lg-true {
   color: #b4432a;
 }
+/* 剛選完的結果 */
+.result {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f2f7f5;
+  border-left: 4px solid var(--accent);
+}
+.result p {
+  margin: 0 0 4px;
+  line-height: 1.6;
+}
+.result .rt {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.result .rc {
+  font-weight: bold;
+}
+.result .rx {
+  font-size: 13px;
+  color: var(--accent);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+.chip {
+  font-size: 13px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eceae4;
+}
+.chip.up {
+  background: #dcefe3;
+  color: #1d6b3a;
+}
+.chip.down {
+  background: #f7e0da;
+  color: #9a2f1c;
+}
 .choice,
 .roll {
   display: block;

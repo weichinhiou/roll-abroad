@@ -46,11 +46,11 @@ export function movePiece(state) {
   return updateBoard3d(state);
 }
 
-export function render(state, board, items) {
+export function render(state, board, items, lastResult = null) {
   if (mode !== "3d") renderBoard2d(state, board);
   renderResources(state);
   renderItems(state, items);
-  renderPanel(state);
+  renderPanel(state, lastResult);
   renderLog(state);
 }
 
@@ -104,12 +104,29 @@ function renderItems(state, items) {
   }
 }
 
-function renderPanel(state) {
+// 剛選完的結果直接留在事件卡的位置，不必去行程紀錄找
+function resultBox(r) {
+  const box = document.createElement("div");
+  box.className = "result";
+  const chips = Object.entries(r.delta)
+    .filter(([, v]) => v !== 0)
+    .map(([k, v]) => `<span class="chip ${v > 0 ? "up" : "down"}">${resName(k)} ${v > 0 ? "+" : "−"}${Math.abs(v)}</span>`)
+    .join("");
+  box.innerHTML = `<p class="rt">${r.title}</p>
+    <p class="rc">你選了「${r.label}」</p>
+    ${r.note ? `<p class="rn">${r.note}</p>` : ""}
+    <div class="chips">${chips || '<span class="chip">資源沒有變化</span>'}</div>
+    ${r.notes.map((n) => `<p class="rx">${n}</p>`).join("")}`;
+  return box;
+}
+
+function renderPanel(state, lastResult) {
   const panel = $("#panel");
   panel.innerHTML = "";
   if (state.status === "done") {
     panel.innerHTML = `<h2>${state.ending.title}</h2><p>${state.ending.text}</p>
       <p class="hint">本局關鍵抉擇：${state.keyChoices.map((k) => `${k.card}→${k.choice}`).join("、") || "尚無"}</p>`;
+    if (lastResult) panel.prepend(resultBox(lastResult));
     return;
   }
   const block = state.pendingEvent || state.pendingCheckpoint;
@@ -144,6 +161,7 @@ function renderPanel(state) {
     return;
   }
   if (state.status === "ready") {
+    if (lastResult) panel.appendChild(resultBox(lastResult));
     const b = document.createElement("button");
     b.type = "button";
     b.className = "roll";

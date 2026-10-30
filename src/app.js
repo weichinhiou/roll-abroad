@@ -8,6 +8,7 @@ import { save, load, clearSave } from "./storage.js";
 let DATA = null;
 let S = null;
 let rolling = false;
+let lastResult = null; // 剛選完的結果，只給畫面用，不進存檔
 
 async function boot() {
   const [board, events, items, cps] = await Promise.all(
@@ -34,7 +35,7 @@ function startGame(seed) {
 }
 
 function draw() {
-  render(S, DATA.board, DATA.items);
+  render(S, DATA.board, DATA.items, lastResult);
   document.getElementById("forced").hidden = !S.items.plan;
   save(S);
 }
@@ -42,6 +43,7 @@ function draw() {
 async function roll(face) {
   if (S.status !== "ready" || rolling) return;
   rolling = true;
+  lastResult = null;
   try {
     let s = face ? E.forcedRoll(S, face) : E.rollDie(S);
     if (!s) return;
@@ -62,7 +64,18 @@ async function roll(face) {
 function choose(i) {
   const block = S.pendingEvent || S.pendingCheckpoint;
   if (!block) return;
-  S = E.applyChoice(S, block, block.choices[i], DATA);
+  const before = S;
+  const choice = block.choices[i];
+  S = E.applyChoice(S, block, choice, DATA);
+  const delta = {};
+  for (const k of ["time", "money", "energy", "knowledge"]) delta[k] = S.res[k] - before.res[k];
+  lastResult = {
+    title: block.title,
+    label: choice.label,
+    note: choice.note || "",
+    delta,
+    notes: S.log.slice(before.log.length).filter((l) => l.kind === "note").map((l) => l.text),
+  };
   if (S.status === "done") clearSave();
   draw();
 }
@@ -80,6 +93,7 @@ function wire() {
     }
     if (t.id === "restart") {
       clearSave();
+      lastResult = null;
       startGame(document.getElementById("seed").value || "demo-1109");
       draw();
     }
