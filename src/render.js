@@ -1,7 +1,8 @@
 // 渲染層：把 state 畫到 DOM。不做判斷、不碰規則。
 // 3D 棋盤是畫面的「棋盤那一層」；WebGL 不可用或「減少動態效果」時退回 2D。
+// 骰子：3D 播動畫；2D 或減少動態效果只在面板顯一行「擲出 X」。
 import { MILESTONES, resName } from "./engine.js";
-import { initBoard3d, updateBoard3d } from "./board3d.js";
+import { initBoard3d, updateBoard3d, rollDice, teleportPawn } from "./board3d.js";
 
 const CH_NAMES = { 1: "投稿", 2: "出國準備", 3: "國際會議", 4: "返國" };
 const REDUCED_MQ = "(prefers-reduced-motion: reduce)";
@@ -39,11 +40,49 @@ export function initBoard(board) {
   wrap3d.hidden = true;
 }
 
+export function getMode() {
+  return mode;
+}
+
+// 擲骰：3D 播骰子動畫；2D 前端只在面板上補一行「擲出 X」（不動機制）。
+export function showDice(value) {
+  if (mode === "3d") return rollDice(value);
+  // 2D 路徑不播動畫，把點數寫到一個暫存 div 供 renderPanel 顯示
+  pendingDice = value;
+  renderDiceBadge();
+  return Promise.resolve();
+}
+
 // 擲骰後，棋子一格一格跳過去；動畫結束 Promise 才 resolve，
 // app.js 接著才會顯示事件卡。
 export function movePiece(state) {
   if (mode !== "3d") return Promise.resolve();
   return updateBoard3d(state);
+}
+
+export function relocatePiece(n) {
+  if (mode !== "3d") return;
+  teleportPawn(n);
+}
+
+// 2D 的「擲出 X」視覺補丁
+let pendingDice = null;
+function renderDiceBadge() {
+  const panel = $("#panel");
+  if (!panel) return;
+  const old = panel.querySelector(".dice-badge");
+  if (old) old.remove();
+  if (pendingDice == null) return;
+  const b = document.createElement("div");
+  b.className = "dice-badge";
+  b.setAttribute("role", "status");
+  b.textContent = `擲出 ${pendingDice}`;
+  panel.prepend(b);
+}
+
+export function clearDiceBadge() {
+  pendingDice = null;
+  renderDiceBadge();
 }
 
 export function render(state, board, items, lastResult = null) {
@@ -52,6 +91,7 @@ export function render(state, board, items, lastResult = null) {
   renderItems(state, items);
   renderPanel(state, lastResult);
   renderLog(state);
+  renderDiceBadge();
 }
 
 function renderBoard2d(state, board) {
@@ -104,12 +144,11 @@ function renderItems(state, items) {
   }
 }
 
-// 剛選完的結果直接留在事件卡的位置，不必去行程紀錄找
 function resultBox(r) {
   const box = document.createElement("div");
   box.className = "result";
   const chips = Object.entries(r.delta)
-    .filter(([, v]) => v !== 0)
+    .filter(([, v]) => v)
     .map(([k, v]) => `<span class="chip ${v > 0 ? "up" : "down"}">${resName(k)} ${v > 0 ? "+" : "−"}${Math.abs(v)}</span>`)
     .join("");
   box.innerHTML = `<p class="rt">${r.title}</p>

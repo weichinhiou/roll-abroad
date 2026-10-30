@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-10-30（台灣時間），Claude Code 加上 Task 7（3D 棋盤），對應 commit `4b044f9` 之後。前一版：2026-10-29 20:25，對應 `c5dfa48`。
+> 更新：2026-10-30（台灣時間），OpenCode 加上 Task 9（美術與骰子畫面，分支 `feature/3d-art-dice`，**尚未 push、未合併 main**）。上一版：Claude Code 的 Task 7（3D 棋盤），對應 commit `4b044f9` 之後。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -135,6 +135,57 @@ Jean 試玩 3D 版後反映：選完選項，結果只寫進右下角的「行�
 
 - 驗證過：用 seed `demo-1109` 在瀏覽器擲骰一次、選第一個選項，結果框正確顯示「精力 −1、學術收穫 +2」，console 沒有錯誤。
 - 沒驗證：手機 375 寬、整局玩完、結局畫面上的結果框、讀取存檔後重新整理（設計上這時不會顯示結果框）。
+
+### Task 9：美術與骰子畫面（2026-10-30，分支 `feature/3d-art-dice`）
+
+Jean 要求：3D 版美術再上一階（光影、桌面、格子、棋子、鏡頭、效能），並加上 3D 骰子畫面。**骰子只負責「演出」engine 已算出的點數，`src/engine.js` 一個字都沒改。** 貼圖一律 canvas 現畫，不加 npm 套件、不連 CDN、不抓網路圖。
+
+**做了什麼**
+
+- `src/board3d.js`（大改，对外 API 增加）
+  - 桌面：圓桌木桌（canvas 畫年輪＋節眼＋明暗漸層）→ 織紋桌布 → 木框棋盤 → 中央麻布；全部 `CanvasTexture`。
+  - 中央空地：「大赴翁／ROLL ABROAD」標題板＋四章名稱與章節印記（`centerTexture()`）。
+  - 格子：每格一張 canvas 貼圖（格號＋`data/board.json` 的短標籤＋章節印記），四章配色沿用 2D 色系但壓沉一點；里程碑 6／12／18／24 加高（0.8 vs 0.3）、深底金邊、外加一層發光金框、立一面章節色小旗。
+  - 光影：暖色半球光＋主平行光（`PCFSoftShadowMap`，陰影圖手機 512／桌機 1024）＋側補光＋冷色輪光；`ACESFilmicToneMapping`、暖色 `Fog`。
+  - 棋子：底座＋梯形身體＋金色領圈＋頭＋髮＋雙臂＋**行李箱**（箱身＋把手＋貼紙）；跳格走拋物線、落地 squash & stretch、箱子稍微拖後再回正；idle 時輕微呼吸、頭微微轉。
+  - 鏡頭：斜上方俯視（fov 36，`(0,14,12)` 看棋盤中心），用阻尼追蹤棋子位置，移動時平順跟隨、能看到整圈。
+  - 效能：`setPixelRatio` 上限（手機 1.6／桌機 2）、陰影圖上限、手機關 antialias；`IntersectionObserver`（棋盤离开畫面）與 `visibilitychange`（分頁隐藏）時 `cancelAnimationFrame` 暫停 render。
+  - 3D 骰子：六面 **1/1/2/2/3/3**（相對面配 1↔3、2↔2），點數用 canvas 畫。`rollDice(value)` 擲前滾約 1 秒、停在 `value` 面朝上、放大顯示點數再淡出。**內部不用 `Math.random`**：最終朝向由 `setFromUnitVectors(面法線, +Y)` 算出，外觀偏航角用單調計數器派生，同一次擲骰的動畫只跟 `value` 和計數器有關。
+  - 新增 export：`rollDice(value)`、`teleportPawn(n)`、`isBoard3dReady()`；`initBoard3d`／`updateBoard3d` 不變。
+  - 驗證用：`window.__dieTargetValue`（這次要演出的點數）、`window.__dieSettledValue`（動畫停穩那一刻寫入，每次擲骰先清空）。只給自動化測試用，刪掉不影響玩法。
+- `src/render.js`：`showDice(value)`（3D 呼叫骰子動畫；2D／減少動態效果不播動畫，改在事件卡區前面 prepend「🎲 擲出 X」徽章）、`relocatePiece(n)`、`clearDiceBadge()`、`getMode()`。Task 8 的結果框原封保留。
+- `src/app.js`：`roll()` 順序改為 `rollDie`／`forcedRoll` → `applyMove` → **`await showDice(diceValue)`** → `await movePiece()` → 才 `drawCard`／`checkpointAt`；`setBusy()` 在動畫期間把 `.roll`／`.choice`／`.item`／`.forced button` 全部 `disabled`（防連按），結束後還原原本的 disabled 狀態；讀存檔改用 `relocatePiece(S.pos)` 直接定位，不播跳格動畫。
+- `styles.css`：新增 `--warm`／`--warm-dark`／`--wood`；`.board3d` 改木質漸層外框＋內高光和陰影；`body.busy` 讓按鈕變淡、`cursor: wait`；`.dice-badge` 樣式；`prefers-reduced-motion` 全域壓動畫。
+
+**驗證過什麼**（headless chromium + playwright，`--use-gl=swiftshader`；`http://localhost:4181`，seed `demo-1109`；腳本 `pw/verify-art-dice.js`）
+
+1. 三個情境各**玩完整局**：擲骰 13 次、位置 24/24、結局「穩健的學術旅人」、**console error 0**
+   - `desktop` 1280×800（3D）
+   - `mobile375` 375×720 dpr2（3D）
+   - `reduced-2d`（`prefers-reduced-motion: reduce`，正確退回 2D：`#board3d` hidden、`#board` 在）
+2. **骰子點數一致性：每情境 13 次逐次比對「骰子停住的點數 vs 行程紀錄『擲出 X』」，13/13 全 OK（共 39 次）**。3D 用 `__dieTargetValue`（起手）＋`__dieSettledValue`（落地那一刻寫入）比對；2D 用 `.dice-badge` 文字比對。
+3. **「提前規劃」驗過**：開局第一擲改按 `[data-face="2"]`，骰子停在 2、行程紀錄「擲出 2」、道具耗掉；三個情境都驗。（上一版驗證是在遊戲結束後才按，`roll()` 直接 return，等於假通過，已改到開局第一擲。）
+4. **動畫期間不能連按**：截圖可見 `.roll` 與道具鈕變淡（`body.busy`），腳本對 disabled 按鈕 `click()` 無效、必須等動畫結束才推得下去。
+5. **Task 8 結果框仍在**：骰子動畫中途的截圖看得到上一輪結果框與「精力 −2／學術收穫 +1」標籤。
+6. `node --check`：`src/app.js`、`src/engine.js`、`src/render.js`、`src/board3d.js`、`src/storage.js`、`server.mjs` 全過（PowerShell 一檔一檔跑）。
+7. `git diff main --stat` 只有 `src/app.js`、`src/board3d.js`、`src/render.js`、`styles.css`（＋這份交接檔），**不含 `src/engine.js`**。
+8. 截圖（`pw/shots/`）：`desktop-1-start/2-end/3-plan/roll-mid/roll-settle`、`mobile375-*`、`reduced-2d-*`。骰子動畫中途截圖清楚可見白底黑點骰子在棋盤中央翻滾。
+
+**沒驗證什麼**
+
+- **院內電腦、筆電、投影機、手機實機效能**：驗證用 headless chromium 是 swiftshader 軟體渲染。老實說在 swiftshader 下**首幀要 2–4 秒才畫出來**（編譯 shader），骰子動畫也會被渲染拖住、實際不到 1 秒就跳到尾段。實機有 GPU 應該正常，但**沒在實機跑過**，請 Jean 開 `start-game.cmd` 親眼看流暢度與動畫速度。
+- **真鼠標／觸控操作**、鍵盤 Tab／focus 順序：验证都用 `element.click()`。
+- **動畫手感**：骰子 1 秒、跳格 260ms＋60ms 停頓是我挑的，太快太慢要 Jean 回饋再調。
+- **骰子每次落地朝向**：偏航角用計數器不是隨機，同一格連續擲會看到相似朝向（要更自然可改成用 engine 的骰值派生，但不能引入隨機）。
+- 重新整理讀檔後的情況（設計上這時不顯示徽章與結果框）。
+- three.js 自家測試沒跑；`vendor/` 那两个檔是 v0.180.0 MIT，Task 7 已載明來源。
+
+驗收：
+- ✅ seed `demo-1109` 玩完一局、console 0 錯誤（桌機、手機 375、2D 退回三情境）。
+- ✅ 骰子點數與行程紀錄完全一致 39 次，含三次「提前規劃」指定 2。
+- ✅ 桌機與 375 寬截圖；減少動態效果退回 2D 並顯示「擲出 X」。
+- ✅ 每個 js 檔 `node --check` 通過；`git diff main` 不含 `src/engine.js`。
+- ✅ 只在 `feature/3d-art-dice` commit；**push 與合併 `main` 等 Jean 明說**。
 
 ## Acceptance Criteria
 

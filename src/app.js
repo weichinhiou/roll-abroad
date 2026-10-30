@@ -1,8 +1,15 @@
 // 狀態流程：intro → ready →(擲骰)→ moving → event/checkpoint → result
 // 只負責接 engine 與 render，不寫規則。
-// 3D 棋盤：擲骰後棋子一格一格跳過去，動畫結束才顯示事件卡。
+// 3D 棋盤：擲骰 → 骰子動畫（演出 engine 已擲好的點數）→ 棋子一格一格跳過去 → 動畫結束才顯示事件卡。
 import * as E from "./engine.js";
-import { render, initBoard, movePiece } from "./render.js";
+import {
+  render,
+  initBoard,
+  movePiece,
+  relocatePiece,
+  showDice,
+  clearDiceBadge,
+} from "./render.js";
 import { save, load, clearSave } from "./storage.js";
 
 let DATA = null;
@@ -24,8 +31,8 @@ async function boot() {
   }
   wire();
   draw();
-  // 讀到存檔時，棋子要直接出現在存下來的那一格
-  await movePiece(S);
+  // 讀到存檔時，棋子直接出現在存下來的那一格（不播動畫）
+  relocatePiece(S.pos);
 }
 
 function startGame(seed) {
@@ -40,16 +47,31 @@ function draw() {
   save(S);
 }
 
+// 動畫播放時防止連按
+function setBusy(on) {
+  document.body.classList.toggle("busy", on);
+  for (const b of document.querySelectorAll(".roll, .choice, .item, .forced button")) {
+    if (on) b.dataset.wasDisabled = b.disabled ? "1" : "0";
+    b.disabled = on ? true : b.dataset.wasDisabled === "1";
+    if (!on) delete b.dataset.wasDisabled;
+  }
+}
+
 async function roll(face) {
   if (S.status !== "ready" || rolling) return;
   rolling = true;
+  setBusy(true);
   lastResult = null;
+  clearDiceBadge();
   try {
     let s = face ? E.forcedRoll(S, face) : E.rollDie(S);
     if (!s) return;
+    const diceValue = s.dice;                 // engine 已決定，這裡只是顯示
     s = E.applyMove(s, DATA.board);
     S = s;
-    // 先把棋子一格一格跳完，才抽卡、顯示事件
+    // 1) 骰子演出（3D 有動畫，2D 只顯「擲出 X」）
+    await showDice(diceValue);
+    // 2) 棋子一格一格跳完，才抽卡、顯示事件
     await movePiece(s);
     const sq = DATA.board.squares.find((x) => x.n === s.pos);
     if (sq.kind === "milestone") s = E.checkpointAt(s, DATA.board, DATA);
@@ -57,6 +79,7 @@ async function roll(face) {
     S = s;
   } finally {
     rolling = false;
+    setBusy(false);
     draw();
   }
 }
@@ -83,7 +106,7 @@ function choose(i) {
 function wire() {
   document.body.addEventListener("click", (ev) => {
     const t = ev.target.closest("button");
-    if (!t) return;
+    if (!t || rolling) return;
     if (t.classList.contains("roll")) return roll(null);
     if (t.dataset.choice !== undefined) return choose(Number(t.dataset.choice));
     if (t.dataset.item === "plan") return (document.getElementById("forced").hidden = false);
@@ -94,7 +117,9 @@ function wire() {
     if (t.id === "restart") {
       clearSave();
       lastResult = null;
+      clearDiceBadge();
       startGame(document.getElementById("seed").value || "demo-1109");
+      relocatePiece(S.pos);
       draw();
     }
   });

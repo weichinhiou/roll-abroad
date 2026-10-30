@@ -8,6 +8,9 @@
   --c4: #efe0ee;
   --ms: #2b2a27;
   --accent: #0f6d5f;
+  --warm: #b9804e;
+  --warm-dark: #6b4425;
+  --wood: #c99b66;
 }
 * {
   box-sizing: border-box;
@@ -114,10 +117,11 @@ button {
   aspect-ratio: 4 / 3;
   min-height: 220px;
   max-height: 480px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid #b98a55;
+  border-radius: 14px;
   overflow: hidden;
-  background: var(--c4);
+  background: radial-gradient(120% 120% at 30% 20%, #e8d6b2 0%, #b58552 55%, #6b4425 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 22px rgba(107, 68, 37, 0.22);
 }
 .board3d canvas {
   display: block;
@@ -127,6 +131,51 @@ button {
 @media (min-width: 760px) {
   .board3d {
     aspect-ratio: 16 / 10;
+    max-height: 560px;
+  }
+}
+
+/* 擲骰／行動中：骰子或棋子正在動畫，按鈕暫時不能按 */
+body.busy {
+  cursor: progress;
+}
+body.busy .roll,
+body.busy .choice,
+body.busy .item,
+body.busy .forced button {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* 2D 模式與減少動態效果：不播動畫，改用這顆徽章顯示「擲出 X」 */
+.dice-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  margin: 0 0 12px;
+  border-radius: 999px;
+  border: 1px solid #c9a16b;
+  background: linear-gradient(180deg, #fff9ec, #f1e3c4);
+  color: #6b4425;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(107, 68, 37, 0.18);
+}
+.dice-badge::before {
+  content: "\1F3B2";
+  font-size: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 .cell {
