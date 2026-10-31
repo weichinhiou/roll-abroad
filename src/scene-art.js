@@ -7,7 +7,7 @@ const emoji = '"Segoe UI Emoji","Apple Color Emoji",sans-serif';
 const icons = ["🌐","📝","🤝","📑","📨","🧭","💡","📋","🎟️","🛂","🗓️","✈️","🏷️","🎤","☕","💬","📊","🏆","🧳","📧","✍️","📂","💡","🏠"];
 const cssColor = (n) => `#${n.toString(16).padStart(6,"0")}`;
 function canvas(w,h) { const c=document.createElement("canvas");c.width=w;c.height=h;return c; }
-function texture(c) { const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t; }
+function texture(c) { const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;return t; }
 function round(ctx,x,y,w,h,r) {ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
 
 export function tileArt(sq, milestone, shape) {
@@ -18,17 +18,19 @@ export function tileArt(sq, milestone, shape) {
   ctx.fillStyle=color;ctx.globalAlpha=.18;round(ctx,18,18,w-36,h*.65,17);ctx.fill();ctx.globalAlpha=1;
   const atlas=artImage("chapters");
   if(milestone && atlas){
-    const i=sq.chapter-1,sw=atlas.naturalWidth/2,sh=atlas.naturalHeight/2,size=Math.min(w,h)*.61;
-    ctx.drawImage(atlas,(i%2)*sw,Math.floor(i/2)*sh,sw,sh,(w-size)/2,h*.07,size,size);
+    const i=sq.chapter-1,sw=atlas.naturalWidth/2,sh=atlas.naturalHeight/2,size=Math.min(w,h)*.48;
+    ctx.drawImage(atlas,(i%2)*sw,Math.floor(i/2)*sh,sw,sh,(w-size)/2,h*.17,size,size);
   } else {
-    ctx.font=`${Math.round(Math.min(w,h)*.38)}px ${emoji}`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(icons[sq.n-1],w/2,h*.35);
+    ctx.font=`${Math.round(Math.min(w,h)*.33)}px ${emoji}`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(icons[sq.n-1],w/2,h*.34);
   }
-  ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle="#223f60";
-  const label=String(sq.label),fs=Math.floor(Math.min(w*.155,h*.16));ctx.font=`900 ${fs}px ${font}`;
-  if(shape==="h") { const cut=Math.ceil(label.length/2);ctx.fillText(label.slice(0,cut),w/2,h*.7,w*.85);ctx.fillText(label.slice(cut),w/2,h*.7+fs*1.1,w*.85); }
-  else ctx.fillText(label,w/2,h*.77,w*.86);
-  ctx.font=`700 ${Math.round(Math.min(w,h)*.075)}px ${font}`;ctx.fillStyle="#39597a";
-  ctx.fillText(`${sq.n}${milestone ? "・必停" : sq.kind==="fate" ? "・命運" : sq.kind==="route" ? "・路線" : "・機會"}`,w/2,h*.93);
+  // 圖文分區，主標放大約五成，維持純白底與深藍字。
+  ctx.fillStyle="#ffffff";ctx.fillRect(14,h*.60,w-28,h*.35);
+  ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle="#102543";
+  const label=String(sq.label),fs=Math.floor(Math.min(w*.23,h*.25));ctx.font=`900 ${fs}px ${font}`;
+  if(shape==="h") { const cut=Math.ceil(label.length/2);ctx.fillText(label.slice(0,cut),w/2,h*.67,w*.9);ctx.fillText(label.slice(cut),w/2,h*.84,w*.9); }
+  else ctx.fillText(label,w/2,h*.79,w*.9);
+  ctx.font=`800 ${Math.round(Math.min(w,h)*.105)}px ${font}`;ctx.fillStyle="#203b59";
+  ctx.fillText(`${sq.n}${milestone ? "・必停" : sq.kind==="fate" ? "・命運" : sq.kind==="route" ? "・路線" : "・機會"}`,w/2,h*.10);
   return texture(c);
 }
 

@@ -51,6 +51,9 @@ let wrap = null;
 let renderer, scene, camera, clock;
 let pawn, pawnGroup, suitcase, pawnHead;
 let ringGroup, tableGroup;
+const tileMeshes = [];
+let tileHint = null;
+let inspectedTile = null;
 let die, dieTexList;
 let dieClickHandler = null;
 let keyLight;
@@ -86,6 +89,7 @@ function applyCamera() {
 }
 
 export function resetView() {
+  clearTileHint();
   view.yaw = isMobile() ? 0 : 0.24;
   view.tilt = isMobile() ? Math.PI * 0.38 : CAM_TILT;
   view.zoom = 1;
@@ -108,6 +112,27 @@ export function onDieClick(fn) {
   dieClickHandler = fn;
 }
 
+function clearTileHint() {
+  inspectedTile = null;
+  if (tileHint) tileHint.hidden = true;
+}
+
+// 螢幕大字不隨 3D 透視縮小；指向或輕點格子即可閱讀。
+function inspectTile(canvas, e) {
+  if (!tileHint || !camera) return;
+  const r = canvas.getBoundingClientRect();
+  pickNdc.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+  pickRay.setFromCamera(pickNdc,camera);
+  const sq = pickRay.intersectObjects(tileMeshes, false)[0]?.object.userData.square;
+  if (!sq) { clearTileHint(); return; }
+  if (inspectedTile === sq.n) return;
+  inspectedTile = sq.n;
+  const type = sq.kind === "milestone" ? "里程碑・必停" : sq.kind === "fate" ? "命運" : sq.kind === "route" ? "路線" : "機會";
+  tileHint.querySelector("strong").textContent = sq.label;
+  tileHint.querySelector("span").textContent = `第 ${sq.n} 格・${CH_NAME[sq.chapter]}・${type}`;
+  tileHint.hidden = false;
+}
+
 // 滑鼠拖曳／單指拖曳：轉動；滾輪／雙指捏合：縮放；雙擊：回正；點骰子：擲骰
 function bindOrbit(canvas) {
   const pts = new Map();
@@ -124,9 +149,11 @@ function bindOrbit(canvas) {
     const prev = pts.get(e.pointerId);
     if (!prev) {
       canvas.style.cursor = hitsDie(canvas, e) ? "pointer" : "";
+      inspectTile(canvas, e);
       return;
     }
     if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 6) press = null;
+    clearTileHint();
     const cur = { x: e.clientX, y: e.clientY };
     pts.set(e.pointerId, cur);
     if (pts.size === 1) {
@@ -141,15 +168,22 @@ function bindOrbit(canvas) {
     applyCamera();
   });
   const end = (e) => {
-    if (e.type === "pointerup" && press && pts.size === 1 && hitsDie(canvas, e)) dieClickHandler?.();
+    if (e.type === "pointerup" && press && pts.size === 1) {
+      if (hitsDie(canvas, e)) { clearTileHint(); dieClickHandler?.(); }
+      else inspectTile(canvas, e);
+    }
     pts.delete(e.pointerId);
     if (pts.size < 2) pinch = 0;
     if (pts.size === 0) canvas.classList.remove("dragging");
   };
   canvas.addEventListener("pointerup", end);
   canvas.addEventListener("pointercancel", end);
+  canvas.addEventListener("pointerleave", (e) => {
+    if (e.pointerType !== "touch") clearTileHint();
+  });
   canvas.addEventListener("wheel", (e) => {
     e.preventDefault();
+    clearTileHint();
     view.zoom = Math.min(1.5, Math.max(0.55, view.zoom * (e.deltaY > 0 ? 1.08 : 0.93)));
     applyCamera();
   }, { passive: false });
@@ -357,10 +391,10 @@ function buildRing(board) {
       color: hexLerp(CH_COLOR[sq.chapter], 0x164a82, 0.18),
       roughness: 0.8,
     });
-    const topMat = new THREE.MeshStandardMaterial({
+    // 印刷面維持原色，避免強光與色調映射把深色字漂白。
+    const topMat = new THREE.MeshBasicMaterial({
       map: cellTexture(sq, ms, p.shape),
-      roughness: ms ? 0.55 : 0.78,
-      metalness: ms ? 0.12 : 0.0,
+      toneMapped: false,
     });
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(w, h, d),
@@ -369,6 +403,8 @@ function buildRing(board) {
     mesh.position.set(p.x, 0.22 + h / 2, p.z);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
+    mesh.userData.square = sq;
+    tileMeshes.push(mesh);
     ringGroup.add(mesh);
 
     if (ms) {
@@ -644,6 +680,12 @@ export function initBoard3d(container_, board) {
   canvas.classList.add("board3d-canvas");
   canvas.setAttribute("aria-label", "3D 環形棋盤：拖曳可轉動，滾輪可縮放，雙擊回正");
   wrap.appendChild(canvas);
+  tileHint = document.createElement("div");
+  tileHint.className = "tile-inspect";
+  tileHint.hidden = true;
+  tileHint.setAttribute("role", "status");
+  tileHint.innerHTML = "<strong></strong><span></span>";
+  wrap.appendChild(tileHint);
   bindOrbit(canvas);
   const resetBtn = document.createElement("button");
   resetBtn.type = "button";
@@ -653,7 +695,7 @@ export function initBoard3d(container_, board) {
   wrap.appendChild(resetBtn);
   const hint = document.createElement("p");
   hint.className = "view-hint";
-  hint.textContent = "拖曳轉動・滾輪縮放";
+  hint.textContent = "指向或輕點棋格看名稱・拖曳轉動・滾輪縮放";
   wrap.appendChild(hint);
   fit();
 
