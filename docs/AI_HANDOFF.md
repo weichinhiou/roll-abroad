@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-02（台灣時間），Codex 加上 Task 16：事件卡由 24 張擴充至 36 張（`codex/game-art`，基線 `77e13df`；待本機提交與推送，未合併 main）。此分支先前的 Task 14–15 美術與文字調整仍在；Task 1–2 的 engine 測試仍留在原工作目錄，不包含在這條美術分支。
+> 更新：2026-11-02（台灣時間），Claude Code。**唯一主線是 `codex/game-art`（plan D13），新功能凍結**；本次工作在 `fix/engine-tests-balance`（疊在主線 `87cf118` 上，未 push、未合併）。`main` 仍是舊版 `62d4314`。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -267,6 +267,13 @@ Jean 要求更多腳本，已新增 12 張：T05–T11、S04b 是既有心得候
 補齊 S04 → S04b 原本不存在的口報後續，加前情旗標避免提前抽到；T10/G03 可觸發原本交流/名片與合作種子。engine 只補 pendingEvent.deck，修正介面將機會/命運誤認為里程碑的識別資料遺漏；沒有改抽牌、資源或結局門檻。
 
 新增 `test/events.test.js`：卡片完整性、連鎖、seed 重現、1,000 局可達性/路線/資源檢查。總計 6 項測試通過；1,000 局死局 0、36 張皆可抽到、平均 13.287 擲。結局 steady 681、stage 222、wild 94、safe 3，safe 偏少尚未解決。真人試玩與完整瀏覽器走局未驗。原引擎測試分支仍獨立，不要將本批測試誤當成 Task 1–2 已全面完成。
+
+### Task 17：引擎測試與結局平衡（Task 1、2，2026-11-02，分支 `fix/engine-tests-balance`）
+- 新增 `test/engine.test.js`、`scripts/simulate.mjs`（`node scripts/simulate.mjs 1000` 可印分布）。
+- 修 `drawCard` 會改到傳入 state、`isEligible` 章節判斷讀錯物件；新增 `strain` 計數。
+- 結局改多面向計分（plan D14）：1,000 局 stage 158、steady 366、wild 285、safe 191。
+
+**驗證過：** `npm test` 31 項全過、`npm run check` 通過、1,000 局死局 0。**沒驗證：** 瀏覽器實際走到新結局、真人選擇下的分布。舊工作目錄 `D:GitGameoll-abroad` 的未提交修改仍在，已複製到這條分支；要清理須先問 Jean。
 
 ## Acceptance Criteria
 
