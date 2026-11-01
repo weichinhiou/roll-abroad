@@ -273,7 +273,7 @@ Jean 要求更多腳本，已新增 12 張：T05–T11、S04b 是既有心得候
 - 修 `drawCard` 會改到傳入 state、`isEligible` 章節判斷讀錯物件；新增 `strain` 計數。
 - 結局改多面向計分（plan D14）：1,000 局 stage 158、steady 366、wild 285、safe 191。
 
-**驗證過：** `npm test` 31 項全過、`npm run check` 通過、1,000 局死局 0。**沒驗證：** 瀏覽器實際走到新結局、真人選擇下的分布。舊工作目錄 `D:GitGameoll-abroad` 的未提交修改仍在，已複製到這條分支；要清理須先問 Jean。
+**驗證過：** `npm test` 31 項全過、`npm run check` 通過、1,000 局死局 0。**沒驗證：** 瀏覽器實際走到新結局、真人選擇下的分布。舊工作目錄 `D:GitGameoll-abroad` 的未提交修改仍在，已複製到這條分支；要清理須先問 Jean。
 
 ## Acceptance Criteria
 
