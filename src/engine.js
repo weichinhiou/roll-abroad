@@ -49,6 +49,7 @@ export function initialState({ seed, route }) {
     pending: [], // 連鎖排程：下一次抽牌優先從這裡拿
     log: [],
     keyChoices: [],
+    strain: 0, // 資源耗盡過幾次，結局會看
     status: "ready", // ready | event | checkpoint | done
     pendingEvent: null,
     pendingCheckpoint: null,
@@ -101,7 +102,7 @@ export function applyMove(state, board) {
 export function isEligible(card, state) {
   if (state.drawn.includes(card.id)) return false;
   if (card.route && card.route !== "both" && card.route !== state.route) return false;
-  if (card.chapters && !card.chapters.includes(card.chapterNow)) return false;
+  if (card.chapters && !card.chapters.includes(state.chapterNow)) return false;
   if (card.requires && !state.flags[card.requires]) return false;
   return true;
 }
@@ -117,13 +118,11 @@ function pick(state, pool) {
 // 抽一張牌：連鎖優先，其次依格子屬性
 export function drawCard(state, board, events, square) {
   if (state.pending.length) {
-    const id = state.pending.shift();
+    // 先複製再取出，不改到傳入的 state
+    const [id, ...rest] = state.pending;
+    state = { ...state, pending: rest };
     const card = events.cards.find((c) => c.id === id && isEligible(c, { ...state, chapterNow: square.chapter }));
-    if (card) {
-      const next = clone(state);
-      next.pending = state.pending;
-      return enterEvent(next, card);
-    }
+    if (card) return enterEvent(state, card);
   }
   const ctx = { ...state, chapterNow: square.chapter };
   const deckKind = square.kind === "route" ? (state.route === "oral" ? "fate" : "chance") : square.kind;
@@ -208,6 +207,7 @@ export function applyChoice(state, card, choice, data) {
     if (next.res[k] === 0) {
       next.res[k] = 1;
       next.res.knowledge = Math.max(0, next.res.knowledge - 2);
+      next.strain = (next.strain || 0) + 1;
       notes.push(`${resName(k)}耗盡，勉強撐過去（學術收穫 −2）。`);
     }
   }
@@ -256,12 +256,13 @@ export function checkpointAt(state, board, data) {
 export function settle(state) {
   const next = clone(state);
   const k = next.res.knowledge;
-  const low = RES_KEYS.filter((r) => next.res[r] <= 2).length;
+  const minRes = Math.min(...RES_KEYS.map((r) => next.res[r]));
+  // 多面向計分：收穫＋資源狀況，稱號才對得上結局文字
   let ending;
-  if (k >= 12 && low === 0) ending = "stage";
-  else if (k >= 8) ending = "steady";
-  else if (k <= 3) ending = "safe";
-  else ending = "wild";
+  if (k >= 13 && minRes >= 3) ending = "stage";
+  else if ((next.strain || 0) >= 1 || minRes <= 1) ending = "wild";
+  else if (k <= 9) ending = "safe";
+  else ending = "steady";
   next.ending = { id: ending, ...data_endings[ending] };
   next.keyChoices = next.keyChoices.slice(-3);
   next.status = "done";
