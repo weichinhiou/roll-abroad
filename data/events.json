@@ -155,8 +155,8 @@
       "title": "口報只有八分鐘",
       "text": "投影片有十六頁，講者計時器已經在閃。",
       "choices": [
-        { "label": "當場跳頁只講重點", "effects": { "knowledge": 2, "energy": -1 }, "note": "聽眾記得一句話，夠了。", "chain": "S04b" },
-        { "label": "全講完，被鈴聲打斷", "effects": { "knowledge": -1, "energy": -2 }, "note": "結論被鈴聲吃掉一半。", "chain": "S04b" }
+        { "label": "當場跳頁只講重點", "effects": { "knowledge": 2, "energy": -1 }, "note": "聽眾記得一句話，夠了。", "flags": { "oral_qa": true }, "chain": "S04b" },
+        { "label": "全講完，被鈴聲打斷", "effects": { "knowledge": -1, "energy": -2 }, "note": "結論被鈴聲吃掉一半。", "flags": { "oral_qa": true }, "chain": "S04b" }
       ]
     },
     {
@@ -294,6 +294,122 @@
       "choices": [
         { "label": "出發前主動追蹤簽核進度", "effects": { "time": -1 }, "note": "發現被退件，趕在出發前補正完成。" },
         { "label": "應該沒問題吧", "effects": { "penalty": { "money": -2, "knowledge": -1 } }, "note": "回國才發現手續沒完成，補件補到頭昏。" }
+      ]
+    },
+    {
+      "id": "T05", "deck": "fate", "tone": "real", "route": "both",
+      "title": "轉機又多了一站",
+      "text": "天候打亂航線，航空公司給你的替代方案多了兩次轉機。原先打算參加的場次，恐怕趕不上了。",
+      "trueStory": "心得報告記載過：天候造成航線改道，旅客經多次轉機後延後抵達，錯過部分議程。",
+      "choices": [
+        { "label": "接受改道，先重新排議程", "effects": { "time": -2, "energy": -1 }, "note": "把想聽的場次重新圈好，抵達後不再白跑。" },
+        { "label": "改訂轉機較少的替代航班", "effects": { "money": -2, "energy": 1 }, "note": "預算縮了一點，人終於能好好休息。" }
+      ]
+    },
+    {
+      "id": "T06", "deck": "fate", "tone": "real", "route": "both",
+      "title": "機場外的交通管制",
+      "text": "走出航廈才發現，市區正在舉辦大型活動。導航上的車程一再變長，飯店傳訊息問你何時抵達。",
+      "trueStory": "心得報告記載過：抵達當天遇到大型活動交通管制，事先安排的接送協助旅客順利抵達住宿地點。",
+      "choices": [
+        { "label": "找事先安排的接送窗口確認路線", "effects": { "money": -1, "time": -1 }, "note": "司機找到替代路線，抵達時間終於有了著落。" },
+        { "label": "先排候車隊伍，再通知飯店", "effects": { "time": -2 }, "note": "車排到了，原本的晚餐計畫也改成便利商店。" }
+      ]
+    },
+    {
+      "id": "T07", "deck": "chance", "tone": "real", "route": "oral",
+      "title": "講者準備室裡的深呼吸",
+      "text": "講者準備室裡，有人練開場、有人盯著計時器。工作人員問你，要不要先試播投影片？",
+      "trueStory": "心得報告記載過：講者報到後先到準備室測試投影片，與各國講者同處一室，既期待又緊張。",
+      "choices": [
+        { "label": "試播一次，確認影片與字型", "effects": { "time": -1, "knowledge": 1 }, "note": "小問題在準備室就解決了，上台少了一份不確定。" },
+        { "label": "先坐下整理開場與結論", "effects": { "energy": 1 }, "note": "把第一句和最後一句記熟，心跳慢了一點。" }
+      ]
+    },
+    {
+      "id": "T08", "deck": "chance", "tone": "real", "route": "both",
+      "title": "飯店房間變成彩排室",
+      "text": "同行夥伴搬來一張椅子，說要假裝最會問問題的聽眾。你的發表還沒開始，第一題已經來了。",
+      "trueStory": "心得報告記載過：團隊在飯店檢查簡報排版、圖片、文獻及時間控制，並演練可能的提問。",
+      "choices": [
+        { "label": "一起彩排，互相問到講清楚", "effects": { "energy": -1, "knowledge": 2 }, "note": "幾個含糊的句子被抓出來，答案也變得踏實。" },
+        { "label": "只確認重點，把睡眠留給自己", "effects": { "energy": 1, "knowledge": 1 }, "note": "濃縮出三個重點，明天帶著清醒的腦袋上場。" }
+      ]
+    },
+    {
+      "id": "T09", "deck": "chance", "tone": "real", "route": "both",
+      "title": "前輩只改了一頁",
+      "text": "你把發表資料交給前輩看。他沒改研究結果，只指著一張塞滿文字的圖說：「這頁，聽眾來不及懂。」",
+      "trueStory": "心得報告記載過：出發前有前輩協助修改發表投影片，重視呈現品質與對外溝通。具體對話為遊戲改寫。",
+      "choices": [
+        { "label": "重畫圖表，留下一句結論", "effects": { "time": -1, "knowledge": 2 }, "note": "圖變少了，想說的話反而更清楚。" },
+        { "label": "先練習用白話解釋這一頁", "effects": { "energy": -1, "knowledge": 1 }, "note": "你終於不用照著圖上的小字念。" }
+      ]
+    },
+    {
+      "id": "T10", "deck": "chance", "tone": "real", "route": "both",
+      "title": "報到隊伍裡的同行",
+      "text": "報到隊伍幾乎沒動。前面的人轉過頭問：「你也是第一次來嗎？」原本安靜的一排，忽然開始聊研究。",
+      "trueStory": "心得報告記載過：等待報到時與其他國家的同行交談，舒緩初次參會的緊張。對話為情境改寫。",
+      "choices": [
+        { "label": "介紹題目，交換聯絡方式", "effects": { "time": -1, "knowledge": 1 }, "social": true, "flags": { "network": true }, "note": "名牌還沒拿到，已經約好會場再聊。" },
+        { "label": "聊聊想聽的場次，先熟悉環境", "effects": { "energy": 1 }, "note": "原來大家都會迷路，你沒那麼緊張了。" }
+      ]
+    },
+    {
+      "id": "T11", "deck": "chance", "tone": "real", "route": "both",
+      "title": "想留住那張投影片",
+      "text": "講者的圖表正好回答你一直想不通的問題。你舉起手機又停住：還沒確認現場能不能拍照。",
+      "trueStory": "心得報告記載過：參會者想藉投影片幫助理解，卻因未取得講者許可而不隨意拍攝。後續選項為遊戲設計。",
+      "choices": [
+        { "label": "先記重點，會後詢問分享方式", "effects": { "time": -1, "knowledge": 2 }, "note": "沒有急著拍照，還多問懂了一個方法上的限制。" },
+        { "label": "畫下示意圖，標註待查問題", "effects": { "energy": -1, "knowledge": 1 }, "note": "筆記沒有原圖漂亮，但知道自己回去要查什麼。" }
+      ]
+    },
+    {
+      "id": "S04b", "deck": "chance", "tone": "real", "route": "oral", "requires": "oral_qa",
+      "title": "鈴聲之後，問題才開始",
+      "text": "發表結束，一位聽眾問：「如果追蹤得更久，結果會不會不同？」這題沒有出現在你的備答清單裡。",
+      "trueStory": "心得報告記載過：英文口頭發表時，與會學者對研究追蹤時間提出不同見解，並提供後續研究建議。",
+      "choices": [
+        { "label": "說明現有限制，記下延伸建議", "effects": { "energy": -1, "knowledge": 2 }, "note": "承認還不知道的部分，換到下一步研究方向。" },
+        { "label": "請對方舉例，先確認問題的意思", "effects": { "time": -1, "knowledge": 1 }, "social": true, "note": "問答變成對話，你帶走了比標準答案更多的東西。" }
+      ]
+    },
+    {
+      "id": "G01", "deck": "fate", "tone": "funny", "route": "both",
+      "title": "行李轉盤的分身術",
+      "text": "第三個一模一樣的黑色行李箱經過，你已經站起來三次。旁邊的人也跟著站起來三次。",
+      "choices": [
+        { "label": "核對行李牌，再確認外觀", "effects": { "time": -1 }, "note": "終於認出自己的箱子，還順手幫對方排除一個分身。" },
+        { "label": "請同行夥伴一起找辨識貼紙", "effects": { "energy": -1 }, "note": "兩雙眼睛終於找到那張歪歪的小貼紙。" }
+      ]
+    },
+    {
+      "id": "G02", "deck": "fate", "tone": "funny", "route": "poster",
+      "title": "壁報的一角開始旅行",
+      "text": "冷氣一吹，壁報右上角慢慢翹起來。你一邊解說，一邊伸手按住，姿勢像在示範一種新復健運動。",
+      "choices": [
+        { "label": "先向服務台借固定用品", "effects": { "time": -1, "knowledge": 1 }, "note": "壁報站穩了，你也終於能用雙手比畫。" },
+        { "label": "請聽眾稍候，重新整理展示位置", "effects": { "energy": -1, "knowledge": 1 }, "note": "短暫中場休息，換來一段更從容的解說。" }
+      ]
+    },
+    {
+      "id": "G03", "deck": "chance", "tone": "funny", "route": "both",
+      "title": "插座前的外交時刻",
+      "text": "休息區只剩一個插座，兩台筆電同時跳出低電量。你和隔壁的研究者看著彼此，笑了出來。",
+      "choices": [
+        { "label": "輪流充電，順便聊聊研究", "effects": { "time": -1, "knowledge": 1 }, "social": true, "flags": { "network": true }, "note": "電池慢慢回來，合作的話題也慢慢打開。" },
+        { "label": "先收起筆電，改用紙筆整理", "effects": { "energy": 1 }, "note": "少一個視窗，腦袋也清爽一點。" }
+      ]
+    },
+    {
+      "id": "G04", "deck": "chance", "tone": "real", "route": "both",
+      "title": "只帶一個改變回來",
+      "text": "筆記裡滿是想帶回單位的新方法。你圈了十個重點，又想到大家原本就很忙：第一步，要從哪裡開始？",
+      "choices": [
+        { "label": "選一個小做法，約同事一起試", "effects": { "time": -1, "knowledge": 2 }, "note": "先把一件事做成，這趟旅程有了可落地的起點。" },
+        { "label": "先整理成一頁摘要，徵詢需求", "effects": { "knowledge": 1 }, "note": "少了一大包資料，多了一個大家願意接話的問題。" }
       ]
     }
   ]

@@ -143,6 +143,7 @@ function enterEvent(state, card) {
   next.status = "event";
   next.pendingEvent = {
     id: card.id,
+    deck: card.deck,
     title: card.title,
     text: card.text,
     tone: card.tone,
