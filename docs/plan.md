@@ -34,7 +34,7 @@ Jean 採納鮮豔卡通 3D 桌遊概念，授權 Codex 從美術設計開始逐�
 
 ### D15：棋盤建築改 Blender 建模匯出 GLB（Jean 指定，2026-11-02）
 
-Jean 認為 box 合成的建築「太醜」，給桌遊風格參考圖指定兩棟都重畫：左邊「出發航廈」（奶油牆＋藍玻璃桶頂＋金拱＋航情塔）、右邊「國際會場」（紫穹頂＋四柱門廊＋三角楣）。技術做法：Blender 建模 → 按材質併網格 → 匯出 `assets/art/airport-terminal.glb` 與 `assets/art/international-venue.glb` → 用 vendored `GLTFLoader.js`（three 0.180.0 同版本，MIT，import 改指 `vendor/three.module.js`）載入，替換 `scene-art.js` 的 box 合成建築與兩塊建築招牌。屬美術修正：`src/engine.js` 不動、無新玩法、執行時不連任何外部服務。沒選：把 Blender 模型逐件轉成程式化 three.js 程式碼（維護成本高、造型出不來）；直接把參考圖當貼圖（plan D11 明確禁止用整張圖冒充模型）。詳見 [AI_HANDOFF.md](AI_HANDOFF.md) Task 18。
+Jean 認為 box 合成的建築「太醜」，給桌遊風格參考圖指定兩棟都重畫：左邊「出發航廈」（奶油牆＋藍玻璃桶頂＋金拱＋航情塔）、右邊「國際會場」（紫穹頂＋四柱門廊＋三角楣）。技術做法：Blender 建模 → 按材質併網格 → 匯出 `assets/art/airport-terminal.glb` 與 `assets/art/international-venue.glb` → 用 vendored `GLTFLoader.js`（three 0.180.0 同版本，MIT，import 改指 `vendor/three.module.js`）載入，替換 `scene-art.js` 的 box 合成建築與兩塊建築招牌。屬美術修正：`src/engine.js` 不動、無新玩法、執行時不連任何外部服務。沒選：把 Blender 模型逐件轉成程式化 three.js 程式碼（維護成本高、造型出不來）；直接把參考圖當貼圖（plan D11 明確禁止用整張圖冒充模型）。第三輪依「門窗像貼上去」的回饋改真開窗：牆上 boolean 開洞＋暗部退後＋框料突出（去貼面感的關鍵），屋頂俯角面補層次，金色三角面佔比降到 33~40%。詳見 [AI_HANDOFF.md](AI_HANDOFF.md) Task 18。
 
 **v1 後的修正（同日，Jean 檢討「細節很多不見了 比如地球」）**：兩棟整棟重建、不打補丁，建模腳本 `tools/blender/build-airport.py`／`build-venue.py` 進 repo 當 GLB 的原始碼（改造型改腳本重跑，GLB 是產物）。參考圖是造型唯一依據，但**圖本身還沒進 repo**，需 Jean 放進 `docs/`（否則下次重建沒有依據）。
 
