@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-02（台灣時間），Claude Code。**唯一主線是 `codex/game-art`（plan D13），新功能凍結**；本次工作在 `fix/engine-tests-balance`（疊在主線 `87cf118` 上，未 push、未合併）。`main` 仍是舊版 `62d4314`。
+> 更新：2026-11-02（台灣時間），OpenCode。**唯一主線是 `codex/game-art`（plan D13），新功能凍結**；`main` 已快轉到 `9dd2016`（含 Task 8、9、14–17）。本次工作在 `feature/board-buildings`（從 `main` 切出，未 push）：Blender 重畫棋盤建築。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -274,6 +274,23 @@ Jean 要求更多腳本，已新增 12 張：T05–T11、S04b 是既有心得候
 - 結局改多面向計分（plan D14）：1,000 局 stage 158、steady 366、wild 285、safe 191。
 
 **驗證過：** `npm test` 31 項全過、`npm run check` 通過、1,000 局死局 0。**沒驗證：** 瀏覽器實際走到新結局、真人選擇下的分布。舊工作目錄 `D:\Git\Game\roll-abroad` 的未提交修改仍在，已複製到這條分支；要清理須先問 Jean。
+
+### Task 18：棋盤建築改 Blender 建模匯出 GLB（2026-11-02，分支 `feature/board-buildings`）
+
+Jean 認為棋盤上的 box 合成建築「太醜」，給了桌遊風格參考圖，指定兩棟都重畫：左邊「出發航廈」（奶油牆＋藍玻璃桶頂＋金拱＋航情塔＋布旗＋行李箱）、右邊「國際會場」（紫穹頂＋鼓座玻璃帶＋四柱門廊＋三角楣＋紫布旗＋紫地毯）。這是美術修正，`src/engine.js` 不動、不新增玩法。
+
+- Blender 5.2 建模，材質前綴 `RA_`／`RA_V_`、物件前綴 `RA_APT_`／`RA_VEN_`，分放 `RA_Airport`、`RA_Venue` collection（場景裡別人的 HQ／店面／雪人模型不動）。
+- 建模腳本放 `tools/blender/build-airport.py`、`build-venue.py`，視為 GLB 的原始碼：改造型改腳本重跑（`runpy.run_path(...)`），不要手動補網格。腳本自己清掉舊物件、併網格、歸零、渲染三張檢查圖到暫存目錄、再匯出。
+- 匯出前套用修改器、按材質 join 成單一 mesh、座標歸零（底座中心為原點、底部 z=0、面向 −Y，匯出後正面朝 +Z）：`assets/art/airport-terminal.glb` 與 `assets/art/international-venue.glb`（第三版後：航廈 557 KB／8,336 tris／17 材質，會場 1,043 KB／16,640 tris／17 材質，均 x ±1.3 內、z 0..2.3/2.6）。渲染時模型暫時 park 到 y=90，避免同一 Blender 檔裡別人的模型入鏡，場景相機渲完還原。
+- 第二版依 Jean 重貼的參考圖補回細節：會場加金線地球儀頂飾、屋頂四旗、半圓拱玻璃帷幕＋依拱圓裁短的金格線、立面牆與玻璃雙開門（門不懸空）、紫吊旗白地球 V 下緣、兩側拱窗、兩階紫地毯金邊、圓錐修頂樹＋繡球花；航廈改粗短管制塔（寬玻璃艙＋金簷）、金底白飛機標誌（原本誤做玻璃底）、綠籬帶加黃花、立面金橫桿布旗、行李箱與陶盆。
+- 執行時載入走新 vendor 的 `vendor/GLTFLoader.js`＋`vendor/BufferGeometryUtils.js`（three 0.180.0 同版本 MIT，import 已改指 `./three.module.js`；不連 npm、不連 CDN）。
+- `src/scene-art.js` 移除兩處 box 合成建築與「出發航廈」「國際會場」招牌，改 `addBuildings(city)` 用 `BUILDINGS` 清單非同步載入，擺位 x ∓1.55、z −1.98，scale 逐棟設定（航廈 .88、會場 .78，Jean 說「機場建築再大一點點」後把航廈由 .78 調大）；載入失敗留空不擋遊戲。小飛機、樹、海報架維持原樣。
+- `server.mjs` 補 `.glb`／`.gltf` MIME；`npm run check-vendor` 納入兩個新 vendor 檔。
+- 第三版依 Jean 回饋「門窗不夠精緻、有貼面上去的模型感」重做門窗：牆上 boolean 開真洞（切口放 `RA_VenueCut`／`RA_AptCut`，不進模型）、暗色室內 `Interior` 退 9 cm、玻璃退 3 cm、石框／窗台／滴水線／拱心石／拱罩突出 5~8 cm、門扇退進洞內＋門框壁燈突出。`window()` 做成兩支腳本共用的分層組件（暗部→玻璃→框→線腳）。
+- 同輪修造型：會場拱後暗部改同形淺碟（方板會露黑角）、金格線依拱圓收斂、柱身加凹槽、簷口加齒飾、立面加壁燈與告示板、花圃改窗下矮槽；航廈屋頂由整片金改奶油屋面＋金壓邊＋屋頂設備／通風管／採光罩，屋脊改採光帶、雷達加支柱與碗、通風柵移到翼樓正面、綠籬壓低不擋玻璃、出發牌改箭頭。金色材質佔比因此下降（會場 50.4%→32.9%、航廈 54.7%→40.4% 三角面）。
+- 接觸陰影不做進模型：`board3d.js` 已有 `PCFSoftShadowMap`，真陰影比較自然。
+
+**驗證過（第三版）：** `npm test` 31 項全過、`npm run check`／`check-vendor` 通過；`verify-glb.mjs`／`tris-by-material.mjs` 量測兩棟 bbox 歸零正確（底部 y=0）、金色三角面佔比降至 32.9%／40.4%；Blender 渲染 5 視角（含俯角）確認門窗有暗部層次、無飄件／黑角／z-fighting；playwright 開 http://localhost:4191 無 console error、無 4xx，實際畫面兩棟造型可讀（單棟約 115×115 px），像素差分量得螢幕佔地約 1.3~1.8%。**沒驗證：** 真實 GPU 的 FPS（headless 軟體渲染約 10 FPS，不代表實機）、投影機與手機實際視覺、真人對精緻度的意見、金色佔比再降與兩棟高度錯開的效果。
 
 ## Acceptance Criteria
 

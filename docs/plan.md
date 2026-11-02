@@ -32,6 +32,12 @@ Jean 採納鮮豔卡通 3D 桌遊概念，授權 Codex 從美術設計開始逐�
 
 順序：學術收穫 ≥13 且最低資源 ≥3 → stage；中途資源耗盡過或最低資源 ≤1 → wild；收穫 ≤9 → safe；其餘 steady。1,000 局隨機選項（36 張卡）：stage 158、steady 366、wild 285、safe 191。沒選：只看學術收穫（24 張時試算 safe 仍約 6%，且「高張力」只代表收穫中等）。隨機選項不代表真人選擇，分布要由試玩再確認。
 
+### D15：棋盤建築改 Blender 建模匯出 GLB（Jean 指定，2026-11-02）
+
+Jean 認為 box 合成的建築「太醜」，給桌遊風格參考圖指定兩棟都重畫：左邊「出發航廈」（奶油牆＋藍玻璃桶頂＋金拱＋航情塔）、右邊「國際會場」（紫穹頂＋四柱門廊＋三角楣）。技術做法：Blender 建模 → 按材質併網格 → 匯出 `assets/art/airport-terminal.glb` 與 `assets/art/international-venue.glb` → 用 vendored `GLTFLoader.js`（three 0.180.0 同版本，MIT，import 改指 `vendor/three.module.js`）載入，替換 `scene-art.js` 的 box 合成建築與兩塊建築招牌。屬美術修正：`src/engine.js` 不動、無新玩法、執行時不連任何外部服務。沒選：把 Blender 模型逐件轉成程式化 three.js 程式碼（維護成本高、造型出不來）；直接把參考圖當貼圖（plan D11 明確禁止用整張圖冒充模型）。第三輪依「門窗像貼上去」的回饋改真開窗：牆上 boolean 開洞＋暗部退後＋框料突出（去貼面感的關鍵），屋頂俯角面補層次，金色三角面佔比降到 33~40%。詳見 [AI_HANDOFF.md](AI_HANDOFF.md) Task 18。
+
+**v1 後的修正（同日，Jean 檢討「細節很多不見了 比如地球」）**：兩棟整棟重建、不打補丁，建模腳本 `tools/blender/build-airport.py`／`build-venue.py` 進 repo 當 GLB 的原始碼（改造型改腳本重跑，GLB 是產物）。參考圖是造型唯一依據，但**圖本身還沒進 repo**，需 Jean 放進 `docs/`（否則下次重建沒有依據）。
+
 ## 2. 遊戲設計（MVP）
 
 **2026-11-01 範圍更新（D12，Jean 要求）**：事件由 D9 的 24 張擴充為 36 張，新增 8 張既有心得候選改編與 4 張原創。只擴充腳本，不增加個別事件插圖；來源對照、連鎖修補與測試見 [report-cases.md](report-cases.md) 第二批紀錄。以下早期 24 張分配保留為歷史設計，不再代表目前實際張數。

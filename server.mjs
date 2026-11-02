@@ -16,6 +16,8 @@ const types = {
   ".svg": "image/svg+xml",
   ".png": "image/png",
   ".webp": "image/webp",
+  ".glb": "model/gltf-binary",
+  ".gltf": "model/gltf+json",
   ".ico": "image/x-icon",
 };
 
