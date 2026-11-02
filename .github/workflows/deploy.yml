@@ -1,0 +1,42 @@
+name: 部署到 GitHub Pages
+# 只發佈遊戲執行需要的檔案（根目錄就是 application root），docs/、tools/、test/ 不進網站。
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 備妥網站檔
+        run: |
+          mkdir -p dist/assets/art
+          cp index.html styles.css game-art.css dist/
+          cp -r src data vendor dist/
+          cp assets/art/*.webp assets/art/*.glb dist/assets/art/
+          echo "發佈內容：" && find dist -type f | sort
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.out.outputs.page_url }}
+    steps:
+      - id: out
+        uses: actions/deploy-pages@v4
