@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-02（台灣時間），OpenCode。**唯一主線是 `codex/game-art`（plan D13），新功能凍結**；`main` 已快轉到 `9dd2016`（含 Task 8、9、14–17）。本次工作在 `feature/board-buildings`（從 `main` 切出，未 push）：Blender 重畫棋盤建築。
+> 更新：2026-11-02（台灣時間），OpenCode。**新功能凍結（plan D13）**；`main` 在 `62dd4f5`（先前快轉到 `9dd2016` 含 Task 8、9、14–17，這次合併 Task 18 棋盤建築 Blender 建模，**已 push**）。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -275,7 +275,7 @@ Jean 要求更多腳本，已新增 12 張：T05–T11、S04b 是既有心得候
 
 **驗證過：** `npm test` 31 項全過、`npm run check` 通過、1,000 局死局 0。**沒驗證：** 瀏覽器實際走到新結局、真人選擇下的分布。舊工作目錄 `D:\Git\Game\roll-abroad` 的未提交修改仍在，已複製到這條分支；要清理須先問 Jean。
 
-### Task 18：棋盤建築改 Blender 建模匯出 GLB（2026-11-02，分支 `feature/board-buildings`）
+### Task 18：棋盤建築改 Blender 建模匯出 GLB（2026-11-02，分支 `feature/board-buildings`，已合併 `main` `62dd4f5` 並 push）
 
 Jean 認為棋盤上的 box 合成建築「太醜」，給了桌遊風格參考圖，指定兩棟都重畫：左邊「出發航廈」（奶油牆＋藍玻璃桶頂＋金拱＋航情塔＋布旗＋行李箱）、右邊「國際會場」（紫穹頂＋鼓座玻璃帶＋四柱門廊＋三角楣＋紫布旗＋紫地毯）。這是美術修正，`src/engine.js` 不動、不新增玩法。
 
@@ -312,6 +312,7 @@ Jean 認為棋盤上的 box 合成建築「太醜」，給了桌遊風格參考�
 2. 結局要維持「單看學術收穫」，還是改成多面向計分？
 3. 黑客松的評分表與 demo 時間限制（還沒拿到）。
 4. 美術要自繪 SVG，還是用 GPT 插圖？
+5. 棋盤建築的參考圖 PNG 要不要放進 repo（建議 `docs/ref/`）當美術 SSOT？現在圖不在 repo，下次重建 GLB 沒有依據（Task 18）。
 
 ## Review Notes
 
