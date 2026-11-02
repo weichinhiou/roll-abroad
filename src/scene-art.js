@@ -45,14 +45,14 @@ function sign(group,text,x,y,z,w,color){
 }
 
 // 棋盤後側兩棟建築：Blender 建模匯出的 GLB（正面朝 +Z），與中央骰子左右對稱。
-const BUILDINGS = [["../assets/art/airport-terminal.glb", -1.55], ["../assets/art/international-venue.glb", 1.55]];
+const BUILDINGS = [["../assets/art/airport-terminal.glb", -1.55, .88], ["../assets/art/international-venue.glb", 1.55, .78]];
 function addBuildings(city) {
   const loader = new GLTFLoader();
-  for (const [rel, x] of BUILDINGS) {
+  for (const [rel, x, s] of BUILDINGS) {
     loader.load(new URL(rel, import.meta.url).href, (gltf) => {
       const model = gltf.scene;
       model.position.set(x, 0, -1.98);
-      model.scale.setScalar(.78);
+      model.scale.setScalar(s);
       model.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
       city.add(model);
     }, undefined, () => {});     // 載入失敗就留空，不影響遊戲進行
