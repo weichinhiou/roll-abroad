@@ -38,6 +38,10 @@ Jean 認為 box 合成的建築「太醜」，給桌遊風格參考圖指定兩�
 
 **v1 後的修正（同日，Jean 檢討「細節很多不見了 比如地球」）**：兩棟整棟重建、不打補丁，建模腳本 `tools/blender/build-airport.py`／`build-venue.py` 進 repo 當 GLB 的原始碼（改造型改腳本重跑，GLB 是產物）。參考圖是造型唯一依據，但**圖本身還沒進 repo**，需 Jean 放進 `docs/`（否則下次重建沒有依據）。
 
+### D16：網站部署到 GitHub Pages（Jean 同意，2026-11-02）
+
+`push` 到 `main` 由 `.github/workflows/deploy.yml` 發佈到 <https://weichinhiou.github.io/roll-abroad/>。發佈檔只有遊戲執行需要的 `index.html`、`styles.css`、`game-art.css`、`src/`、`data/`、`vendor/`、`assets/art/*.webp|*.glb`；`docs/`、`tools/`、`test/` 不進網站（避免院內流程紀錄變成網站內容）。代價：免費方案不支援 private repo 開 Pages，**repo 因此改成 public**，`docs/` 與建模腳本對外人可讀。沒選：院內伺服器部署（要有 web 空間與上傳權限）、升級 GitHub Pro 維持 private。驗證：Actions run `success`、線上 `index.html`／`src/*.js`／兩個 `.glb`（`model/gltf-binary`）／`webp`／`data/*.json` 都回 200、`docs/` 回 404，playwright 開線上站 console 錯誤 0、無 4xx。
+
 ## 2. 遊戲設計（MVP）
 
 **2026-11-01 範圍更新（D12，Jean 要求）**：事件由 D9 的 24 張擴充為 36 張，新增 8 張既有心得候選改編與 4 張原創。只擴充腳本，不增加個別事件插圖；來源對照、連鎖修補與測試見 [report-cases.md](report-cases.md) 第二批紀錄。以下早期 24 張分配保留為歷史設計，不再代表目前實際張數。

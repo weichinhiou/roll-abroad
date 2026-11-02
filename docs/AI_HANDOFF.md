@@ -56,6 +56,13 @@
 
 ## Tasks
 
+### Task 19：上線 GitHub Pages（2026-11-02，`main`）
+
+- 加 `.github/workflows/deploy.yml`：push 到 `main` 就發佈到 <https://weichinhiou.github.io/roll-abroad/>；只複製 `index.html`、`styles.css`、`game-art.css`、`src/`、`data/`、`vendor/`、`assets/art/*.webp|*.glb` 進 `dist`，`docs/`、`tools/`、`test/` 不進網站。
+- 免費方案不支援 private 開 Pages（API 回 422 `Your current plan does not support GitHub Pages for this repository.`），依 Jean 選擇把 repo 改 **public**，Pages 來源設 `build_type: workflow`。
+- **驗證過：** Actions run `completed/success`；線上 `index.html`(200 text/html)、`src/board3d.js`、兩個 `.glb`（200 `model/gltf-binary`，大小與本機相同）、`travel-world.webp`、`data/events.json` 全 200；`docs/AI_HANDOFF.md` 404（如設計不發佈）；playwright 開線上站 `hasCanvas: true`、console 錯誤 0、無 4xx，截圖確認棋盤、兩棟建築、HUD 正常。**沒驗證：** 院內電腦／手機實機流暢度（swiftshader）、網址在院內防火牆外是否顺、真人玩線上版。
+
+
 ### Task 1：補自動測試（plan.md 要求，目前缺少）
 新增 `test/engine.test.js` 和 `package.json` 的 `"test": "node --test"`。要測：
 - 防跳關：例如在第 5 格擲出 3，要停在第 6 格。
@@ -313,6 +320,7 @@ Jean 認為棋盤上的 box 合成建築「太醜」，給了桌遊風格參考�
 3. 黑客松的評分表與 demo 時間限制（還沒拿到）。
 4. 美術要自繪 SVG，還是用 GPT 插圖？
 5. 棋盤建築的參考圖 PNG 要不要放進 repo（建議 `docs/ref/`）當美術 SSOT？現在圖不在 repo，下次重建 GLB 沒有依據（Task 18）。
+6. 網站已公開上線（plan D16），repo 也改 public：`docs/` 的院內流程紀錄對外人可讀，要不要把部分文件移出發佈範圍以外的資料夾或改寫？
 
 ## Review Notes
 

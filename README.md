@@ -13,12 +13,16 @@
 - 有兩條發表路線可以選：壁報、口頭報告。
 - 遊戲裡的行政規則只寫重點概念；精確的金額與期限請到無界任意門查詢（需要登入）。
 
-## 怎麼玩（本機）
+## 怎麼玩
 
-- **雙擊 `start-game.cmd`**：會啟動本機伺服器，並打開 http://localhost:4191 。需要先安裝 Node.js。
+- **線上直接玩**（GitHub Pages，不用裝任何东西）：<https://weichinhiou.github.io/roll-abroad/>
+- **本機**：**雙擊 `start-game.cmd`**，會啟動本機伺服器並打開 http://localhost:4191 。需要先安裝 Node.js。
 - 或者在資料夾裡執行 `npm start`，再打開 http://localhost:4191 。
 - **不要直接雙擊 `index.html`**：用 `file://` 開檔時，瀏覽器會擋掉 ES module 和資料讀取，畫面只剩空殼，畫面上會顯示提示。
-- 上線到 GitHub Pages 之後，直接開網址就可以玩，不需要這些步驟。
+
+## 部署
+
+`push` 到 `main` 會觸發 `.github/workflows/deploy.yml`：只把 `index.html`、兩個 CSS、`src/`、`data/`、`vendor/`、`assets/art/*.webp|*.glb` 放進網站，`docs/`、`tools/`、`test/` 不發佈。Pages 來源設為 GitHub Actions；repo 需為 public（免費方案不支援 private 開 Pages）。
 
 ## 文件
 
