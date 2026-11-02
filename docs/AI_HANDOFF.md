@@ -280,12 +280,14 @@ Jean 要求更多腳本，已新增 12 張：T05–T11、S04b 是既有心得候
 Jean 認為棋盤上的 box 合成建築「太醜」，給了桌遊風格參考圖，指定兩棟都重畫：左邊「出發航廈」（奶油牆＋藍玻璃桶頂＋金拱＋航情塔＋布旗＋行李箱）、右邊「國際會場」（紫穹頂＋鼓座玻璃帶＋四柱門廊＋三角楣＋紫布旗＋紫地毯）。這是美術修正，`src/engine.js` 不動、不新增玩法。
 
 - Blender 5.2 建模，材質前綴 `RA_`／`RA_V_`、物件前綴 `RA_APT_`／`RA_VEN_`，分放 `RA_Airport`、`RA_Venue` collection（場景裡別人的 HQ／店面／雪人模型不動）。
-- 匯出前套用修改器、按材質 join 成單一 mesh、座標歸零（底部 z=0、面向 −Y，匯出後正面朝 +Z）：`assets/art/airport-terminal.glb`（656 KB、15 材質、11,060 tris）、`assets/art/international-venue.glb`（550 KB、15 材質、9,452 tris）。
+- 建模腳本放 `tools/blender/build-airport.py`、`build-venue.py`，視為 GLB 的原始碼：改造型改腳本重跑（`runpy.run_path(...)`），不要手動補網格。腳本自己清掉舊物件、併網格、歸零、渲染三張檢查圖到暫存目錄、再匯出。
+- 匯出前套用修改器、按材質 join 成單一 mesh、座標歸零（底座中心為原點、底部 z=0、面向 −Y，匯出後正面朝 +Z）：`assets/art/airport-terminal.glb`（470 KB、16 材質、8,260 tris）、`assets/art/international-venue.glb`（941 KB、16 材質、17,872 tris）。渲染時模型暫時 park 到 y=90，避免同一 Blender 檔裡別人的模型入鏡，場景相機渲完還原。
+- 第二版依 Jean 重貼的參考圖補回細節：會場加金線地球儀頂飾、屋頂四旗、半圓拱玻璃帷幕＋依拱圓裁短的金格線、立面牆與玻璃雙開門（門不懸空）、紫吊旗白地球 V 下緣、兩側拱窗、兩階紫地毯金邊、圓錐修頂樹＋繡球花；航廈改粗短管制塔（寬玻璃艙＋金簷）、金底白飛機標誌（原本誤做玻璃底）、綠籬帶加黃花、立面金橫桿布旗、行李箱與陶盆。
 - 執行時載入走新 vendor 的 `vendor/GLTFLoader.js`＋`vendor/BufferGeometryUtils.js`（three 0.180.0 同版本 MIT，import 已改指 `./three.module.js`；不連 npm、不連 CDN）。
 - `src/scene-art.js` 移除兩處 box 合成建築與「出發航廈」「國際會場」招牌，改 `addBuildings(city)` 用 `BUILDINGS` 清單非同步載入，擺位 x ∓1.55、z −1.98、`scale 0.78`；載入失敗留空不擋遊戲。小飛機、樹、海報架維持原樣。
 - `server.mjs` 補 `.glb`／`.gltf` MIME；`npm run check-vendor` 納入兩個新 vendor 檔。
 
-**驗證過：** `npm test` 31 項全過、`npm run check`／`check-vendor` 通過、兩支 GLB 都以 vendored GLTFLoader 在 node 解析成功（各 15 meshes、bbox 底部 y=0）、本地 server 相關檔案 HTTP 200 且 `model/gltf-binary`。**沒驗證：** 瀏覽器視覺（本環境無瀏覽器工具）——要 Jean 開 http://localhost:4191 確認大小／位置／FPS。
+**驗證過：** `npm test` 31 項全過、`npm run check`／`check-vendor` 通過、兩支 GLB 都以 vendored GLTFLoader 在 node 解析成功（各 16 meshes、bbox 底部 y=0、x ±1.22／±1.26）、本地 server 相關檔案 HTTP 200 且 `model/gltf-binary`；playwright（headless chromium + swiftshader）開 http://localhost:4191 實際載入，無 console error、無 4xx，兩棟在棋盤中央正常顯示（擲骰後被事件視窗遮蓋屬正常流程）。**沒驗證：** 真實 GPU 的 FPS（headless 軟體渲染只有 9 FPS，不代表實機）、投影機與手機實際視覺、真人對大小／位置的意见。
 
 ## Acceptance Criteria
 
