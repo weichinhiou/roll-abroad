@@ -7,6 +7,6 @@
     "start": "node server.mjs",
     "test": "node --test",
     "check": "node --check src/app.js && node --check src/engine.js && node --check src/render.js && node --check src/board3d.js && node --check src/storage.js && node --check src/art.js && node --check src/scene-art.js && node --check server.mjs",
-    "check-vendor": "node --check vendor/three.module.js && node --check vendor/three.core.js"
+    "check-vendor": "node --check vendor/three.module.js && node --check vendor/three.core.js && node --check vendor/GLTFLoader.js && node --check vendor/BufferGeometryUtils.js"
   }
 }

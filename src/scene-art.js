@@ -1,5 +1,6 @@
 // 棋盤共用美術：圖片貼圖與簡單 3D 旅行場景。規則留在 engine。
 import * as THREE from "../vendor/three.module.js";
+import { GLTFLoader } from "../vendor/GLTFLoader.js";
 import { artImage } from "./art.js";
 export const CHAPTER_COLORS = {1:0x35c58c,2:0x38aff0,3:0xffc536,4:0xa775e1};
 const font = '"Microsoft JhengHei",system-ui,sans-serif';
@@ -43,6 +44,18 @@ function sign(group,text,x,y,z,w,color){
   const m=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:texture(c),side:THREE.DoubleSide}));m.position.set(x,y,z);group.add(m);
 }
 
+// 機場航廈：Blender 建模匯出的 GLB（正面朝 +Z），與右側會場對稱擺在後側。
+const AIRPORT_URL=new URL("../assets/art/airport-terminal.glb",import.meta.url).href;
+function addAirport(city){
+  new GLTFLoader().load(AIRPORT_URL,(gltf)=>{
+    const model=gltf.scene;
+    model.position.set(-1.55,0,-1.98);
+    model.scale.setScalar(.78);
+    model.traverse((o)=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+    city.add(model);
+  },undefined,()=>{});   // 載入失敗就留空，不影響遊戲進行
+}
+
 export function buildTravelTable(scene, outer, inner, topY) {
   const group=new THREE.Group();
   box(group,0,-.08,0,outer*2+.35,.32,outer*2+.35,0x218cc1);
@@ -53,12 +66,8 @@ export function buildTravelTable(scene, outer, inner, topY) {
   floor.rotation.x=-Math.PI/2;floor.position.y=topY;floor.receiveShadow=true;group.add(floor);
   // 中央骰子周圍留空；模型放在後側，不遮住落地與點擊。
   const city=new THREE.Group();city.position.y=topY;
-  // 機場：藍玻璃航廈、黃屋頂、塔台。
-  box(city,-1.45,.38,-1.95,1.85,.75,.9,0x52c5ed);
-  box(city,-1.45,.8,-1.95,2.03,.12,1.04,0xffca43);
-  for(let i=0;i<5;i++)box(city,-2.18+i*.37,.42,-1.48,.045,.65,.03,0xf3fcff);
-  box(city,-2.4,.85,-2.05,.25,1.7,.25,0xfff1d2);box(city,-2.4,1.73,-2.05,.62,.28,.5,0x218ad0);
-  sign(city,"出發航廈",-1.45,.83,-1.41,1.5,0xe9a51d);
+  // 機場：Blender 重畫的航廈（assets/art/airport-terminal.glb），載入完成才掛上；失敗留空不影響遊戲。
+  addAirport(city);
   // 會場：紫色屋頂、講台、海報。
   box(city,1.45,.43,-1.95,1.85,.85,.9,0x7667d3);box(city,1.45,.9,-1.95,2.02,.1,1.05,0x9f8bf3);
   for(let i=0;i<4;i++)box(city,.77+i*.45,.38,-1.48,.32,.6,.035,0x97e1f8);
