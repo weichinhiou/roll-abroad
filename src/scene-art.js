@@ -44,16 +44,19 @@ function sign(group,text,x,y,z,w,color){
   const m=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:texture(c),side:THREE.DoubleSide}));m.position.set(x,y,z);group.add(m);
 }
 
-// 機場航廈：Blender 建模匯出的 GLB（正面朝 +Z），與右側會場對稱擺在後側。
-const AIRPORT_URL=new URL("../assets/art/airport-terminal.glb",import.meta.url).href;
-function addAirport(city){
-  new GLTFLoader().load(AIRPORT_URL,(gltf)=>{
-    const model=gltf.scene;
-    model.position.set(-1.55,0,-1.98);
-    model.scale.setScalar(.78);
-    model.traverse((o)=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
-    city.add(model);
-  },undefined,()=>{});   // 載入失敗就留空，不影響遊戲進行
+// 棋盤後側兩棟建築：Blender 建模匯出的 GLB（正面朝 +Z），與中央骰子左右對稱。
+const BUILDINGS = [["../assets/art/airport-terminal.glb", -1.55], ["../assets/art/international-venue.glb", 1.55]];
+function addBuildings(city) {
+  const loader = new GLTFLoader();
+  for (const [rel, x] of BUILDINGS) {
+    loader.load(new URL(rel, import.meta.url).href, (gltf) => {
+      const model = gltf.scene;
+      model.position.set(x, 0, -1.98);
+      model.scale.setScalar(.78);
+      model.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      city.add(model);
+    }, undefined, () => {});     // 載入失敗就留空，不影響遊戲進行
+  }
 }
 
 export function buildTravelTable(scene, outer, inner, topY) {
@@ -66,12 +69,8 @@ export function buildTravelTable(scene, outer, inner, topY) {
   floor.rotation.x=-Math.PI/2;floor.position.y=topY;floor.receiveShadow=true;group.add(floor);
   // 中央骰子周圍留空；模型放在後側，不遮住落地與點擊。
   const city=new THREE.Group();city.position.y=topY;
-  // 機場：Blender 重畫的航廈（assets/art/airport-terminal.glb），載入完成才掛上；失敗留空不影響遊戲。
-  addAirport(city);
-  // 會場：紫色屋頂、講台、海報。
-  box(city,1.45,.43,-1.95,1.85,.85,.9,0x7667d3);box(city,1.45,.9,-1.95,2.02,.1,1.05,0x9f8bf3);
-  for(let i=0;i<4;i++)box(city,.77+i*.45,.38,-1.48,.32,.6,.035,0x97e1f8);
-  sign(city,"國際會場",1.45,.85,-1.4,1.6,0x6651b6);
+  // 機場與會場：Blender 重畫的 GLB（assets/art/），載入完成才掛上；失敗留空不影響遊戲。
+  addBuildings(city);
   // 小飛機：固定模型，不引入額外隨機或下載模型。
   const plane=new THREE.Group();plane.position.set(0,.98,-2.05);plane.rotation.y=-.3;
   const fuselage=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.7,4,12),mat(0xf6fbff));fuselage.rotation.x=Math.PI/2;plane.add(fuselage);

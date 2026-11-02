@@ -275,17 +275,17 @@ Jean 要求更多腳本，已新增 12 張：T05–T11、S04b 是既有心得候
 
 **驗證過：** `npm test` 31 項全過、`npm run check` 通過、1,000 局死局 0。**沒驗證：** 瀏覽器實際走到新結局、真人選擇下的分布。舊工作目錄 `D:\Git\Game\roll-abroad` 的未提交修改仍在，已複製到這條分支；要清理須先問 Jean。
 
-### Task 18：建築物改 Blender 建模匯出 GLB（2026-11-02，分支 `feature/board-buildings`）
+### Task 18：棋盤建築改 Blender 建模匯出 GLB（2026-11-02，分支 `feature/board-buildings`）
 
-Jean 認為棋盤上的 box 合成建築「太醜」，給了桌遊風格參考圖，指定先重畫左邊的「出發航廈」（右邊「國際會場」之後做）。這是美術修正，`src/engine.js` 不動、不新增玩法。
+Jean 認為棋盤上的 box 合成建築「太醜」，給了桌遊風格參考圖，指定兩棟都重畫：左邊「出發航廈」（奶油牆＋藍玻璃桶頂＋金拱＋航情塔＋布旗＋行李箱）、右邊「國際會場」（紫穹頂＋鼓座玻璃帶＋四柱門廊＋三角楣＋紫布旗＋紫地毯）。這是美術修正，`src/engine.js` 不動、不新增玩法。
 
-- Blender 5.2 建模（奶油牆＋藍玻璃桶頂＋金拱＋航情塔＋布旗＋行李箱），材質 `RA_` 前綴、物件收在 `RA_Airport` collection（場景裡別人的 HQ／雪人模型不動）。
-- 匯出前套用修改器、按材質 join 成單一 mesh、座標歸零（底部 z=0、面向 −Y）。匯出 `assets/art/airport-terminal.glb`（656 KB、15 材質、11,060 tris、正面朝 +Z）。
+- Blender 5.2 建模，材質前綴 `RA_`／`RA_V_`、物件前綴 `RA_APT_`／`RA_VEN_`，分放 `RA_Airport`、`RA_Venue` collection（場景裡別人的 HQ／店面／雪人模型不動）。
+- 匯出前套用修改器、按材質 join 成單一 mesh、座標歸零（底部 z=0、面向 −Y，匯出後正面朝 +Z）：`assets/art/airport-terminal.glb`（656 KB、15 材質、11,060 tris）、`assets/art/international-venue.glb`（550 KB、15 材質、9,452 tris）。
 - 執行時載入走新 vendor 的 `vendor/GLTFLoader.js`＋`vendor/BufferGeometryUtils.js`（three 0.180.0 同版本 MIT，import 已改指 `./three.module.js`；不連 npm、不連 CDN）。
-- `src/scene-art.js` 移除 box 合成的航廈與「出發航廈」招牌，改 `addAirport(city)` 非同步載入 GLB，擺位 `(-1.55, 0, -1.98)`、`scale 0.78`；載入失敗留空不擋遊戲。會場、小飛機、樹、海報架暫時維持原樣。
+- `src/scene-art.js` 移除兩處 box 合成建築與「出發航廈」「國際會場」招牌，改 `addBuildings(city)` 用 `BUILDINGS` 清單非同步載入，擺位 x ∓1.55、z −1.98、`scale 0.78`；載入失敗留空不擋遊戲。小飛機、樹、海報架維持原樣。
 - `server.mjs` 補 `.glb`／`.gltf` MIME；`npm run check-vendor` 納入兩個新 vendor 檔。
 
-**驗證過：** `npm test` 31 項全過、`npm run check`／`check-vendor` 通過、GLB 以 vendored GLTFLoader 在 node 解析成功（15 meshes、bbox y 0–2.02）、本地 server 四個檔案 HTTP 200 且 `model/gltf-binary`。**沒驗證：** 瀏覽器視覺（本環境無瀏覽器工具）——要 Jean 開 http://localhost:4191 確認大小／位置／FPS。
+**驗證過：** `npm test` 31 項全過、`npm run check`／`check-vendor` 通過、兩支 GLB 都以 vendored GLTFLoader 在 node 解析成功（各 15 meshes、bbox 底部 y=0）、本地 server 相關檔案 HTTP 200 且 `model/gltf-binary`。**沒驗證：** 瀏覽器視覺（本環境無瀏覽器工具）——要 Jean 開 http://localhost:4191 確認大小／位置／FPS。
 
 ## Acceptance Criteria
 

@@ -34,7 +34,7 @@ Jean 採納鮮豔卡通 3D 桌遊概念，授權 Codex 從美術設計開始逐�
 
 ### D15：棋盤建築改 Blender 建模匯出 GLB（Jean 指定，2026-11-02）
 
-Jean 認為 box 合成的建築「太醜」，給桌遊風格參考圖指定重畫：先做左邊「出發航廈」（奶油牆＋藍玻璃桶頂＋金拱＋航情塔），右邊「國際會場」（紫穹頂）之後跟進。技術做法：Blender 建模 → 按材質併網格 → 匯出 `assets/art/airport-terminal.glb` → 用 vendored `GLTFLoader.js`（three 0.180.0 同版本，MIT，import 改指 `vendor/three.module.js`）載入，替換 `scene-art.js` 的 box 合成建築。屬美術修正：`src/engine.js` 不動、無新玩法、執行時不連任何外部服務。沒選：把 Blender 模型逐件轉成程式化 three.js 程式碼（維護成本高、造型出不來）；直接把參考圖當貼圖（plan D11 明確禁止用整張圖冒充模型）。詳見 [AI_HANDOFF.md](AI_HANDOFF.md) Task 18。
+Jean 認為 box 合成的建築「太醜」，給桌遊風格參考圖指定兩棟都重畫：左邊「出發航廈」（奶油牆＋藍玻璃桶頂＋金拱＋航情塔）、右邊「國際會場」（紫穹頂＋四柱門廊＋三角楣）。技術做法：Blender 建模 → 按材質併網格 → 匯出 `assets/art/airport-terminal.glb` 與 `assets/art/international-venue.glb` → 用 vendored `GLTFLoader.js`（three 0.180.0 同版本，MIT，import 改指 `vendor/three.module.js`）載入，替換 `scene-art.js` 的 box 合成建築與兩塊建築招牌。屬美術修正：`src/engine.js` 不動、無新玩法、執行時不連任何外部服務。沒選：把 Blender 模型逐件轉成程式化 three.js 程式碼（維護成本高、造型出不來）；直接把參考圖當貼圖（plan D11 明確禁止用整張圖冒充模型）。詳見 [AI_HANDOFF.md](AI_HANDOFF.md) Task 18。
 
 ## 2. 遊戲設計（MVP）
 
