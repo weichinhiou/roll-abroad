@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-03（台灣時間），OpenCode。**新功能凍結（plan D13）**；`main` 在 `6bfbb15`（Task 18 兩棟建築、Task 19 Pages 部署都已在線上）。工作分支 `feature/traveler-miniature`（Task 20 旅人棋子）已 push，**尚未 merge 進 `main`**（合併才會發佈到線上）。
+> 更新：2026-11-03（台灣時間），OpenCode。**新功能凍結（plan D13）**；`main` 在 `490e6d6`（Task 18 兩棟建築、Task 19 Pages 部署、Task 20 旅人棋子 v1＋v2 都已 merge 並發佈到線上）。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -63,7 +63,7 @@
 - **驗證過：** Actions run `completed/success`；線上 `index.html`(200 text/html)、`src/board3d.js`、兩個 `.glb`（200 `model/gltf-binary`，大小與本機相同）、`travel-world.webp`、`data/events.json` 全 200；`docs/AI_HANDOFF.md` 404（如設計不發佈）；playwright 開線上站 `hasCanvas: true`、console 錯誤 0、無 4xx，截圖確認棋盤、兩棟建築、HUD 正常。**沒驗證：** 院內電腦／手機實機流暢度（swiftshader）、網址在院內防火牆外是否顺、真人玩線上版。
 
 
-### Task 20：玩家棋子改 Blender 建模的旅人（2026-11-03，分支 `feature/traveler-miniature`，已 push、未 merge）
+### Task 20：玩家棋子改 Blender 建模的旅人（2026-11-03，分支 `feature/traveler-miniature`，已 merge `main` 並發佈）
 
 Jean 給一張「開心學術旅人」插畫（捲髮男孩、綠外套白襯衫、藍識別證、黃書、黃背包、卡其褲反折、棕鞋、青綠圓底座），要把它做成棋子。仍是美術修正：`src/engine.js` 不動、不新增玩法。
 
@@ -76,7 +76,7 @@ Jean 給一張「開心學術旅人」插畫（捲髮男孩、綠外套白襯衫
 
 **v2 修正（同日，Jean 看遊戲畫面說「左手結構怪怪的，好像沒有拿文件夾拿行李箱的感覺」）**：v1 的書和行李箱都堆在同一側、手飄在腰邊沒握到東西，俯角下讀成「一團黃色加一團橘色」。改成**兩手各有工作**：左手（+X）下垂握住豎式行李箱的拉把（拉桿兩支柱＋橫把，輪子真的停在底座面上 z=0.114，底座因此往行李箱側加長成橢圓才托得住），右手（−X）抱會議文件夾（黃夾＋白紙從上緣露出一截＋藍標籤線，取代原本夾在腋下的書）。踩到的坑：① `capsule` 的軸是局部 +Z，`rot x` 要**負值**才是小臂往前、`rot y` 要「左側負、右側正」手才往外下垂，符號寫反袖子會往後翹——v1 的怪手就是這個；② 歸零如果連底座 bbox 一起算，偏右的橢圓底座會把人推離格子中心，改成只把 z 壓到 0、x/y 以雙腳為原點。頭髮、手臂、行李箱全部由 `build-traveler.py` 重跑產生（4,020 三角面、263 KB）。
 
-**驗證過（v2 重跑後再驗一次）：** `npm run check` 通過、`npm test` 31 項全過；`inspect-traveler.mjs` 解析 GLB 確認三節點 bbox：body y 0..0.799、head 0.742..1.130、case y 0.093..0.526（拉桿頂端在 0.526，離手 z≈0.63 一截拉桿的距離）、總 4,020 三角面／263,256 bytes；playwright 開 http://localhost:4191（`shot-pawn2.js`、`verify-pawn.js`）：`traveler.glb` 回 200 `model/gltf-binary`、`window.__pawnModel` 為 `glb`、擲骰走到第 1/24 格・選定會議、console 錯誤 0、無 4xx；遊戲畫面 2 倍截圖放大確認左手握到拉桿、文件夾有白紙與藍標籤線、棋子站在格子中央（歸零只壓 z）。**沒驗證（延續 v1）：** 真實 GPU 的 FPS 與陰影表現、真人對棋子精緻度的意見、縮到手機尺寸後讀不讀得出來、行李箱跳格拖曳實機手感、插畫參考圖尚未進 repo（Open Questions）。
+**驗證過（v2 重跑後再驗一次）：** `npm run check` 通過、`npm test` 31 項全過；`inspect-traveler.mjs` 解析 GLB 確認三節點 bbox：body y 0..0.799、head 0.742..1.130、case y 0.093..0.526（拉桿頂端在 0.526，離手 z≈0.63 一截拉桿的距離）、總 4,020 三角面／263,256 bytes；playwright 開 http://localhost:4191（`shot-pawn2.js`、`verify-pawn.js`）：`traveler.glb` 回 200 `model/gltf-binary`、`window.__pawnModel` 為 `glb`、擲骰走到第 1/24 格・選定會議、console 錯誤 0、無 4xx；遊戲畫面 2 倍截圖放大確認左手握到拉桿、文件夾有白紙與藍標籤線、棋子站在格子中央（歸零只壓 z）。**發佈驗證（merge 進 `main` 後）：** Actions run #3 `completed/success`；線上 <https://weichinhiou.github.io/roll-abroad/> 實測 `traveler.glb` 回 200 `model/gltf-binary`、`__pawnModel` 為 `glb`、點 3D 骰子擲到 1 走到「第 1/24 格・選定會議｜擲骰 1 次」、console 錯誤 0／4xx 0。**沒驗證（延續 v1）：** 真實 GPU 的 FPS 與陰影表現、真人對棋子精緻度的意見、縮到手機尺寸後讀不讀得出來、行李箱跳格拖曳實機手感、插畫參考圖尚未進 repo（Open Questions）。
 
 ### Task 1：補自動測試（plan.md 要求，目前缺少）
 新增 `test/engine.test.js` 和 `package.json` 的 `"test": "node --test"`。要測：
