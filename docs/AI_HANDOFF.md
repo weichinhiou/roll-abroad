@@ -1,11 +1,11 @@
 # AI Handoff
 
-> 更新：2026-11-02（台灣時間），OpenCode。**新功能凍結（plan D13）**；`main` 在 `62dd4f5`（先前快轉到 `9dd2016` 含 Task 8、9、14–17，這次合併 Task 18 棋盤建築 Blender 建模，**已 push**）。
+> 更新：2026-11-03（台灣時間），OpenCode。**新功能凍結（plan D13）**；`main` 在 `6bfbb15`（Task 18 兩棟建築、Task 19 Pages 部署都已在線上）。目前工作分支 `feature/traveler-miniature`（Task 20 旅人棋子）**尚未 push**。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
 
-《大赴翁》Roll Abroad：`D:\Git\Game\roll-abroad`，遠端 https://github.com/weichinhiou/roll-abroad （**目前是私人 repo**）。
+《大赴翁》Roll Abroad：`D:\Git\roll-abroad`，遠端 https://github.com/weichinhiou/roll-abroad （**public**，線上 <https://weichinhiou.github.io/roll-abroad/>，plan D16）。
 
 ## Goal
 
@@ -62,6 +62,17 @@
 - 免費方案不支援 private 開 Pages（API 回 422 `Your current plan does not support GitHub Pages for this repository.`），依 Jean 選擇把 repo 改 **public**，Pages 來源設 `build_type: workflow`。
 - **驗證過：** Actions run `completed/success`；線上 `index.html`(200 text/html)、`src/board3d.js`、兩個 `.glb`（200 `model/gltf-binary`，大小與本機相同）、`travel-world.webp`、`data/events.json` 全 200；`docs/AI_HANDOFF.md` 404（如設計不發佈）；playwright 開線上站 `hasCanvas: true`、console 錯誤 0、無 4xx，截圖確認棋盤、兩棟建築、HUD 正常。**沒驗證：** 院內電腦／手機實機流暢度（swiftshader）、網址在院內防火牆外是否顺、真人玩線上版。
 
+
+### Task 20：玩家棋子改 Blender 建模的旅人（2026-11-03，分支 `feature/traveler-miniature`，**未 push**）
+
+Jean 給一張「開心學術旅人」插畫（捲髮男孩、綠外套白襯衫、藍識別證、黃書、黃背包、卡其褲反折、棕鞋、青綠圓底座），要把它做成棋子。仍是美術修正：`src/engine.js` 不動、不新增玩法。
+
+- 建模腳本 `tools/blender/build-traveler.py`（GLB 的原始碼，改造型改腳本重跑）：`runpy.run_path()` 執行 → 清舊物件 → 按節點 join → 套用修改器 → 歸零（底座中心為原點、底部 z=0、正面 −Y）→ 自帶 Sun＋Area 渲四張檢查圖（正面／側後／上半身／**遊戲俯角**）→ 匯出 `assets/art/traveler.glb`。渲完把燈刪掉、場景相機還原；模型渲暫存時 park 到 y=90 不入鏡別人的模型。成品 4,136 三角面、266 KB、三節點。
+- 三個節點是動畫需要：`RA_TravelerBody`（含底座）、`RA_TravelerHead`（原點搬到脖子）、`RA_TravelerCase`（行李箱，原點搬到箱中心）。`board3d.js` 用 head 做 idle「左右看」、用 case 做跳格拖後與落地回正；跳格動畫的基準位置改讀節點原始 position（`CASE_HOME`，box 備援用預設值），不再硬編碼。
+- 縮圖取捨寫進 [art-direction.md](art-direction.md)「旅人棋子」：整顆在螢幕上約 40×90 px，所以砍掉口袋／釨子／第二條鞋帶等細碎件、行李箱改橘紅（黃書＋黃背包已經都是黃的）、瀏海抬高到眉上，否則 56° 俯角看成一坨毛球。整體縮放常數 `S = 0.82`。
+- `src/board3d.js`：`buildPawn()` 先照原本方式做出 box 棋子，再非同步載 GLB，成功才拆掉 box 換模型（GLB 掛掉不影響遊戲）；載入成功會設 `window.__pawnModel = "glb"` 供驗證。`server.mjs` 已支援 `.glb` MIME、`deploy.yml` 已複製 `assets/art/*.glb`，不用改。
+
+**驗證過：** `npm run check` 通過、`npm test` 31 項全過；`inspect-traveler.mjs` 用 vendor 的 `GLTFLoader` 解析 GLB 確認三節點名稱、原點與 bbox（body y 0..0.799、head 0.742..1.130、case 0.007..0.369）；playwright 開 http://localhost:4191，`traveler.glb` 回 200 `model/gltf-binary`、`window.__pawnModel` 為 `glb`、console 錯誤 0、無 4xx；A/B 截圖（A 一般載入、B 擋掉 `traveler.glb`）做像素差異定位，差異集中在起點格棋子所在區域，A 是 GLB 旅人、B 是 box 備援，證明替換路徑與備援路徑都活。Blender 端渲四張（含遊戲俯角）確認臉不被頭髮蓋住、底座 z=0。**沒驗證：** 真實 GPU 的 FPS 與陰影表現（headless 軟體渲染）、真人對棋子精緻度的意見、縮到手機尺寸後棋子還讀不讀得出來、行李箱跳格拖曳在實機順不順、插畫參考圖尚未進 repo（`docs/ref/`，見 Open Questions）。
 
 ### Task 1：補自動測試（plan.md 要求，目前缺少）
 新增 `test/engine.test.js` 和 `package.json` 的 `"test": "node --test"`。要測：
@@ -319,7 +330,7 @@ Jean 認為棋盤上的 box 合成建築「太醜」，給了桌遊風格參考�
 2. 結局要維持「單看學術收穫」，還是改成多面向計分？
 3. 黑客松的評分表與 demo 時間限制（還沒拿到）。
 4. 美術要自繪 SVG，還是用 GPT 插圖？
-5. 棋盤建築的參考圖 PNG 要不要放進 repo（建議 `docs/ref/`）當美術 SSOT？現在圖不在 repo，下次重建 GLB 沒有依據（Task 18）。
+5. 棋盤建築與旅人棋子的參考圖 PNG 要不要放進 repo（建議 `docs/ref/`）當美術 SSOT？現在圖只在對話裡，下次重建 GLB 沒有依據（Task 18、20）。
 6. 網站已公開上線（plan D16），repo 也改 public：`docs/` 的院內流程紀錄對外人可讀，要不要把部分文件移出發佈範圍以外的資料夾或改寫？
 
 ## Review Notes

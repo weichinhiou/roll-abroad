@@ -11,6 +11,7 @@
 //
 // 規則（格子順序、位置、里程碑、骰子點數）由 engine / data/board.json 決定，這裡不寫規則。
 import * as THREE from "../vendor/three.module.js";
+import { GLTFLoader } from "../vendor/GLTFLoader.js";
 import { CHAPTER_COLORS, tileArt, buildTravelTable } from "./scene-art.js";
 
 // ── 顏色與版面 ─────────────────────────────────────────────────────
@@ -50,6 +51,8 @@ let ready = false;
 let wrap = null;
 let renderer, scene, camera, clock;
 let pawn, pawnGroup, suitcase, pawnHead;
+// 行李箱基準位置（相對於棋子）。GLB 載入後會改讀節點自己的 position，這組是 box 備援用的預設值。
+const CASE_HOME = new THREE.Vector3(0.36, 0.16, 0.08);
 let ringGroup, tableGroup;
 const tileMeshes = [];
 let tileHint = null;
@@ -512,7 +515,30 @@ function buildPawn() {
   pawn.add(backpack);
   pawn.traverse((o) => { if (o.isMesh) o.castShadow = true; });
 
-  // 行李箱：一顆小箱在棋子側邊
+  // 棋子本體改用 Blender 建模匯出的旅人（tools/blender/build-traveler.py）。
+  // 載入成功就拆掉上面那組 box 備援件。GLB 三個節點：RA_TravelerBody / RA_TravelerHead（idle 左右看）
+  // / RA_TravelerCase（跳格時拖後、落地回正）。行李箱拉到 pawnGroup 層級，跟 box 版一樣不吃 squash。
+  new GLTFLoader().load(new URL("../assets/art/traveler.glb", import.meta.url).href, (gltf) => {
+    for (const ob of [...pawn.children]) pawn.remove(ob);
+    const model = gltf.scene;
+    model.traverse((o) => {
+      if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+    });
+    pawn.add(model);
+    const head = model.getObjectByName("RA_TravelerHead");
+    if (head) pawnHead = head;
+    const caseNode = model.getObjectByName("RA_TravelerCase");
+    if (caseNode) {
+      const oldCase = suitcase;
+      pawnGroup.add(caseNode);
+      suitcase = caseNode;
+      CASE_HOME.copy(caseNode.position);        // 跳格動畫以模型自己的擺位為基準
+      if (oldCase) pawnGroup.remove(oldCase);
+    }
+    if (typeof window !== "undefined") window.__pawnModel = "glb";   // 給測試／除錯用
+  }, undefined, () => {});            // 載入失敗留上面那組 box 棋子，不影響遊戲
+
+  // 行李箱：一顆小箱在棋子側邊（GLB 載入成功時會被模型的 RA_TravelerCase 取代）
   suitcase = new THREE.Group();
   const caseBody = new THREE.Mesh(
     new THREE.BoxGeometry(0.28, 0.22, 0.14),
@@ -530,7 +556,7 @@ function buildPawn() {
   );
   caseSticker.position.set(0, 0.02, 0.071);
   suitcase.add(caseBody, caseHandle, caseSticker);
-  suitcase.position.set(0.36, 0.16, 0.08);
+  suitcase.position.copy(CASE_HOME);
   suitcase.traverse((o) => { if (o.isMesh) o.castShadow = true; });
 
   pawnGroup.add(pawn, suitcase);
@@ -546,7 +572,7 @@ function resetPawnGroup() {
   const sq = data ? data.board.squares[pos <= 0 ? 23 : Math.min(23, pos - 1)] : null;
   const y = 0.30 + (sq ? cellHeight(sq) : 0);
   pawnGroup.position.set(target.x, y, target.z);
-  if (suitcase) suitcase.position.set(0.36, 0.16, 0.08);
+  if (suitcase) suitcase.position.copy(CASE_HOME);
 }
 
 function buildDie() {
@@ -885,8 +911,8 @@ function hop(fromN, toN, done) {
 
       // 起跳時箱子稍微拖後、落地時回正
       if (suitcase) {
-        suitcase.position.x = 0.36 - Math.sin(k * Math.PI) * 0.22;
-        suitcase.position.z = 0.08 - Math.sin(k * Math.PI) * 0.18;
+        suitcase.position.x = CASE_HOME.x - Math.sin(k * Math.PI) * 0.22;
+        suitcase.position.z = CASE_HOME.z - Math.sin(k * Math.PI) * 0.18;
       }
       if (pawn) {
         const squish = 1 + Math.sin(k * Math.PI) * 0.12;
@@ -902,8 +928,8 @@ function hop(fromN, toN, done) {
           const bounce = 1 - Math.sin(lk * Math.PI) * 0.14;
           if (pawn) pawn.scale.set(2 - bounce, bounce, 2 - bounce);
           if (suitcase) {
-            suitcase.position.x += (0.36 - suitcase.position.x) * 0.25;
-            suitcase.position.z += (0.08 - suitcase.position.z) * 0.25;
+            suitcase.position.x += (CASE_HOME.x - suitcase.position.x) * 0.25;
+            suitcase.position.z += (CASE_HOME.z - suitcase.position.z) * 0.25;
             suitcase.rotation.z = Math.sin(lk * Math.PI * 2) * 0.12;
           }
           pawnGroup.position.y = endY + Math.sin(lk * Math.PI) * 0.12;
@@ -911,7 +937,7 @@ function hop(fromN, toN, done) {
           else {
             if (pawn) pawn.scale.set(1, 1, 1);
             if (suitcase) {
-              suitcase.position.set(0.36, 0.16, 0.08);
+              suitcase.position.copy(CASE_HOME);
               suitcase.rotation.z = 0;
             }
             pawnGroup.position.y = endY;
