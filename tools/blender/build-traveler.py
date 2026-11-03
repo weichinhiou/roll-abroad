@@ -101,11 +101,15 @@ def box(name, size, loc, mat, bevel=0.0, rot=(0, 0, 0), head=False, case=False):
     return own(o, mat, bevel, head, case)
 
 
-def cyl(name, r, depth, loc, mat, verts=16, rot=(0, 0, 0), head=False, case=False):
+def cyl(name, r, depth, loc, mat, verts=16, rot=(0, 0, 0), head=False, case=False,
+        scale=(1, 1, 1)):
     bpy.ops.mesh.primitive_cylinder_add(vertices=verts, radius=r * S, depth=depth * S,
                                         location=P(loc), rotation=rot)
     o = bpy.context.active_object
     o.name = name
+    if scale != (1, 1, 1):
+        o.scale = scale
+        bpy.ops.object.transform_apply(scale=True)
     return own(o, mat, 0.0, head, case)
 
 
@@ -144,9 +148,9 @@ def capsule(name, r, depth, loc, mat, rot=(0, 0, 0), verts=12, head=False):
     return own(bpy.context.active_object, mat, 0.0, head)
 
 
-# ── 底座（跟插畫一樣的青綠圓台）───────────────────────────────────
-cyl("Base", 0.36, 0.09, (0, 0, 0.045), BASED, verts=28)
-cyl("BaseTop", 0.31, 0.028, (0, 0, 0.10), BASE, verts=28)
+# ── 底座（青綠圓台，往行李箱那一側加長成橢圓，行李箱才不會懸在台外）──
+cyl("Base", 0.36, 0.09, (0.05, 0, 0.045), BASED, verts=28, scale=(1.22, 1.0, 1.0))
+cyl("BaseTop", 0.31, 0.028, (0.05, 0, 0.10), BASE, verts=28, scale=(1.22, 1.0, 1.0))
 
 # ── 褲子、反折褲口、鞋 ─────────────────────────────────────────────
 for sx in (-1, 1):
@@ -179,28 +183,27 @@ for sx in (-1, 1):
     box("Strap%d" % sx, (0.05, 0.028, 0.30), (sx * 0.10, -0.078, 0.80), BAG,
         rot=(math.radians(7), 0, 0))
 
-# ── 手臂：綠袖＋白袖口＋膚色手（左手抓背包帶、右手扶書）────────────
-capsule("ArmL", 0.058, 0.20, (-0.235, -0.012, 0.80), COAT,
-        rot=(math.radians(16), 0, math.radians(28)))
-capsule("ForeL", 0.052, 0.10, (-0.252, -0.09, 0.668), COAT,
-        rot=(math.radians(80), 0, math.radians(16)))
-box("CuffL", (0.082, 0.082, 0.04), (-0.258, -0.135, 0.655), SHIRT, bevel=0.014,
-    rot=(math.radians(16), 0, 0))
-ball("HandL", 0.062, (-0.243, -0.158, 0.648), SKIN, sub=1)
-capsule("ArmR", 0.058, 0.19, (0.232, -0.02, 0.80), COAT,
-        rot=(math.radians(22), 0, math.radians(-13)))
-capsule("ForeR", 0.052, 0.06, (0.243, -0.10, 0.672), COAT, rot=(math.radians(86), 0, 0))
-box("CuffR", (0.082, 0.082, 0.04), (0.243, -0.148, 0.655), SHIRT, bevel=0.014,
-    rot=(math.radians(22), 0, 0))
-ball("HandR", 0.068, (0.246, -0.205, 0.615), SKIN, sub=1)   # 手要在書前面，才不像綠手套
+# ── 手臂：綠袖＋白袖口＋膚色手 ─────────────────────────────────────
+# 兩手各有工作在幹：左手（+X）下垂握住行李箱拉把、右手（−X）抱著會議文件夾。
+# 轉向符號要注意：capsule 的軸是 +Z，`rot x` 要**負**的才是手肘以下往「前」（−Y）、
+# `rot y` 要「左手負、右手正」手才往外側下垂；符號搞反袖子會往後翹，縮圖下就是怪手。
+ARM_L = (math.radians(-12), math.radians(-22), 0)      # 往外側＋稍微往前下垂，落在拉把上
+ARM_R = (math.radians(-32), math.radians(10), 0)       # 往前抱，落在文件夾下緣
+capsule("ArmL", 0.058, 0.19, (0.29, -0.005, 0.775), COAT, rot=ARM_L)
+box("CuffL", (0.082, 0.082, 0.04), (0.328, -0.028, 0.676), SHIRT, bevel=0.014, rot=ARM_L)
+ball("HandL", 0.06, (0.34, -0.032, 0.632), SKIN, sub=1)
+capsule("ArmR", 0.058, 0.19, (-0.245, -0.06, 0.75), COAT, rot=ARM_R)
+box("CuffR", (0.082, 0.082, 0.04), (-0.262, -0.118, 0.668), SHIRT, bevel=0.014, rot=ARM_R)
+ball("HandR", 0.062, (-0.268, -0.145, 0.625), SKIN, sub=1)
 
-# 書：夾在右腋下。轉角不能大，否則書頁會從黃封面旁邊露出來、縮圖下變成一個相框。
-box("Book", (0.175, 0.05, 0.235), (0.225, -0.14, 0.61), BOOK, bevel=0.012,
-    rot=(math.radians(-6), math.radians(8), 0))
-box("BookPages", (0.155, 0.02, 0.205), (0.225, -0.10, 0.612), PAPER,
-    rot=(math.radians(-6), math.radians(8), 0))
-box("BookBand", (0.18, 0.018, 0.028), (0.225, -0.168, 0.555), BAGD,
-    rot=(math.radians(-6), math.radians(8), 0))
+# 文件夾：黃夾＋白紙從上緣露一點＋藍標籤線（取代原本的書，比較有「開會文件」的味道）
+# 手要抓到夾子的下緣外側，才看得出是「抱著」而不是飄在身前。
+box("Folder", (0.175, 0.045, 0.24), (-0.225, -0.11, 0.685), BOOK, bevel=0.012,
+    rot=(0, 0, math.radians(-6)))
+box("FolderPaper", (0.155, 0.02, 0.215), (-0.225, -0.088, 0.725), PAPER,
+    rot=(0, 0, math.radians(-6)))
+box("FolderLine", (0.085, 0.02, 0.02), (-0.225, -0.14, 0.74), BADGELINE,
+    rot=(0, 0, math.radians(-6)))
 
 # ── 頭（獨立節點 RA_TravelerHead）──────────────────────────────────
 # 遊戲鏡頭是 56° 俯角：頭不能太大、頭髮不能太蓬，否則整顆讀成一坨毛球。
@@ -236,19 +239,23 @@ for i, (dx, dz, r) in enumerate([(-0.13, 0.1, 0.062), (-0.062, 0.115, 0.066),
          scale=(1, 0.8, 1.05), head=True)
 
 # ── 行李箱（獨立節點：跳格時拖後、落地回正）────────────────────────
-# 顏色用橘紅不用黃：黃書、黃背包都是黃的，箱子再黃縮圖下會糊成一團。
-CXL, CYL, CZL = 0.36, 0.08, 0.20
-box("Case", (0.14, 0.26, 0.32), (CXL, CYL, CZL), CASE, bevel=0.025,
-    rot=(0, 0, math.radians(9)), case=True)
-box("CaseStripe", (0.145, 0.265, 0.05), (CXL, CYL, CZL - 0.09), CASED,
-    rot=(0, 0, math.radians(9)), case=True)
-box("CaseHandle", (0.09, 0.02, 0.10), (CXL, CYL - 0.15, CZL + 0.2), CUFF,
-    rot=(0, 0, math.radians(9)), case=True)
-box("CaseTag", (0.05, 0.015, 0.06), (CXL + 0.07, CYL - 0.15, CZL + 0.17), LANYARD,
-    rot=(0, 0, math.radians(9)), case=True)   # 吊牌吊在拉把上，不要飄在箱子旁邊
+# 橘紅色（黃書包＋黃文件夾已經夠黃，箱子再黃會糊成一團）。
+# 重點是「拉桿行李箱」要讀得出來：豎著的高箱＋两轮＋伸出来的拉杆，拉杆顶端剛好讓手握住。
+# 輪子要真正停在底座面上（底座面 z=0.114），不能懸在半空中。
+CXL, CYL, CZL = 0.34, 0.05, 0.314
+box("Case", (0.15, 0.26, 0.36), (CXL, CYL, CZL), CASE, bevel=0.025,
+    rot=(0, 0, math.radians(6)), case=True)
+box("CaseStripe", (0.155, 0.265, 0.055), (CXL, CYL, CZL - 0.10), CASED,
+    rot=(0, 0, math.radians(6)), case=True)
+box("CaseZip", (0.02, 0.27, 0.30), (CXL - 0.075, CYL, CZL + 0.02), CASED,
+    rot=(0, 0, math.radians(6)), case=True)
+for dy in (-0.09, 0.09):        # 拉杆兩支柱
+    box("CasePost", (0.022, 0.022, 0.16), (CXL, CYL + dy, 0.55), CUFF, case=True)
+box("CaseBar", (0.028, 0.20, 0.032), (CXL, 0.02, 0.625), CUFF, case=True)
+box("CaseTag", (0.05, 0.014, 0.055), (CXL + 0.005, 0.135, 0.585), LANYARD, case=True)
 for sx in (-1, 1):
-    cyl("CaseWheel%d" % sx, 0.028, 0.02, (CXL + sx * 0.05, CYL + 0.09, CZL - 0.165),
-        EYE, verts=10, rot=(0, math.pi / 2, 0), case=True)
+    cyl("CaseWheel%d" % sx, 0.03, 0.022, (CXL + sx * 0.05, CYL + 0.09, 0.144),
+        EYE, verts=12, rot=(0, math.pi / 2, 0), case=True)
 
 # ── 頭、身體各自併成一張 mesh（Head 原點搬到脖子）──────────────────
 if bpy.context.mode != 'OBJECT':
@@ -296,17 +303,19 @@ for ob, pivot in ((head, NECK), (case, CORG)):
         v.co -= pivot
     ob.location = pivot
 
-# 歸零：整體 bbox 底座中心為原點、底部 z=0。matrix_world 會等 depsgraph 更新，
-# 改完 location 一定要先 update() 再讀，否則會抓到舊值、歸零歸不準。
+# 歸零：原點＝**雙腳中心**、底座底部 z=0。matrix_world 會等 depsgraph 更新，改完
+# location 一定要先 update() 再讀，否則抓到舊值、歸零歸不準。
+# x/y 只取底座面以上（z>0.13）的頂點：底座為了托住行李箱做成偏右的橢圓，連底座一起算
+# 會把人偏移半格，棋子就站不正在格子中央了。
 def bbox():
     bpy.context.view_layer.update()
-    vs = [body.matrix_world @ Vector(v.co) for v in body.data.vertices]
-    vs += [head.matrix_world @ Vector(v.co) for v in head.data.vertices]
-    return ([v.x for v in vs], [v.y for v in vs], [v.z for v in vs])
+    vs = [ob.matrix_world @ Vector(v.co) for ob in (body, head) for v in ob.data.vertices]
+    up = [v for v in vs if v.z > 0.13]
+    return ([v.x for v in up], [v.y for v in up], [v.z for v in vs])
 
 
 for _ in range(2):                     # 跑兩次，第二次把殘差清掉
-    xs, ys, zs = bbox()                # 只用人身 bbox：行李箱是掛在旁邊的，不能把原點拉歪
+    xs, ys, zs = bbox()
     off = Vector((-(min(xs) + max(xs)) / 2, -(min(ys) + max(ys)) / 2, -min(zs)))
     for ob in (body, head, case):
         ob.location += off

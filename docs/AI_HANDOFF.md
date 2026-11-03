@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-03（台灣時間），OpenCode。**新功能凍結（plan D13）**；`main` 在 `6bfbb15`（Task 18 兩棟建築、Task 19 Pages 部署都已在線上）。目前工作分支 `feature/traveler-miniature`（Task 20 旅人棋子）**尚未 push**。
+> 更新：2026-11-03（台灣時間），OpenCode。**新功能凍結（plan D13）**；`main` 在 `6bfbb15`（Task 18 兩棟建築、Task 19 Pages 部署都已在線上）。工作分支 `feature/traveler-miniature`（Task 20 旅人棋子）已 push，**尚未 merge 進 `main`**（合併才會發佈到線上）。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -63,16 +63,20 @@
 - **驗證過：** Actions run `completed/success`；線上 `index.html`(200 text/html)、`src/board3d.js`、兩個 `.glb`（200 `model/gltf-binary`，大小與本機相同）、`travel-world.webp`、`data/events.json` 全 200；`docs/AI_HANDOFF.md` 404（如設計不發佈）；playwright 開線上站 `hasCanvas: true`、console 錯誤 0、無 4xx，截圖確認棋盤、兩棟建築、HUD 正常。**沒驗證：** 院內電腦／手機實機流暢度（swiftshader）、網址在院內防火牆外是否顺、真人玩線上版。
 
 
-### Task 20：玩家棋子改 Blender 建模的旅人（2026-11-03，分支 `feature/traveler-miniature`，**未 push**）
+### Task 20：玩家棋子改 Blender 建模的旅人（2026-11-03，分支 `feature/traveler-miniature`，已 push、未 merge）
 
 Jean 給一張「開心學術旅人」插畫（捲髮男孩、綠外套白襯衫、藍識別證、黃書、黃背包、卡其褲反折、棕鞋、青綠圓底座），要把它做成棋子。仍是美術修正：`src/engine.js` 不動、不新增玩法。
 
-- 建模腳本 `tools/blender/build-traveler.py`（GLB 的原始碼，改造型改腳本重跑）：`runpy.run_path()` 執行 → 清舊物件 → 按節點 join → 套用修改器 → 歸零（底座中心為原點、底部 z=0、正面 −Y）→ 自帶 Sun＋Area 渲四張檢查圖（正面／側後／上半身／**遊戲俯角**）→ 匯出 `assets/art/traveler.glb`。渲完把燈刪掉、場景相機還原；模型渲暫存時 park 到 y=90 不入鏡別人的模型。成品 4,136 三角面、266 KB、三節點。
+- 建模腳本 `tools/blender/build-traveler.py`（GLB 的原始碼，改造型改腳本重跑）：`runpy.run_path()` 執行 → 清舊物件 → 按節點 join → 套用修改器 → 歸零（雙腳中心為原點、底座底部 z=0、正面 −Y）→ 自帶 Sun＋Area 渲四張檢查圖（正面／側後／上半身／**遊戲俯角**）→ 匯出 `assets/art/traveler.glb`。渲完把燈刪掉、場景相機還原；模型渲暫存時 park 到 y=90 不入鏡別人的模型。成品 4,020 三角面、263 KB、三節點。
 - 三個節點是動畫需要：`RA_TravelerBody`（含底座）、`RA_TravelerHead`（原點搬到脖子）、`RA_TravelerCase`（行李箱，原點搬到箱中心）。`board3d.js` 用 head 做 idle「左右看」、用 case 做跳格拖後與落地回正；跳格動畫的基準位置改讀節點原始 position（`CASE_HOME`，box 備援用預設值），不再硬編碼。
-- 縮圖取捨寫進 [art-direction.md](art-direction.md)「旅人棋子」：整顆在螢幕上約 40×90 px，所以砍掉口袋／釨子／第二條鞋帶等細碎件、行李箱改橘紅（黃書＋黃背包已經都是黃的）、瀏海抬高到眉上，否則 56° 俯角看成一坨毛球。整體縮放常數 `S = 0.82`。
+- 縮圖取捨寫進 [art-direction.md](art-direction.md)「旅人棋子」：整顆在螢幕上約 40×90 px，所以砍掉口袋／釨子／第二條鞋帶等細碎件、行李箱改橘紅（黃文件夾＋黃背包已經都是黃的）、瀏海抬高到眉上，否則 56° 俯角看成一坨毛球。整體縮放常數 `S = 0.82`。
 - `src/board3d.js`：`buildPawn()` 先照原本方式做出 box 棋子，再非同步載 GLB，成功才拆掉 box 換模型（GLB 掛掉不影響遊戲）；載入成功會設 `window.__pawnModel = "glb"` 供驗證。`server.mjs` 已支援 `.glb` MIME、`deploy.yml` 已複製 `assets/art/*.glb`，不用改。
 
-**驗證過：** `npm run check` 通過、`npm test` 31 項全過；`inspect-traveler.mjs` 用 vendor 的 `GLTFLoader` 解析 GLB 確認三節點名稱、原點與 bbox（body y 0..0.799、head 0.742..1.130、case 0.007..0.369）；playwright 開 http://localhost:4191，`traveler.glb` 回 200 `model/gltf-binary`、`window.__pawnModel` 為 `glb`、console 錯誤 0、無 4xx；A/B 截圖（A 一般載入、B 擋掉 `traveler.glb`）做像素差異定位，差異集中在起點格棋子所在區域，A 是 GLB 旅人、B 是 box 備援，證明替換路徑與備援路徑都活。Blender 端渲四張（含遊戲俯角）確認臉不被頭髮蓋住、底座 z=0。**沒驗證：** 真實 GPU 的 FPS 與陰影表現（headless 軟體渲染）、真人對棋子精緻度的意見、縮到手機尺寸後棋子還讀不讀得出來、行李箱跳格拖曳在實機順不順、插畫參考圖尚未進 repo（`docs/ref/`，見 Open Questions）。
+**驗證過（v1）：** `npm run check` 通過、`npm test` 31 項全過；`inspect-traveler.mjs` 用 vendor 的 `GLTFLoader` 解析 GLB 確認三節點名稱、原點與 bbox（v1：body y 0..0.799、head 0.742..1.130、case 0.007..0.369）；playwright 開 http://localhost:4191，`traveler.glb` 回 200 `model/gltf-binary`、`window.__pawnModel` 為 `glb`、console 錯誤 0、無 4xx；A/B 截圖（A 一般載入、B 擋掉 `traveler.glb`）做像素差異定位，差異集中在起點格棋子所在區域，A 是 GLB 旅人、B 是 box 備援，證明替換路徑與備援路徑都活。Blender 端渲四張（含遊戲俯角）確認臉不被頭髮蓋住、底座 z=0。**沒驗證：** 真實 GPU 的 FPS 與陰影表現（headless 軟體渲染）、真人對棋子精緻度的意見、縮到手機尺寸後棋子還讀不讀得出來、行李箱跳格拖曳在實機順不順、插畫參考圖尚未進 repo（`docs/ref/`，見 Open Questions）。
+
+**v2 修正（同日，Jean 看遊戲畫面說「左手結構怪怪的，好像沒有拿文件夾拿行李箱的感覺」）**：v1 的書和行李箱都堆在同一側、手飄在腰邊沒握到東西，俯角下讀成「一團黃色加一團橘色」。改成**兩手各有工作**：左手（+X）下垂握住豎式行李箱的拉把（拉桿兩支柱＋橫把，輪子真的停在底座面上 z=0.114，底座因此往行李箱側加長成橢圓才托得住），右手（−X）抱會議文件夾（黃夾＋白紙從上緣露出一截＋藍標籤線，取代原本夾在腋下的書）。踩到的坑：① `capsule` 的軸是局部 +Z，`rot x` 要**負值**才是小臂往前、`rot y` 要「左側負、右側正」手才往外下垂，符號寫反袖子會往後翹——v1 的怪手就是這個；② 歸零如果連底座 bbox 一起算，偏右的橢圓底座會把人推離格子中心，改成只把 z 壓到 0、x/y 以雙腳為原點。頭髮、手臂、行李箱全部由 `build-traveler.py` 重跑產生（4,020 三角面、263 KB）。
+
+**驗證過（v2 重跑後再驗一次）：** `npm run check` 通過、`npm test` 31 項全過；`inspect-traveler.mjs` 解析 GLB 確認三節點 bbox：body y 0..0.799、head 0.742..1.130、case y 0.093..0.526（拉桿頂端在 0.526，離手 z≈0.63 一截拉桿的距離）、總 4,020 三角面／263,256 bytes；playwright 開 http://localhost:4191（`shot-pawn2.js`、`verify-pawn.js`）：`traveler.glb` 回 200 `model/gltf-binary`、`window.__pawnModel` 為 `glb`、擲骰走到第 1/24 格・選定會議、console 錯誤 0、無 4xx；遊戲畫面 2 倍截圖放大確認左手握到拉桿、文件夾有白紙與藍標籤線、棋子站在格子中央（歸零只壓 z）。**沒驗證（延續 v1）：** 真實 GPU 的 FPS 與陰影表現、真人對棋子精緻度的意見、縮到手機尺寸後讀不讀得出來、行李箱跳格拖曳實機手感、插畫參考圖尚未進 repo（Open Questions）。
 
 ### Task 1：補自動測試（plan.md 要求，目前缺少）
 新增 `test/engine.test.js` 和 `package.json` 的 `"test": "node --test"`。要測：

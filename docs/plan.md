@@ -44,7 +44,7 @@ Jean 認為 box 合成的建築「太醜」，給桌遊風格參考圖指定兩�
 
 ### D17：玩家棋子改 Blender 建模的旅人 GLB（Jean 給插畫，2026-11-03）
 
-玩家棋子由 three.js box 合成改成 `assets/art/traveler.glb`（建模腳本 `tools/blender/build-traveler.py`，造型依 Jean 給的旅人插畫）。模型切成 `RA_TravelerBody`／`RA_TravelerHead`（脖子為原點）／`RA_TravelerCase`（行李箱，箱中心為原點）三節點，`board3d.js` 才能做 idle 左右看與跳格時箱子拖後；GLB 載入失敗留 box 棋子當備援。屬美術修正，`src/engine.js` 不動、無新玩法、執行時不連外部服務。沒選：繼續用 box 合成加貼圖（plan D11 禁止用整張圖冒充模型）、把棋子做成骨架動畫（多餘，遊戲只有跳格與 idle）。代價：多一個 266 KB GLB，以及「參考圖仍不在 repo」。詳見 [AI_HANDOFF.md](AI_HANDOFF.md) Task 20、[art-direction.md](art-direction.md)「旅人棋子」。
+玩家棋子由 three.js box 合成改成 `assets/art/traveler.glb`（建模腳本 `tools/blender/build-traveler.py`，造型依 Jean 給的旅人插畫；兩手各有工作：左手握豎式拉桿行李箱的拉把、右手抱會議文件夾，v2 依 Jean 回饋修正）。模型切成 `RA_TravelerBody`／`RA_TravelerHead`（脖子為原點）／`RA_TravelerCase`（行李箱，箱中心為原點）三節點，`board3d.js` 才能做 idle 左右看與跳格時箱子拖後；GLB 載入失敗留 box 棋子當備援。屬美術修正，`src/engine.js` 不動、無新玩法、執行時不連外部服務。沒選：繼續用 box 合成加貼圖（plan D11 禁止用整張圖冒充模型）、把棋子做成骨架動畫（多餘，遊戲只有跳格與 idle）。代價：多一個 263 KB GLB，以及「參考圖仍不在 repo」。詳見 [AI_HANDOFF.md](AI_HANDOFF.md) Task 20、[art-direction.md](art-direction.md)「旅人棋子」。
 
 ## 2. 遊戲設計（MVP）
 
