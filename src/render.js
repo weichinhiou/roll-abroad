@@ -150,10 +150,56 @@ function renderJourney(state, board) {
   $("#chapter").textContent = `第${CH_ORD[chapter - 1]}章・${CH_NAMES[chapter]}`;
   $("#rollinfo").textContent = `${state.pos === 0 ? "起點・準備出發" : `第 ${state.pos}/${board.squares.length} 格・${square.label}`}　｜　擲骰 ${state.rolls} 次`;
   const note = $("#companion-note");
+  // 開局（擲過骰前）由黑貓輪流說兩句：操作提示↔催擲骰。擲過骰就改講行程相關。
+  const hintMode = mode === "3d" && state.rolls === 0 && state.status === "ready";
+  document.body.classList.toggle("companion-hint", hintMode);
+  if (hintMode) {
+    startCompanionHint(note);
+    return;
+  }
+  stopCompanionHint();
   note.textContent = state.status === "done" ? "旅程完成！這些收穫，帶回去分享吧。" :
     state.status === "checkpoint" ? "重要的一站！做個好決定，再出發。" :
     state.status === "event" ? "旅途總有新發現，你會怎麼選？" :
     mode === "3d" ? "點中央骰子，看看下一站！" : "準備好了，就按擲骰出發！";
+}
+
+// 黑貓開場雙句輪播：第一句多停一下，之後每 5 秒換一句；換句時輕淡入。
+const COMPANION_FIRST_MS = 7000;
+const COMPANION_SWAP_MS = 5000;
+let companionTimer = 0;
+let companionAlt = false;
+
+function companionLines() {
+  const touch = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
+  return [`這盤能拖曳轉視角、${touch ? "雙指" : "滾輪"}縮放；點棋格看名稱。`, "點中央骰子，看看下一站！"];
+}
+
+function startCompanionHint(note) {
+  const lines = companionLines();
+  if (companionTimer) return; // 已经在轮播，别叠定时器
+  note.textContent = lines[0];
+  const step = (delay) => {
+    companionTimer = setTimeout(() => {
+      companionTimer = 0;
+      if (!document.body.classList.contains("companion-hint")) return;
+      companionAlt = !companionAlt;
+      note.textContent = lines[companionAlt ? 1 : 0];
+      note.classList.remove("swap");
+      void note.offsetWidth; // 強制重排，讓動畫可以重複觸發
+      note.classList.add("swap");
+      step(COMPANION_SWAP_MS);
+    }, delay);
+  };
+  step(COMPANION_FIRST_MS);
+}
+
+function stopCompanionHint() {
+  if (companionTimer) {
+    clearTimeout(companionTimer);
+    companionTimer = 0;
+  }
+  companionAlt = false;
 }
 
 function renderItems(state, items) {

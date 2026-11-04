@@ -437,38 +437,45 @@ function buildRing(board) {
     ringGroup.add(mesh);
 
     if (ms) {
-      // 里程碑小旗：插在角落格的外側，不擋到格子上的字
+      // 里程碑小旗：插在角落格的外側，不擋到格子上的字。
+      // 旗桿＋旗面包成一組、整組朝外轉：旗面永遠面向观众側、沿邊伸出，
+      // 否則五個角落的旗面會全部朝同一個世界方向，從某些角度看起來像歪掉。
       const r = Math.hypot(p.x, p.z) || 1;
       const ox = p.x / r, oz = p.z / r;   // 外向
-      const bx = p.x + ox * 0.62, bz = p.z + oz * 0.62;
+      const bx = p.x + ox * 0.55, bz = p.z + oz * 0.55;
+      const flagGroup = new THREE.Group();
+      flagGroup.position.set(bx, 0.22 + h, bz);
+      flagGroup.rotation.y = Math.atan2(ox, oz); // 區域 +Z 朝外，+X 沿著邊
+
       const pole = new THREE.Mesh(
         new THREE.CylinderGeometry(0.035, 0.035, 1.0, 12),
         new THREE.MeshStandardMaterial({ color: 0xefe0bd, roughness: 0.7, metalness: 0.15 })
       );
-      pole.position.set(bx, 0.22 + h + 0.5, bz);
+      pole.position.set(0, 0.5, 0);
       pole.castShadow = true;
-      ringGroup.add(pole);
+      flagGroup.add(pole);
 
       const flagCanvas = makeCanvas(128, 128);
       const fc = flagCanvas.getContext("2d");
       fc.fillStyle = hexCSS(CH_COLOR[sq.chapter]);
       fc.beginPath();
-      fc.moveTo(4, 4);
-      fc.lineTo(120, 28);
-      fc.lineTo(4, 64);
+      fc.moveTo(4, 6);
+      fc.lineTo(122, 64);
+      fc.lineTo(4, 122);
       fc.closePath();
       fc.fill();
       fc.lineWidth = 5;
       fc.strokeStyle = "rgba(0,0,0,0.18)";
       fc.stroke();
       const flag = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.5, 0.35),
+        new THREE.PlaneGeometry(0.5, 0.34),
         new THREE.MeshStandardMaterial({ map: toTexture(flagCanvas), transparent: true, side: THREE.DoubleSide, roughness: 0.85 })
       );
-      // 旗面沿著邊的方向伸出（內建的斜角旗形不用改）
-      flag.position.set(bx + oz * 0.26, 0.22 + h + 0.86, bz - ox * 0.26);
+      // 掛在桿頂，沿邊的方向飄出（群組已轉向，這裡只用區域座標）
+      flag.position.set(0.26, 0.83, 0.02);
       flag.castShadow = true;
-      ringGroup.add(flag);
+      flagGroup.add(flag);
+      ringGroup.add(flagGroup);
     }
   });
 
@@ -747,10 +754,6 @@ export function initBoard3d(container_, board) {
   resetBtn.textContent = "回正視角";
   resetBtn.addEventListener("click", resetView);
   wrap.appendChild(resetBtn);
-  const hint = document.createElement("p");
-  hint.className = "view-hint";
-  hint.textContent = "指向或輕點棋格看名稱・拖曳轉動・滾輪縮放";
-  wrap.appendChild(hint);
   fit();
 
   if (typeof ResizeObserver === "function") {
