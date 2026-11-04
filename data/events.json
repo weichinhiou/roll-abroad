@@ -411,6 +411,262 @@
         { "label": "選一個小做法，約同事一起試", "effects": { "time": -1, "knowledge": 2 }, "note": "先把一件事做成，這趟旅程有了可落地的起點。" },
         { "label": "先整理成一頁摘要，徵詢需求", "effects": { "knowledge": 1 }, "note": "少了一大包資料，多了一個大家願意接話的問題。" }
       ]
-    }
+    },
+
+    { "id": "N01", "deck": "chance", "tone": "real", "route": "both",
+      "title": "臨時決定多寫一份海報",
+      "text": "補助下來了，離截稿只剩一週。本來沒打算再多寫一份，現在有預算、有材料。",
+      "trueStory": "院內同仁真的遇過：預算核下來後才臨時決定要撰寫海報張貼，原本抱定要全心聽課。",
+      "choices": [
+        { "label": "把現有資料彙整成海報", "effects": { "energy": -2, "knowledge": 2 }, "note": "額外的加班，換到這趟多一份發表。" },
+        { "label": "維持原計畫，省下來的當預算", "effects": { "money": 1 }, "note": "沒有答應自己做不到的事。" }
+      ] },
+    { "id": "N02", "deck": "chance", "tone": "real", "route": "both",
+      "title": "補助，去哪查？",
+      "text": "你只知道有出國補助這回事，但哪些類別、什麼條件、怎麼申請都不清楚。有人說：「上無界任意門系統查，裡頭都有。」",
+      "trueStory": "院內同仁真的遇過：有剩餘款補助要透過承辦才知道，許多人根本不知道有哪些補助。",
+      "choices": [
+        { "label": "立刻登入無界任意門系統查清楚", "effects": { "time": -1, "knowledge": 2 }, "note": "查得到，就沒有白跑一趟。" },
+        { "label": "問科部秘書就好", "effects": { "energy": 1 }, "note": "順口一問，秘書正好知道。" }
+      ] },
+    { "id": "N03", "deck": "fate", "tone": "real", "route": "both",
+      "title": "三年內的 SCI",
+      "text": "出國補助申請下來了。回院後有人提起一個後續義務：取得補助之後，三年內要把成果發表在 SCI 期刊，作為成效追蹤。",
+      "trueStory": "院內同仁真的遇過：出國補助附帶成效追蹤條件，三年內要發表 SCI 期刊作為成果。",
+      "choices": [
+        { "label": "就當是三年裡的一段讀書計畫，排進後續", "effects": { "time": -1, "knowledge": 1 }, "note": "壓力變成時間表。" },
+        { "label": "先把眼前的事做好", "effects": { "energy": 1 }, "flags": { "pub_pending": true }, "note": "心情輕鬆一些，期限放在後面。" }
+      ] },
+    { "id": "N04", "deck": "chance", "tone": "real", "route": "both",
+      "title": "出發前的那個檢查袋",
+      "text": "打點行李時有人提醒：常用藥、胃藥、備用眼鏡、備用處方。你本來只打算帶會議資料。",
+      "choices": [
+        { "label": "多帶一包常備藥", "effects": { "money": -1, "energy": 1 }, "note": "麻煩一包，安心幾天。" },
+        { "label": "輕裝出門", "effects": { "energy": 2 }, "note": "少一包行李，多一份灑脫。" }
+      ] },
+    { "id": "N05", "deck": "chance", "tone": "real", "route": "both",
+      "title": "幫同科後輩看場子",
+      "text": "同科的後輩第一次出國，拿著行程表問你：「這樣安排可以嗎？」",
+      "trueStory": "院內同仁真的遇過：第一次與會的同仁，報告方式跟飯店 check in 每一項環節都要前輩帶著走。",
+      "choices": [
+        { "label": "花一個下午陪他對行程", "effects": { "time": -1, "knowledge": 1 }, "note": "第一次後來順了，之後有人帶著走。" },
+        { "label": "讓他先自己摸索", "effects": { "energy": 1 }, "note": "省下時間，後輩學到的都是跌出來的。" }
+      ] },
+    { "id": "N06", "deck": "chance", "tone": "real", "route": "both",
+      "title": "便宜的飯店，遠了一點",
+      "text": "為了省預算，你挑了離會場遠一點的飯店。電車班次和步行時間都查好了。",
+      "trueStory": "院內同仁真的遇過：選擇價格比較經濟的飯店，靠大眾運輸往來會場。",
+      "choices": [
+        { "label": "搭電車通勤", "effects": { "money": 1, "time": -1 }, "note": "早起幾十分鐘，省下一晚差價。" },
+        { "label": "換一晚住近一點", "effects": { "money": -2, "energy": 1 }, "note": "走得到會場，體力差很多。" }
+      ] },
+    { "id": "N07", "deck": "fate", "tone": "real", "route": "both",
+      "title": "隨身行李超標",
+      "text": "上機前被告知隨身行李尺寸超標，只好現場把會議資料拿出來重新分裝。",
+      "choices": [
+        { "label": "現場重新分裝", "effects": { "energy": -1, "time": -1 }, "note": "狼狽，但資料還在身邊。" },
+        { "label": "把一箱託運", "effects": { "money": -2, "energy": -2 }, "note": "省了手提的力氣，換來擔心兩天。" }
+      ] },
+    { "id": "N08", "deck": "chance", "tone": "real", "route": "both",
+      "title": "轉機多出來的三小時",
+      "text": "轉機比預期多三小時。可以睡在椅子上，也可以把明天的彩排再順一次。",
+      "trueStory": "院內同仁真的遇過：天候造成航線改道，旅客經多次轉機後延後抵達。",
+      "choices": [
+        { "label": "睡一下", "effects": { "energy": 2 }, "note": "肩膀痠了，人卻清醒。" },
+        { "label": "把投影片再順一次", "effects": { "energy": -1, "knowledge": 1 }, "note": "多發現一個說不清楚的地方。" }
+      ] },
+
+    { "id": "N09", "deck": "fate", "tone": "real", "route": "both",
+      "title": "沒帶翻譯機的那一段路",
+      "text": "下錯站又迷路，路上問不動人。你手上沒有翻譯機，也沒有漫遊。",
+      "trueStory": "院內同仁真的遇過：忘記用翻譯機，也沒帶，強迫開口與人溝通。",
+      "choices": [
+        { "label": "硬著頭皮開口揮手問路", "effects": { "energy": -1, "knowledge": 1 }, "note": "不好意思，卻真的問到了。" },
+        { "label": "走回大路跟著人潮", "effects": { "time": -1 }, "note": "慢慢走，總會走到。" }
+      ] },
+    { "id": "N10", "deck": "chance", "tone": "real", "route": "both",
+      "title": "名牌吊繩的重量",
+      "text": "報到櫃台給你一包：名牌、秩序冊、展場地圖、廠商攤位配置。你突然很忙。",
+      "trueStory": "院內同仁真的遇過：報到領取識別名牌、議程秩序冊、展場地圖與廠商攤位配置，順道確認口頭報告位置。",
+      "choices": [
+        { "label": "花十分鐘看地圖、勾場次", "effects": { "knowledge": 1, "time": -1 }, "note": "動線想好，明天少走很多路。" },
+        { "label": "先直接進去聽講", "effects": { "energy": 1 }, "note": "進場就有了，其它路上再看。" }
+      ] },
+    { "id": "N11", "deck": "fate", "tone": "funny", "route": "both",
+      "title": "走錯出口，33 度走十五分鐘",
+      "text": "下錯捷運出口。大太陽下拖著電腦走了十五分鐘才到會場，T 恤濕一半。",
+      "trueStory": "院內同仁真的遇過：錯地鐵捷運站，在高溫 33 度大太陽下走了十五分鐘才到達會場。",
+      "choices": [
+        { "label": "堅持走完", "effects": { "energy": -2, "time": -1 }, "note": "進場時衣服濕一半。" },
+        { "label": "搭一站回去", "effects": { "money": -1, "time": -1 }, "note": "少走幾步，多花一點車錢。" }
+      ] },
+    { "id": "N12", "deck": "chance", "tone": "real", "route": "both",
+      "title": "同步口譯耳機",
+      "text": "這場有同步口譯。耳機壓久了耳朵怪怪的，但你終於聽得懂一半以上。",
+      "trueStory": "院內同仁真的遇過：會議全程有開放同步英語翻譯。",
+      "choices": [
+        { "label": "繼續戴著聽", "effects": { "knowledge": 2, "energy": -1 }, "note": "很多地方跟得上。" },
+        { "label": "改聽原文，自己做筆記", "effects": { "energy": 1, "knowledge": 1 }, "note": "跟不上的部分自己補。" }
+      ] },
+    { "id": "N13", "deck": "chance", "tone": "real", "route": "both",
+      "title": "分會場動線，來自夜裡對地圖",
+      "text": "明天你在兩個不同分會場都有事。晚上攤開手冊、開著手機地圖，拉一條線。",
+      "trueStory": "院內同仁真的遇過：以會議手冊比對場地地圖，確認隔日各分會場的動線。",
+      "choices": [
+        { "label": "照會議手冊排好動線", "effects": { "time": -1, "knowledge": 1 }, "note": "隔天不多走冤枉路。" },
+        { "label": "當天早上再看", "effects": { "energy": 1 }, "note": "走錯了就算散步。" }
+      ] },
+    { "id": "N14", "deck": "chance", "tone": "real", "route": "both",
+      "title": "工作坊跟場次撞期了",
+      "text": "會場角落有場低價工作坊，主題正是你一直想學的；但撞上你排定要聽的場次。",
+      "trueStory": "院內同仁真的遇過：工作坊收費用非常低，教學熱忱及設備不亞於年會。",
+      "choices": [
+        { "label": "原定場次聽完", "effects": { "knowledge": 1 }, "note": "想聽的都是功課。" },
+        { "label": "去工作坊", "effects": { "knowledge": 2, "time": -1 }, "note": "多學一樣，錯過原本的場次。" }
+      ] },
+    { "id": "N15", "deck": "chance", "tone": "real", "route": "oral",
+      "title": "上台前十分鐘，資料換了一版",
+      "text": "會前十分鐘，工作人員遞來一張補充資料說是共同作者剛傳來的。你只有幾分鐘決定。",
+      "trueStory": "院內同仁真的遇過：登台之前十分鐘取得初步的影像。",
+      "choices": [
+        { "label": "臨時把最新版說進去", "effects": { "knowledge": 1, "time": -1 }, "note": "最新版本出現在最後一個段落。" },
+        { "label": "照原稿講完，會後再補說", "effects": { "knowledge": 1, "energy": 1 }, "note": "節奏穩，最新結果留給討論。" }
+      ] },
+    { "id": "N16", "deck": "fate", "tone": "funny", "route": "both",
+      "title": "口報排在吃早餐的時段",
+      "text": "你的場次被排在一大早餐桌時間，台下有人邊吃邊聽、有人還沒睡醒。",
+      "trueStory": "院內同仁真的遇過：報告時間是一大早的早餐時間。",
+      "choices": [
+        { "label": "提早十分鐘到先暖場", "effects": { "energy": -1, "knowledge": 1 }, "note": "多數人開始聽的時候，你已經開頭。" },
+        { "label": "安靜把內容講完", "effects": { "energy": 1 }, "note": "台上沒冷場，台下吃著飯也聽完了。" }
+      ] },
+
+    { "id": "N17", "deck": "fate", "tone": "real", "route": "oral",
+      "title": "無講稿、無海報的口說",
+      "text": "上台前一秒你決定不看稿。望著螢幕，一手拿麥克風，直接展開英文口說。",
+      "trueStory": "院內同仁真的遇過：無海報、無講稿的英文口說發表。",
+      "choices": [
+        { "label": "脫稿流暢說完", "effects": { "energy": -2, "knowledge": 2 }, "note": "說得比想像中順，講完手心全是汗。" },
+        { "label": "打開事先準備的大綱", "effects": { "energy": 1, "knowledge": 1 }, "note": "踏實，只是說得慢一點。" }
+      ] },
+    { "id": "N18", "deck": "chance", "tone": "real", "route": "poster",
+      "title": "委員走進你的海報時段",
+      "text": "時段表上沒有安排，但委員走到你的欄位前開始提問。你不能離開你的海報。",
+      "trueStory": "院內同仁真的遇過：張貼海報也需要作者在場和當地討論研究動機。",
+      "choices": [
+        { "label": "站滿時段逐一解說", "effects": { "knowledge": 2, "energy": -2 }, "note": "站到腳酸，問題一個一個被答完。" },
+        { "label": "跟同區作者輪流看板", "effects": { "knowledge": 1 }, "social": true, "note": "你去他那邊看，他來你這邊看。" }
+      ] },
+    { "id": "N19", "deck": "fate", "tone": "real", "route": "both",
+      "title": "三分鐘，講完你幾年的成果",
+      "text": "議程上寫著這是三分鐘快問快答場。你手上那份資料，原本要講十五分鐘。",
+      "trueStory": "院內同仁真的遇過：口頭報告三分鐘、討論兩分鐘的場次。",
+      "choices": [
+        { "label": "抽出一句話的結論先講", "effects": { "knowledge": 2, "energy": -1 }, "note": "聽眾記住一句，就記住你。" },
+        { "label": "照原本的節奏講", "effects": { "energy": -2, "knowledge": -1 }, "note": "講到第二頁就被提醒只剩一分鐘。" }
+      ] },
+    { "id": "N20", "deck": "fate", "tone": "real", "route": "both",
+      "title": "問題開口的第一個字",
+      "text": "有人舉手，第三秒你才聽懂他問的不是你的研究，是兩地制度的差異。",
+      "trueStory": "院內同仁真的遇過：口頭報告後接受的提問，多涉及健康保險研究數據。",
+      "choices": [
+        { "label": "先說明背景不同，再回到結論", "effects": { "knowledge": 2 }, "note": "一個問題，變成兩個體系的對話。" },
+        { "label": "直接回答字面上的問題", "effects": { "energy": -1, "knowledge": 1 }, "note": "回答得快，但少了你的故事。" }
+      ] },
+    { "id": "N21", "deck": "chance", "tone": "real", "route": "both",
+      "title": "交換禮物與夜裡的合影",
+      "text": "歡迎晚宴上，各代表團互相交換小禮物。有人說：來，請服務生幫忙照一張。",
+      "trueStory": "院內同仁真的遇過：代表台灣與各國學會交換禮物合影。",
+      "choices": [
+        { "label": "準備一份台灣來的小物", "effects": { "money": -1 }, "social": true, "note": "準備一份小東西，換到一份好場面。" },
+        { "label": "只參與合影", "effects": { "energy": 1 }, "note": "照片之外，多出半小時休息。" }
+      ] },
+    { "id": "N22", "deck": "chance", "tone": "real", "route": "both",
+      "title": "有座位沒人坐",
+      "text": "午休時間，餐廳一桌人剛走。你坐下單吃飯，還是去隔壁桌跟人聊聊？",
+      "trueStory": "院內同仁真的遇過：學會安排社交聯誼活動，讓各國學者有互動認識的機會。",
+      "choices": [
+        { "label": "去隔壁桌打招呼", "effects": { "knowledge": 1 }, "social": true, "note": "話題還沒結束，人已經先熟。" },
+        { "label": "自己吃完小睡一下", "effects": { "energy": 2 }, "note": "桌上突然安靜下來，你也真的休息到了。" }
+      ] },
+    { "id": "N23", "deck": "chance", "tone": "real", "route": "both",
+      "title": "用翻譯App看懂他國海報",
+      "text": "這區的海報你幾乎都看不懂。手機裡的翻譯App 一張一張照，比想像中認真。",
+      "trueStory": "院內同仁真的遇過：運用翻譯APP 了解大部分使用他國語言製作的海報。",
+      "choices": [
+        { "label": "照一張翻一張", "effects": { "time": -1, "knowledge": 2 }, "note": "慢慢看得懂的時候，才發現自己想多了。" },
+        { "label": "記下題目，晚上整理", "effects": { "knowledge": 1 }, "note": "先收集，回去再好好看。" }
+      ] },
+    { "id": "N24", "deck": "chance", "tone": "real", "route": "both",
+      "title": "團隊不在時，別國的人幫忙翻",
+      "text": "先前的同行都不在現場。你聽不懂旁人的介紹，有外國與會者走過來替你翻譯。",
+      "trueStory": "院內同仁真的遇過：團員不在現場時，其他國家的觀摩者會幫忙協助翻譯。",
+      "choices": [
+        { "label": "接受並真的聊起來", "effects": { "knowledge": 1 }, "social": true, "note": "語言不通，但對話真的發生了。" },
+        { "label": "微笑致謝，自己繼續聽", "effects": { "energy": 1 }, "note": "自己慢慢聽懂七八成。" }
+      ] },
+
+    { "id": "N25", "deck": "chance", "tone": "real", "route": "both",
+      "title": "留下名片，也留下疑問",
+      "text": "對方聽完你的問題，留下名片說：「有需要可以聯絡。」你帶著一個沒問完的問題。",
+      "trueStory": "院內同仁真的遇過：會中留下名片，對方說如果有需要可以聯絡。",
+      "choices": [
+        { "label": "回國寄一封信提問", "effects": { "time": -1, "knowledge": 1 }, "note": "信寄出去，兩個月後收到更完整的答案。" },
+        { "label": "感謝就收好名片", "effects": { "energy": 1 }, "note": "名片收進資料夾，可能日後有機會。" }
+      ] },
+    { "id": "N26", "deck": "chance", "tone": "funny", "route": "both",
+      "title": "到處買伴手禮，比報告還累",
+      "text": "任務完成了。你要帶八份伴手禮，距離關櫃只剩兩個小時。",
+      "choices": [
+        { "label": "絕境採購", "effects": { "money": -2, "energy": -1 }, "note": "盒子、紙袋、膠帶，全靠雙手抱。" },
+        { "label": "寄明信片回去就好", "effects": { "money": -1, "energy": 1 }, "note": "一人一張，寫得比較久。" }
+      ] },
+    { "id": "N27", "deck": "chance", "tone": "funny", "route": "both",
+      "title": "最後一天，天氣很好",
+      "text": "會議最後一天，陽光很好。你的場次昨天就講完了。",
+      "choices": [
+        { "label": "跳一場出去看看這個城市", "effects": { "energy": 1, "knowledge": -1 }, "note": "少聽一場，多一點自己的故事。" },
+        { "label": "留下來聽完最後一天", "effects": { "knowledge": 1 }, "note": "把握最後幾場，想看的還沒看完。" }
+      ] },
+    { "id": "N28", "deck": "chance", "tone": "real", "route": "both",
+      "title": "科內報告結束後的問題",
+      "text": "科內報告結束，同事們開始問問題。其中一條，你當時自己也沒想通。",
+      "trueStory": "院內同仁真的遇過：會中好奇詢問相關推動時的感受與影響。",
+      "choices": [
+        { "label": "坦白說不知道、一起查", "effects": { "knowledge": 2, "energy": -1 }, "note": "兩個人查，比一個人回來的時候更快。" },
+        { "label": "照會場聽到的包裝帶過", "effects": { "knowledge": -1 }, "note": "回答順了，錯過真正的好問題。" }
+      ] },
+    { "id": "N29", "deck": "fate", "tone": "real", "route": "both",
+      "title": "想把一項設備或工具引進院內",
+      "text": "會議上看到一項很實用的東西。回單位後有人問：「那我們要不要也做？」流程卻很長。",
+      "trueStory": "院內同仁真的遇過：看到國外符合人體工學的設備與流程，想帶回院內引用。",
+      "choices": [
+        { "label": "先寫一份提案送出去", "effects": { "time": -1, "knowledge": 1 }, "note": "流程很長，但案子開始走了。" },
+        { "label": "先放著，等下一次機會", "effects": { "energy": 1 }, "note": "省下現在的力氣，案子沒走第一步。" }
+      ] },
+    { "id": "N30", "deck": "chance", "tone": "real", "route": "both",
+      "title": "帶一位後輩來參加下一次",
+      "text": "你知道明年還有同樣的機會。有人問你：「這次，要不要帶人一起去？」",
+      "trueStory": "院內同仁真的遇過：住院醫師在前輩指導下一同出國參與並發表。",
+      "choices": [
+        { "label": "引介科內後輩報名", "effects": { "energy": -1 }, "social": true, "note": "有人開始走你走過的路。" },
+        { "label": "自己再報名一次", "effects": { "knowledge": 1 }, "note": "多看到一點你想看的東西，沒有人跟上來。" }
+      ] },
+    { "id": "N31", "deck": "chance", "tone": "real", "route": "both",
+      "title": "信裡寫：「有興趣繼續合作」",
+      "text": "會上認識的人寄來一封信，說想繼續討論合作、交換資料、合著一篇——不是那種只會寒暄的信。",
+      "trueStory": "院內同仁真的遇過：有外國年輕醫師表達來本院進修意願，後續聯絡安排。",
+      "choices": [
+        { "label": "認真排時間擬合作計畫", "effects": { "time": -1, "knowledge": 2 }, "note": "對話變成跨國資料。" },
+        { "label": "先回感謝，之後再說", "effects": { "energy": 1 }, "note": "誠意有了，時間還沒準備好。" }
+      ] },
+    { "id": "N32", "deck": "fate", "tone": "real", "route": "both",
+      "title": "規則臨時改了，人已經在外面",
+      "text": "你人在海外才聽說：回國後的作業辦法改了。改動的時間點，通知還沒到你手上。",
+      "trueStory": "院內同仁真的遇過：出國期間院方作業辦法修訂，回國後才得知新規定。",
+      "choices": [
+        { "label": "打電話回單位確認作法", "effects": { "time": -1, "energy": 1 }, "note": "先搞清楚狀況，回國不用重新申請。" },
+        { "label": "等正式通知寄到再說", "effects": { "energy": -1 }, "note": "等通知的那兩天都很難睡。" }
+      ] }
   ]
 }
