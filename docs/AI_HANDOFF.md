@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-04（台灣時間），OpenCode。`main` 在 `ed3bb25`（Task 22：棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正，已 commit 並 push，未部署）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-04（台灣時間），OpenCode。`main` 在 `ed3bb25`＋文件 `144484b`（Task 22：棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正），**已發佈上線**（Actions run #9 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -56,7 +56,7 @@
 
 ## Tasks
 
-### Task 22：棋盤 24→32 格、五邊形棋盤、第五章「回院之後」（2026-11-04，已 commit `6796992`＋`ed3bb25` 並 push，未部署）
+### Task 22：棋盤 24→32 格、五邊形棋盤、第五章「回院之後」（2026-11-04，已 commit `6796992`＋`ed3bb25` 並 push，已發佈上線）
 
 依據 plan D19：前 24 格一格不動，新增第 25–32 格全放第五章「回院之後」；棋盤幾何改五邊形，五個角落＝五個里程碑（6／12／18／24／32）。第 24 格改里程碑 `return`「回國報到」，第 32 格 `final`「滿載而歸」（先「兌現承諾」→「回饋與傳承」→ Jean 定案「滿載而歸」）內含承諾兌現選項（選項層級 `requires: flag`，`engine.checkpointAt` 依旗標過濾，全濾空時退回完整清單防死局）。結局計分「高張力」門檻收緊為 `strain >= 2`。五章色 `0xef7d57`／`--c5: #f9dccd`；章徽只有四枚，第五章暫沿用返國章。桌板跟著棋盤外框改五邊形（`scene-art.js` 的 `offsetPoly`／`plateMesh`）。
 
@@ -65,6 +65,8 @@
 **續做（同日）：遊戲背景換圖（桌機＋手機）**：Jean 兩度給圖——桌機 `學術港灣與世界地標全景.png`（1672×941）轉 `assets/art/world-desktop.webp`（172KB）、手機 `國際學術旅港灣全景.png`（直式 941×1672）縮寬 900 轉 `assets/art/world-mobile.webp`（115KB）。`game-art.css`：`body` 換 `world-desktop.webp`，`@media(max-width:759px)` 段換 `world-mobile.webp`（`background-position:center top`）；舊 `travel-world.webp` 保留（仍在素材庫、手機段不再引用）。製作紀錄在 `assets/art/README.md`（註明兩張非 image_gen 產出）。
 
 **續做（同日）：介面三處修正**（已 commit `ed3bb25` 並 push）：(1) 里程碑小旗的旗面 `PlaneGeometry` 沒設 rotation，五個角落旗面全朝同一世界方向，側看像歪掉的棍子——改成「旗桿＋旗面」包成 Group、整組 `rotation.y = atan2(ox, oz)` 朝外，旗面改用整塊 128×128 三角貼圖掛在桿頂沿邊伸出（`board3d.js`）。(2) 狀態列 `.rollinfo` 與棋盤下緣操作提示重疊（桌機錨 `bottom:120px` 撞上提示帶 111–133px、手機 165px 撞 183–203px）→ 桌機 145px、手機 215px。(3) 該操作提示（`view-hint` 膠囊）依 Jean 指示**取消，改由黑貓旅伴說**：`render.js` 在 `rolls === 0` 時讓氣泡**輪播兩句**（先講操作提示 7 秒、之後每 5 秒換「點中央骰子，看看下一站！」，換句走 `.swap` 淡入、`prefers-reduced-motion` 下不動畫；`(pointer: coarse)` 決定滾輪或雙指），擲過骰 `stopCompanionHint()` 清定时器並改講行程訊息；並在 `body` 掛 `companion-hint` class 讓手機／760–1100px（原本藏氣泡的兩個區間）開局時也顯示氣泡；`view-hint` 的元素與 CSS 一併移除。驗證：Playwright 量 4–7 種版型座標，狀態列／氣泡與周圍元素 0 重疊；桌機＋手機截圖目視；觸控模擬（`hasTouch`）確認文案轉「雙指縮放」；實測 t=0/8s/13s 三點確認輪播、擲骰後 6.5 秒文字不變（定时器有清）；`npm.cmd run check` 與 `npm.cmd test` 34 項全過。
+
+**發佈與線上驗證（同日，Jean 授權）**：push 觸發 `.github/workflows/deploy.yml`，Actions run **#9（`144484b`）`completed/success`**。線上 <https://weichinhiou.github.io/roll-abroad/> 帶 cache-buster 驗證：`index.html`／`game-art.css`／`styles.css`／`src/render.js`／`src/board3d.js`／三個 `data/*.json`／`world-desktop.webp`（172,036 bytes＝本機相同）／`world-mobile.webp`／`traveler.glb`（`model/gltf-binary`）／`vendor/three.module.js` **全 200 且 Content-Type 正確**；`docs/`、`test/`、`tools/` 回 **404**（沒洩進行內文件）；线上 CSS 抽檢：`world-desktop.webp`✔、`world-mobile.webp`✔、`companion-hint`✔、`bottom:145px`✔、`view-hint` 已不存在✔；`events.json` **77 張**、有 `N41`、有 `chapters`；`board.json` **32 格**、第 32 格 `milestone: final`；`render.js` 有 `startCompanionHint`、`board3d.js` 有 `flagGroup`。Playwright 開线上站（桌機 1366＋手機 390）：`canvas` 存在、黑貓開局氣泡出現並輪播（8 秒後換句）、桌機實點擲骰走到「第 1/32 格・選定會議｜擲骰 1 次」、`.view-hint` 殘留＝無、**console 錯誤 0／4xx 0**，截圖與本機一致。**沒驗證：** 真實 GPU 的 FPS、院內網路到 GitHub 的連速、手機實機手勢。
 
 **驗證過：** `npm.cmd run check` 通過、`npm.cmd test` 34 項全過（含 3 項章節門檻新測試；1,000 局：死局 0、77 張都抽得到、meanRolls 17.7）；Playwright＋無頭 Chrome 本地 4191 兩局實玩到結局（「第四章：回國報到」「第五章：旅程結算」〔後改名滿載而歸〕都出現、requires 過濾實測：無旗標只剩 2 通用選項、有 mentor 多 1 項、頁面顯示「第 24/32 格」「第五章・回院之後」）；console 錯誤 0／4xx 0；2D 退回模式（減少動態效果）32 格、5 里程碑、8 欄 ch5；桌機與手機截圖確認五邊形棋盤＋五邊形桌板＋廣場貼圖正常（UV 修正後）；背景換圖後無頭 Chrome 截桌機 1366×860 與手機 390×844 兩版型：`body` 背景分別為 `world-desktop.webp`／`world-mobile.webp`、4xx 0、console 錯誤 0、棋盤不被背景干擾。**沒驗證：** 真機 FPS、手機實機（只用模擬 viewport）、77 張數值平衡的逐卡分布、舊存檔續玩沒實測（引擎面 pos≤24 直接續玩）、目標一局時間沒有數字；骰子墊與梅花鹿等內圈小物沒重排。**待 Jean 拍板：** N04／N07 是否掛真實標記。
 
