@@ -9,7 +9,7 @@ const byId=new Map(events.cards.map(c=>[c.id,c]));
 
 function play(seed) {
   let s=E.initialState({seed}),policy=E.initialState({seed:`${seed}-choices`});
-  for(let step=0;step<100 && s.status!=="done";step++) {
+  for(let step=0;step<200 && s.status!=="done";step++) {
     if(s.status==="ready") {
       s=E.applyMove(E.rollDie(s),board);
       const sq=board.squares.find(q=>q.n===s.pos);
@@ -29,21 +29,28 @@ function play(seed) {
     assert.ok(s.res.knowledge>=0);
   }
   assert.equal(s.status,"done",`死局：${seed}`);
-  assert.equal(s.pos,24);
+  assert.equal(s.pos,32);
   assert.ok(s.ending);
   return s;
 }
 
-test("68 張事件 ID 唯一，選項效果與所有連鎖目標有效",()=>{
-  assert.equal(events.cards.length,68);
-  assert.equal(byId.size,68);
+test("77 張事件 ID 唯一，選項效果與所有連鎖目標有效",()=>{
+  assert.equal(events.cards.length,77);
+  assert.equal(byId.size,77);
   const keys=new Set(["time","money","energy","knowledge","penalty","flagLoss"]);
   for(const c of events.cards){
     assert.ok(["chance","fate"].includes(c.deck));assert.ok(c.choices.length>=2);
+    // 章節門檻：每張都要標 1–5 的章節（第五章回院後至少要有兩張命運、六張機會）
+    assert.ok(Array.isArray(c.chapters)&&c.chapters.length,`${c.id} 沒標 chapters`);
+    for(const n of c.chapters) assert.ok(Number.isInteger(n)&&n>=1&&n<=5,`${c.id} chapters 非法：${n}`);
     for(const ch of c.choices){
       if(ch.chain) assert.ok(byId.has(ch.chain),`${c.id} 指向不存在的 ${ch.chain}`);
       for(const k of Object.keys(ch.effects||{}))assert.ok(keys.has(k));
     }
+  }
+  // 每一章的兩個卡堆都不能空，否則那章的格子只能空轉
+  for(let ch=1;ch<=5;ch++)for(const deck of ["chance","fate"]){
+    assert.ok(events.cards.some(c=>c.deck===deck&&c.chapters.includes(ch)),`第 ${ch} 章沒有 ${deck} 卡`);
   }
 });
 
@@ -57,7 +64,7 @@ test("口報問答只在口報前情之後出現，兩個選項都排入後續",
   }
 });
 
-test("1,000 局：死局 0、68 張都抽得到、路線正確、資源合法",t=>{
+test("1,000 局：死局 0、77 張都抽得到、路線正確、資源合法",t=>{
   const seen=new Set(),endings={},routes={},rolls=[];
   for(let i=0;i<1000;i++){
     const s=play(`events-36-${i}`);s.drawn.forEach(id=>seen.add(id));
@@ -67,6 +74,6 @@ test("1,000 局：死局 0、68 張都抽得到、路線正確、資源合法",t
   assert.deepEqual([...seen].sort(),[...byId.keys()].sort());
   assert.deepEqual(play("repeat-events"),play("repeat-events"));
   const mean=rolls.reduce((a,b)=>a+b,0)/1000;
-  assert.ok(mean>=10&&mean<=15);
+  assert.ok(mean>=10&&mean<=25);
   t.diagnostic(JSON.stringify({games:1000,deadlocks:0,cards:seen.size,endings,routes,meanRolls:mean,minRolls:Math.min(...rolls),maxRolls:Math.max(...rolls)}));
 });

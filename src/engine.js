@@ -2,7 +2,9 @@
 // 相同 seed + 相同選擇 = 相同結果。所有隨機都從 state.rng 推。
 
 const DICE = [1, 1, 2, 2, 3, 3];
-export const MILESTONES = [6, 12, 18, 24];
+// 五個角落＝五個里程碑；最後一格（終點）就是最後一個里程碑
+export const MILESTONES = [6, 12, 18, 24, 32];
+const END = MILESTONES[MILESTONES.length - 1];
 export const RES_KEYS = ["time", "money", "energy"];
 export const RES_LIMIT = 10;
 
@@ -86,7 +88,7 @@ export function applyMove(state, board) {
     to = blocked;
     stopped = true;
   }
-  if (to > 24) to = 24;
+  if (to > END) to = END;
   next.pos = to;
   next.rolls += 1;
   next.dice = null;
@@ -102,7 +104,8 @@ export function applyMove(state, board) {
 export function isEligible(card, state) {
   if (state.drawn.includes(card.id)) return false;
   if (card.route && card.route !== "both" && card.route !== state.route) return false;
-  if (card.chapters && !card.chapters.includes(state.chapterNow)) return false;
+  // chapterNow 為 null 表示「不限章節」（抽牌池空時的保險用）
+  if (card.chapters && state.chapterNow != null && !card.chapters.includes(state.chapterNow)) return false;
   if (card.requires && !state.flags[card.requires]) return false;
   return true;
 }
@@ -121,12 +124,17 @@ export function drawCard(state, board, events, square) {
     // 先複製再取出，不改到傳入的 state
     const [id, ...rest] = state.pending;
     state = { ...state, pending: rest };
-    const card = events.cards.find((c) => c.id === id && isEligible(c, { ...state, chapterNow: square.chapter }));
+    // 連鎖是劇情的延續，不受章節門檻影響
+    const card = events.cards.find((c) => c.id === id && isEligible(c, { ...state, chapterNow: null }));
     if (card) return enterEvent(state, card);
   }
   const ctx = { ...state, chapterNow: square.chapter };
   const deckKind = square.kind === "route" ? (state.route === "oral" ? "fate" : "chance") : square.kind;
-  const pool = events.cards.filter((c) => c.deck === deckKind && isEligible(c, ctx));
+  let pool = events.cards.filter((c) => c.deck === deckKind && isEligible(c, ctx));
+  if (!pool.length) {
+    // 這一章的牌都抽完了就退回不限章節，避免格子變成空轉
+    pool = events.cards.filter((c) => c.deck === deckKind && isEligible(c, { ...ctx, chapterNow: null }));
+  }
   const [card, after] = pick(state, pool);
   if (!card) {
     const next = clone(state);
@@ -156,7 +164,7 @@ function enterEvent(state, card) {
 
 // 沒有事件可抽時，往前補一格直到有牌可抽或抵達終點
 function advanceReady(state) {
-  if (state.pos >= 24) return { ...state, status: "done" };
+  if (state.pos >= END) return { ...state, status: "done" };
   return { ...state, status: "ready" };
 }
 
@@ -236,7 +244,7 @@ export function applyChoice(state, card, choice, data) {
 }
 
 function finishTurn(state) {
-  if (state.pos >= 24) return settle(state);
+  if (state.pos >= END) return settle(state);
   return { ...state, status: "ready" };
 }
 
@@ -247,8 +255,11 @@ export function checkpointAt(state, board, data) {
   const cp = data.checkpoints[square.milestone];
   if (!cp) return state;
   const next = clone(state);
+  // 選項可以掛 requires：只顯示玩家立過旗標的選項（例如最後一關的承諾兌現選項）。
+  // 全被濾掉時退回完整清單，避免死局。
+  const choices = cp.choices.filter((c) => !c.requires || next.flags[c.requires]);
   next.status = "checkpoint";
-  next.pendingCheckpoint = { id: square.milestone, title: cp.title, text: cp.text, choices: cp.choices };
+  next.pendingCheckpoint = { id: square.milestone, title: cp.title, text: cp.text, choices: choices.length ? choices : cp.choices };
   return next;
 }
 
@@ -260,7 +271,7 @@ export function settle(state) {
   // 多面向計分：收穫＋資源狀況，稱號才對得上結局文字
   let ending;
   if (k >= 13 && minRes >= 3) ending = "stage";
-  else if ((next.strain || 0) >= 1 || minRes <= 1) ending = "wild";
+  else if ((next.strain || 0) >= 2) ending = "wild";
   else if (k <= 9) ending = "safe";
   else ending = "steady";
   next.ending = { id: ending, ...data_endings[ending] };

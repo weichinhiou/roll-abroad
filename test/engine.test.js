@@ -31,9 +31,12 @@ test("防跳關：每個里程碑前擲 3 都會被擋下", () => {
   }
 });
 
-test("防跳關：從里程碑出發不會被自己擋住，也不會超過 24", () => {
+test("防跳關：從里程碑出發不會被自己擋住，也不會超過第 32 格", () => {
   assert.equal(E.applyMove(at(6, { dice: 3 }), data.board).pos, 9);
   assert.equal(E.applyMove(at(23, { dice: 3 }), data.board).pos, 24);
+  assert.equal(E.applyMove(at(31, { dice: 3 }), data.board).pos, 32);
+  assert.equal(E.applyMove(at(30, { dice: 3 }), data.board).pos, 32);
+  assert.equal(E.applyMove(at(32, { dice: 3 }), data.board).pos, 32);
 });
 
 test("提前規劃：指定點數並扣道具，沒道具或點數不合法時回 null", () => {
@@ -177,13 +180,14 @@ test("真實改編卡選完會在行程紀錄記一行", () => {
 });
 
 // ── 結局 ───────────────────────────────────────────────
-test("結局：看學術收穫，也看資源有沒有見底", () => {
-  const end = (knowledge, min, strain = 0) => E.settle({ ...at(24), strain, res: { time: min, money: 8, energy: 8, knowledge } }).ending.id;
+test("結局：看學術收穫，也看中途耗盡過幾次", () => {
+  const end = (knowledge, min, strain = 0) => E.settle({ ...at(32), strain, res: { time: min, money: 8, energy: 8, knowledge } }).ending.id;
   assert.equal(end(13, 3), "stage");
   assert.equal(end(13, 2), "steady");
-  assert.equal(end(13, 3, 1), "stage"); // 中途見底但收得漂亮，還是國際舞台
-  assert.equal(end(12, 5, 1), "wild");
-  assert.equal(end(8, 1), "wild");
+  assert.equal(end(13, 3, 2), "stage"); // 中途見底但收穫滿行囊、資源也留得住，還是國際舞台
+  assert.equal(end(12, 5, 2), "wild");  // 幾度差點走不下去
+  assert.equal(end(12, 5, 1), "steady");
+  assert.equal(end(8, 1), "safe");
   assert.equal(end(9, 5), "safe");
   assert.equal(end(10, 5), "steady");
 });
@@ -191,9 +195,36 @@ test("結局：看學術收穫，也看資源有沒有見底", () => {
 test("資源耗盡會記一次 strain；舊存檔沒有這個欄位也能結算", () => {
   const c = { id: "x", title: "x", choices: [{ label: "x", effects: { money: -20 } }] };
   assert.equal(E.applyChoice(at(3), c, c.choices[0], data).strain, 1);
-  const old = at(24);
+  const old = at(32);
   delete old.strain;
   assert.ok(E.settle(old).ending.id);
+});
+
+// ── 章節門檻 ───────────────────────────────────────────
+test("章節門檻：只在標示的章節抽得到，chapterNow 為 null 表示不限章節", () => {
+  const card = { id: "ch5only", deck: "chance", route: "both", chapters: [5] };
+  const s = at(3, { route: "oral" });
+  assert.equal(E.isEligible(card, { ...s, chapterNow: 5 }), true);
+  assert.equal(E.isEligible(card, { ...s, chapterNow: 4 }), false);
+  assert.equal(E.isEligible(card, { ...s, chapterNow: null }), true);
+});
+
+test("章節門檻：某章牌被抽完就退回不限章節，格子不會空轉", () => {
+  const card = { id: "ch5only", deck: "chance", route: "both", chapters: [5],
+    title: "t", choices: [{ label: "a", effects: {} }, { label: "b", effects: {} }] };
+  const events = { cards: [card], items: data.items };
+  const sq = { n: 3, chapter: 1, kind: "chance", label: "x" };
+  const out = E.drawCard(at(3), data.board, events, sq);
+  assert.equal(out.pendingEvent.id, "ch5only");
+});
+
+test("章節門檻：連鎖卡不受章節限制，跨章仍接得上", () => {
+  const chain = { id: "chainB", deck: "chance", route: "both", chapters: [5],
+    title: "t", choices: [{ label: "a", effects: {} }, { label: "b", effects: {} }] };
+  const events = { cards: [chain], items: data.items };
+  const sq = { n: 3, chapter: 1, kind: "chance", label: "x" };
+  const out = E.drawCard(at(3, { pending: ["chainB"] }), data.board, events, sq);
+  assert.equal(out.pendingEvent.id, "chainB");
 });
 
 // ── seed 重現 ──────────────────────────────────────────
@@ -209,11 +240,11 @@ test("不同 seed 會走出不同的局", () => {
 });
 
 // ── 1,000 局模擬 ───────────────────────────────────────
-test("1,000 局模擬：死局 0、每張卡都抽得到、擲骰平均 10–15 次、四種結局都會出現", () => {
+test("1,000 局模擬：死局 0、每張卡都抽得到、擲骰平均 10–25 次、四種結局都會出現", () => {
   const r = simulate(1000, data); // 任何一局卡住都會 throw
   for (const c of data.events.cards) assert.ok(r.drawn[c.id] > 0, `${c.id} 一次都沒抽到`);
   const mean = r.rolls.reduce((a, b) => a + b, 0) / r.n;
-  assert.ok(mean >= 10 && mean <= 15, `平均擲骰 ${mean}`);
+  assert.ok(mean >= 10 && mean <= 25, `平均擲骰 ${mean}`);
   for (const id of ["stage", "steady", "wild", "safe"]) {
     assert.ok((r.endings[id] || 0) >= 50, `結局 ${id} 只出現 ${r.endings[id] || 0} 次`);
   }

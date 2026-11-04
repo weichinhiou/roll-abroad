@@ -6,6 +6,7 @@
   --c2: #e6e9f7;
   --c3: #fbe6d8;
   --c4: #efe0ee;
+  --c5: #f9dccd;
   --ms: #2b2a27;
   --accent: #0f6d5f;
   --warm: #b9804e;
@@ -109,7 +110,7 @@ button {
 /* 棋盤 */
 .board {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   gap: 4px;
 }
 .board3d {
@@ -276,6 +277,9 @@ body.busy .forced button {
 }
 .ch4 {
   background: var(--c4);
+}
+.ch5 {
+  background: var(--c5);
 }
 .cell.milestone {
   border: 2px solid var(--ms);

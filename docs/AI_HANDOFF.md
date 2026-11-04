@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-04（台灣時間），OpenCode。**新功能凍結（plan D13）**；`main` 在 `97c80bf`＋本次 Task 21（事件卡 36→68 張）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-04（台灣時間），OpenCode。`main` 在 `97c80bf`＋已上線的 Task 21（事件卡 36→68 張）；**本次 Task 22（棋盤 24→32 格、五邊形、第五章）尚未 commit，等工作目錄裡那批改動**。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -9,7 +9,7 @@
 
 ## Goal
 
-在 **2026-11-09 黑客松**前，做出可以展示的單人擲骰遊戲：24 格、四章、壁報與口報兩條路線、機會／命運卡、道具、結局，並且有 3 分鐘展示模式。之後在任意門的任務實驗室加上外連卡片（KIDE 報告也會提到這一點）。
+在 **2026-11-09 黑客松**前，做出可以展示的單人擲骰遊戲：32 格、五章（含「回院之後」）、壁報與口報兩條路線、機會／命運卡、道具、結局，並且有 3 分鐘展示模式。之後在任意門的任務實驗室加上外連卡片（KIDE 報告也會提到這一點）。
 
 ## Context
 
@@ -46,15 +46,25 @@
 
 | 檔案 | 內容 |
 |---|---|
-| `src/engine.js` | `initialState`、`rollDie`／`forcedRoll`、`applyMove`（里程碑 6／12／18／24 強制停）、`isEligible`、`drawCard`（優先處理連鎖 `pending`）、`applyChoice`、`checkpointAt`、`settle`（四種結局寫死在檔案底部的 `data_endings`） |
+| `src/engine.js` | `initialState`、`rollDie`／`forcedRoll`、`applyMove`（里程碑 6／12／18／24／32 強制停）、`isEligible`、`drawCard`（優先處理連鎖 `pending`）、`applyChoice`、`checkpointAt`（選項可用 `requires: flag` 依旗標過濾）、`settle`（四種結局寫死在檔案底部的 `data_endings`；高張力＝`strain >= 2`） |
 | `src/app.js` | 狀態流程；預設 seed 是 `demo-1109`；存檔用 localStorage |
 | `src/render.js`、`styles.css`、`index.html` | 畫面 |
-| `data/board.json` | 24 格 |
-| `data/events.json` | `{ cards: [...] }` 共 20 張，`deck` 是 chance／fate，`tone` 是 real／funny／fantasy；路線欄位的值有 `both`、`poster`、`oral`，以及連鎖用的 `mentor`、`network` |
-| `data/checkpoints.json` | 里程碑：`route`（第一章選路線）、`gate` 等 |
+| `data/board.json` | 32 格、milestones [6,12,18,24,32] |
+| `data/events.json` | `{ cards: [...] }` 共 77 張，`deck` 是 chance／fate，`tone` 是 real／funny／fantasy，`chapters` 標「哪幾章能抽」；路線欄位的值有 `both`、`poster`、`oral`，以及連鎖用的 `mentor`、`network` |
+| `data/checkpoints.json` | 里程碑：`route`（第一章選路線）、`gate`、`session`、`return`（第四章回國報到）、`final`（第五章回饋與傳承，承諾兌現選項帶 `requires`） |
 | `data/items.json` | 5 種道具：plan、consult、door、usb（壁報線送）、badge（口報線送） |
 
 ## Tasks
+
+### Task 22：棋盤 24→32 格、五邊形棋盤、第五章「回院之後」（2026-11-04，工作目錄未 commit）
+
+依據 plan D19：前 24 格一格不動，新增第 25–32 格全放第五章「回院之後」；棋盤幾何改五邊形，五個角落＝五個里程碑（6／12／18／24／32）。第 24 格改里程碑 `return`「回國報到」，第 32 格 `final`「滿載而歸」（先「兌現承諾」→「回饋與傳承」→ Jean 定案「滿載而歸」）內含承諾兌現選項（選項層級 `requires: flag`，`engine.checkpointAt` 依旗標過濾，全濾空時退回完整清單防死局）。結局計分「高張力」門檻收緊為 `strain >= 2`。五章色 `0xef7d57`／`--c5: #f9dccd`；章徽只有四枚，第五章暫沿用返國章。桌板跟著棋盤外框改五邊形（`scene-art.js` 的 `offsetPoly`／`plateMesh`）。
+
+**續做（同日）：回院後腳本盤點與章節門檻**（plan D20，詳見 [postreturn-cards-2026-11-04.md](postreturn-cards-2026-11-04.md)）：回原始 PDF 堆（`D:\Git\國際會議旅伴`，6 冊 228 篇）重盤回院後素材（心得及建議段 213 篇、建議事項 91 篇），新增 9 張回院後卡 `N33`–`N41`（全掛 `trueStory`；N16／N19 口報卡依 Jean「壁報也有短講」維持 `route: both`）；77 張全標 `chapters`（哪幾章能抽），`drawCard` 設兩道保險（空池退回不限章節、連鎖不受章節限制）。加卡後 1,000 局分布：steady 522／wild 229／safe 132／stage 117，平衡尚未細調。
+
+**續做（同日）：遊戲背景換圖（桌機＋手機）**：Jean 兩度給圖——桌機 `學術港灣與世界地標全景.png`（1672×941）轉 `assets/art/world-desktop.webp`（172KB）、手機 `國際學術旅港灣全景.png`（直式 941×1672）縮寬 900 轉 `assets/art/world-mobile.webp`（115KB）。`game-art.css`：`body` 換 `world-desktop.webp`，`@media(max-width:759px)` 段換 `world-mobile.webp`（`background-position:center top`）；舊 `travel-world.webp` 保留（仍在素材庫、手機段不再引用）。製作紀錄在 `assets/art/README.md`（註明兩張非 image_gen 產出）。
+
+**驗證過：** `npm.cmd run check` 通過、`npm.cmd test` 34 項全過（含 3 項章節門檻新測試；1,000 局：死局 0、77 張都抽得到、meanRolls 17.7）；Playwright＋無頭 Chrome 本地 4191 兩局實玩到結局（「第四章：回國報到」「第五章：旅程結算」〔後改名滿載而歸〕都出現、requires 過濾實測：無旗標只剩 2 通用選項、有 mentor 多 1 項、頁面顯示「第 24/32 格」「第五章・回院之後」）；console 錯誤 0／4xx 0；2D 退回模式（減少動態效果）32 格、5 里程碑、8 欄 ch5；桌機與手機截圖確認五邊形棋盤＋五邊形桌板＋廣場貼圖正常（UV 修正後）；背景換圖後無頭 Chrome 截桌機 1366×860 與手機 390×844 兩版型：`body` 背景分別為 `world-desktop.webp`／`world-mobile.webp`、4xx 0、console 錯誤 0、棋盤不被背景干擾。**沒驗證：** 真機 FPS、手機實機（只用模擬 viewport）、77 張數值平衡的逐卡分布、舊存檔續玩沒實測（引擎面 pos≤24 直接續玩）、目標一局時間沒有數字；骰子墊與梅花鹿等內圈小物沒重排。**待 Jean 拍板：** N04／N07 是否掛真實標記。
 
 ### Task 21：事件卡擴充 36→68 張（2026-11-04，`main`）
 

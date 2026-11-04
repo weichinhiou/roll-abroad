@@ -30,6 +30,14 @@ One square atlas, exact 2×2 equal quadrants without gutters/margins. Original d
 
 One square atlas, exact 3×3 equal cells, genuinely transparent background, no gutters/margins, no text or UI chrome. Nine centered vivid polished 3D toy icons with generous consistent padding: row 1 stopwatch, gold coins, green/yellow lightning bolt; row 2 purple graduation cap, blue calendar with orange tab, blue shield with a friendly adviser silhouette; row 3 turquoise open door, purple backup USB flash drive, coral business-card holder. Center positions align exactly to 1/6, 1/2, 5/6 on each axis. Icons never cross cells, readable at 24–40px.
 
+### world-desktop.webp（桌機背景）
+
+Jean 提供的原圖 `學術港灣與世界地標全景.png`（1672×941），非 image_gen 產出。轉檔 WebP quality 82（約 172KB）。內容：學術港灣＋世界地標全景，中央水面低對比留給 3D 棋盤。掛在 `game-art.css` 的 `body` 背景，桌機與 ≥760px 版型共用。
+
+### world-mobile.webp（手機背景）
+
+Jean 提供的原圖 `國際學術旅港灣全景.png`（941×1672 直式），非 image_gen 產出。轉檔時縮到寬 900（900×1599）、WebP quality 82（約 115KB）。掛在 `game-art.css` 的 `@media(max-width:759px)` body 背景段，`background-position:center top`。
+
 ## 維護
 
 - `src/art.js` 是檔名清單；`scene-art.js` 依四章圖集的固定位置讀取。

@@ -41,7 +41,7 @@ async function boot() {
 
 function startGame(seed) {
   S = E.initialState({ seed });
-  S.log = [{ kind: "info", text: "旅程開始：從第 0 格出發，目標是走完 24 格。" }];
+  S.log = [{ kind: "info", text: "旅程開始：從第 0 格出發，目標是走完 32 格。" }];
   save(S);
 }
 

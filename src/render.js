@@ -5,7 +5,8 @@ import { MILESTONES, resName } from "./engine.js";
 import { initBoard3d, updateBoard3d, rollDice, teleportPawn, onDieClick } from "./board3d.js";
 import { ART } from "./art.js";
 
-const CH_NAMES = { 1: "投稿", 2: "出國準備", 3: "國際會議", 4: "返國" };
+const CH_NAMES = { 1: "投稿", 2: "出國準備", 3: "國際會議", 4: "返國", 5: "回院之後" };
+const CH_ORD = ["一", "二", "三", "四", "五"];
 const REDUCED_MQ = "(prefers-reduced-motion: reduce)";
 const $ = (sel) => document.querySelector(sel);
 
@@ -102,7 +103,7 @@ export function render(state, board, items, lastResult = null) {
   renderJourney(state, board);
   renderItems(state, items);
   renderPanel(state, lastResult);
-  renderDialog(state, lastResult);
+  renderDialog(state, board, lastResult);
   renderLog(state);
   renderDiceBadge();
 }
@@ -146,8 +147,8 @@ function renderResources(state) {
 function renderJourney(state, board) {
   const square = board.squares.find((s) => s.n === state.pos);
   const chapter = square?.chapter || 1;
-  $("#chapter").textContent = `第${["一","二","三","四"][chapter-1]}章・${CH_NAMES[chapter]}`;
-  $("#rollinfo").textContent = `${state.pos === 0 ? "起點・準備出發" : `第 ${state.pos}/24 格・${square.label}`}　｜　擲骰 ${state.rolls} 次`;
+  $("#chapter").textContent = `第${CH_ORD[chapter - 1]}章・${CH_NAMES[chapter]}`;
+  $("#rollinfo").textContent = `${state.pos === 0 ? "起點・準備出發" : `第 ${state.pos}/${board.squares.length} 格・${square.label}`}　｜　擲骰 ${state.rolls} 次`;
   const note = $("#companion-note");
   note.textContent = state.status === "done" ? "旅程完成！這些收穫，帶回去分享吧。" :
     state.status === "checkpoint" ? "重要的一站！做個好決定，再出發。" :
@@ -205,7 +206,7 @@ function renderPanel(state, lastResult) {
 }
 
 // 事件、結果、結局都放在畫面正中間的跳出視窗，不用上下捲動找
-function renderDialog(state, lastResult) {
+function renderDialog(state, board, lastResult) {
   const dialog = $("#modal");
   dialog.innerHTML = "";
   const block = state.pendingEvent || state.pendingCheckpoint;
@@ -222,7 +223,8 @@ function renderDialog(state, lastResult) {
     dialog.appendChild(end);
     dialog.appendChild(actionButton("再玩一次", "restart"));
   } else if (block) {
-    fillEvent(dialog, block, Math.max(1, Math.ceil(state.pos / 6)));
+    const sq = board.squares.find((s) => s.n === state.pos);
+    fillEvent(dialog, block, sq?.chapter || 1);
   } else if (lastResult) {
     dialog.appendChild(resultBox(lastResult));
     dialog.appendChild(actionButton("繼續", "continue"));
@@ -255,10 +257,11 @@ function fillEvent(dialog, block, currentChapter) {
   if (!block.deck) {
     const emblem = document.createElement("span");
     emblem.className = "chapter-emblem";
+    // 2×2 圖集只有四枚章徽；第五章先沿用返國章
     const chapter = Math.max(0, Math.min(3, currentChapter - 1));
     emblem.style.backgroundPosition = `${chapter % 2 ? "100%" : "0%"} ${chapter > 1 ? "100%" : "0%"}`;
     emblem.setAttribute("role", "img");
-    emblem.setAttribute("aria-label", `${CH_NAMES[chapter+1]}章節徽章`);
+    emblem.setAttribute("aria-label", `${CH_NAMES[currentChapter] || CH_NAMES[chapter+1]}章節徽章`);
     dialog.appendChild(emblem);
   }
   const h = document.createElement("h2");

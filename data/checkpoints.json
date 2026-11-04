@@ -24,10 +24,22 @@
         { "label": "回飯店整理 today 的筆記", "effects": { "energy": 1, "knowledge": 1 }, "note": "睡一覺，明天還有力氣。" }
       ]
     },
-    "final": {
-      "title": "第四章：旅程結算",
-      "text": "行李、收據、筆記摊在桌上。這一趟到底換到了什麼。",
+    "return": {
+      "title": "第四章：回國報到",
+      "text": "回到崗位第一天，桌上已經堆著出差期間的待辦。出國的這一段結束了，但這趟旅程還沒有。",
       "choices": [
+        { "label": "先把心得報告的時程排出來", "effects": { "time": -1, "knowledge": 1 }, "note": "期限先訂好，後面才不會一路趕。" },
+        { "label": "銷假、回崗位報到", "effects": { "energy": 1 }, "note": "先把人安頓好，其他慢慢來。" }
+      ]
+    },
+    "final": {
+      "title": "第五章：滿載而歸",
+      "text": "收據、報告與一疊名片攤在桌上。這一趟答應過的事，你兌現了哪一條？",
+      "choices": [
+        { "label": "把三年內要發表的稿子，真的送出去", "requires": "pub_pending", "effects": { "time": -1, "knowledge": 3 }, "note": "稿子送出去的那一刻，才算真的回來。" },
+        { "label": "回覆那封說「有興趣繼續合作」的信", "requires": "network", "effects": { "knowledge": 2 }, "note": "信寄出去了，合作真的開始。" },
+        { "label": "把被問倒的那個問題，查個水落石出", "requires": "oral_qa", "effects": { "knowledge": 2, "time": -1 }, "note": "當場答不出來的，現在答得出來了。" },
+        { "label": "把出國前幫你的那位，回饋回去", "requires": "mentor", "effects": { "knowledge": 1, "energy": 1 }, "note": "輪到你當一次前輩。" },
         { "label": "把這趟寫成一份好報告", "effects": { "time": -1, "knowledge": 1 }, "note": "報告交出去了。" },
         { "label": "直接結帳", "effects": { "energy": 1 }, "note": "先休息，報告再說。" }
       ]

@@ -15,19 +15,37 @@ import { GLTFLoader } from "../vendor/GLTFLoader.js";
 import { CHAPTER_COLORS, tileArt, buildTravelTable } from "./scene-art.js";
 
 // ── 顏色與版面 ─────────────────────────────────────────────────────
-// 四章色系比 2D 版稍微沉一點，一起用在格子、中央標題、章節旗上，視覺才一致。
+// 五章色系比 2D 版稍微沉一點，一起用在格子、中央標題、章節旗上，視覺才一致。
 const CH_COLOR = CHAPTER_COLORS;
-const CH_SIGIL = { 1: "稿", 2: "行", 3: "會", 4: "結" };
-const CH_NAME = { 1: "投稿", 2: "出國準備", 3: "國際會議", 4: "返國結案" };
+const CH_SIGIL = { 1: "稿", 2: "行", 3: "會", 4: "結", 5: "承" };
+const CH_NAME = { 1: "投稿", 2: "出國準備", 3: "國際會議", 4: "返國結案", 5: "回院之後" };
 const MILESTONE_GOLD = 0xe1b56a;
 const MILESTONE_FILL = 0x35302a;
 
-// 桌遊式方形棋盤：四個角是里程碑（6／12／18／24），每邊中間 5 格長方形卡片格
-const TILE_W = 1.2;              // 一般格沿著邊的寬度
-const TILE_D = 1.8;              // 一般格往內的深度（也是角落格的邊長）
-const INNER = 2.5 * TILE_W;      // 內圈半邊長（5 格寬的一半）
-const SIDE = INNER + TILE_D / 2; // 每一邊格子中心線的位置
-const OUTER = INNER + TILE_D;    // 棋盤外緣半邊長
+// 桌遊式五邊形棋盤：五個角是里程碑（6／12／18／24／32）。
+// 前四邊各 6 格（5 張卡片格＋右端角落格）＝既有四章一格不動；
+// 第五邊「回院之後」8 格（第 25–32 格）、面朝觀眾收尾。
+const TILE_W = 0.9;              // 一般格沿著邊的寬度
+const TILE_D = 1.4;              // 一般格往內的深度（也是角落格的邊長）
+// 五個角落（里程碑）座標：24 前左、32 前右、6 右、12 後、18 左。
+// 正五邊形比例、底邊（第五章）加長到 7.7，其餘四邊等長 5.9。
+const CORNERS = [
+  { x: -3.85, z: 4.07 },  // 第 24 格・前左
+  { x: 3.85, z: 4.07 },   // 第 32 格・前右
+  { x: 4.95, z: -1.75 },  // 第 6 格・右
+  { x: 0, z: -5.01 },     // 第 12 格・後
+  { x: -4.95, z: -1.75 }, // 第 18 格・左
+];
+// 每一邊：from 是起點角（屬上一邊），to 是終點角（本邊的里程碑）
+const SIDES = [
+  { from: 1, to: 2, tiles: 6 }, // 第 1–6 格
+  { from: 2, to: 3, tiles: 6 }, // 第 7–12 格
+  { from: 3, to: 4, tiles: 6 }, // 第 13–18 格
+  { from: 4, to: 0, tiles: 6 }, // 第 19–24 格
+  { from: 0, to: 1, tiles: 8 }, // 第 25–32 格
+];
+const INNER = 3.2;               // 內圈廣場半邊長（骰子、標題板與場景都在裡面）
+const RING_R = Math.max(...CORNERS.map((c) => Math.hypot(c.x, c.z))) + TILE_D / 2; // 棋盤外緣半徑
 const CELL_H = 0.2;    // 一般格高度
 const CELL_H_MS = 0.34; // 里程碑（角落）格高度
 const REDUCED_MQ = "(prefers-reduced-motion: reduce)";
@@ -237,8 +255,8 @@ function hexLerp(hex, target, k) {
 // 格子卡面（桌遊卡片風格）：米白卡底＋上方章節色帶＋號碼＋短標籤＋格子類型標籤。
 // 角落里程碑：深色底、金框、大圖示、「必停」。
 // shape 決定畫布比例，和格子頂面一樣，字才不會被拉扁。
-const CH_ICON = { 1: "📝", 2: "🧳", 3: "🎤", 4: "🏠" };
-const MS_ICON = { route: "🧭", gate: "✈️", session: "🏆", final: "🏁" };
+const CH_ICON = { 1: "📝", 2: "🧳", 3: "🎤", 4: "🏠", 5: "🎓" };
+const MS_ICON = { route: "🧭", gate: "✈️", session: "🏆", return: "🛬", final: "🏁" };
 const KIND_TAG = {
   chance: { text: "機會", color: "#2f7d4f" },
   fate: { text: "命運", color: "#b4432a" },
@@ -299,21 +317,30 @@ function dieFaceTexture(pips) {
 }
 
 // ── 環形格子佈局 ───────────────────────────────────────────────
-// n = 0..23（第 n+1 格）。每邊前 5 格是卡片格，第 6 格是角落（里程碑）。
-// 下邊由左往右 1–5、右下角 6；右邊往上 7–11、右上角 12；上邊往左 13–17、左上角 18；左邊往下 19–23、左下角 24。
-// shape：corner 是正方形；h 是上下兩邊的直立卡（寬 TILE_W、深 TILE_D）；v 是左右兩邊的橫卡。
-function ringPos(n) {
-  const side = Math.floor(n / 6);
-  const k = n % 6;
-  const off = INNER - TILE_W * (k + 0.5);
-  if (k === 5) {
-    const corners = [[SIDE, SIDE], [SIDE, -SIDE], [-SIDE, -SIDE], [-SIDE, SIDE]];
-    return { x: corners[side][0], z: corners[side][1], shape: "corner" };
+// n = 0..31（第 n+1 格）。沿著五邊形的一邊走：每邊前幾格是卡片格，右端一格是角落（里程碑）。
+// 第五邊（第 25–32 格）面朝觀眾、格數 8，是刻意拉長的「回院之後」收尾大道。
+// 形狀：corner 是角落正方形；mid 是沿著邊的直立卡（寬 TILE_W、深 TILE_D），跟著邊的方向轉。
+// 格子貼圖的「上方」一律朝棋盤內側（編號在內、標籤在外），像攤在桌上的桌遊卡。
+const GAP = 0.06; // 格子之間留一條細縫，看起來像一張張卡片
+const RING = (() => {
+  const out = [];
+  for (const side of SIDES) {
+    const a = CORNERS[side.from], b = CORNERS[side.to];
+    const dx = b.x - a.x, dz = b.z - a.z, len = Math.hypot(dx, dz);
+    const ux = dx / len, uz = dz / len;
+    // rotation.y = atan2(-uz, ux) 時，local +x 沿著邊、local +z 指向外側
+    const rot = Math.atan2(-uz, ux);
+    for (let k = 0; k < side.tiles - 1; k++) {
+      const t = TILE_D / 2 + TILE_W * (k + 0.5);
+      out.push({ x: a.x + ux * t, z: a.z + uz * t, rot, shape: "mid" });
+    }
+    out.push({ x: b.x, z: b.z, rot: Math.atan2(b.x, b.z), shape: "corner" });
   }
-  if (side === 0) return { x: -off, z: SIDE, shape: "h" };
-  if (side === 1) return { x: SIDE, z: off, shape: "v" };
-  if (side === 2) return { x: off, z: -SIDE, shape: "h" };
-  return { x: -SIDE, z: -off, shape: "v" };
+  return out;
+})();
+
+function ringPos(n) {
+  return RING[Math.max(0, Math.min(RING.length - 1, n))];
 }
 
 function cellHeight(sq) {
@@ -372,15 +399,13 @@ function buildLights() {
   // 保持背景透明，讓本機旅行世界圖與 3D 棋盤整合。
 }
 
-function buildTable() { tableGroup = buildTravelTable(scene, OUTER, INNER, BOARD_TOP_Y); }
+function buildTable() { tableGroup = buildTravelTable(scene, RING_R, INNER, BOARD_TOP_Y, CORNERS); }
 
 function buildRing(board) {
   ringGroup = new THREE.Group();
-  const GAP = 0.06; // 格子之間留一條細縫，看起來像一張張卡片
   const dims = {
     corner: [TILE_D - GAP, TILE_D - GAP],
-    h: [TILE_W - GAP, TILE_D - GAP],
-    v: [TILE_D - GAP, TILE_W - GAP],
+    mid: [TILE_W - GAP, TILE_D - GAP],
   };
 
   board.squares.forEach((sq) => {
@@ -404,6 +429,7 @@ function buildRing(board) {
       [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]
     );
     mesh.position.set(p.x, 0.22 + h / 2, p.z);
+    mesh.rotation.y = p.rot; // 格子轉向沿著邊，卡面才跟著棋盤走
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     mesh.userData.square = sq;
@@ -411,15 +437,15 @@ function buildRing(board) {
     ringGroup.add(mesh);
 
     if (ms) {
-      // 里程碑小旗：插在角落格的外角，不擋到格子上的字
-      const sx = Math.sign(p.x), sz = Math.sign(p.z);
+      // 里程碑小旗：插在角落格的外側，不擋到格子上的字
+      const r = Math.hypot(p.x, p.z) || 1;
+      const ox = p.x / r, oz = p.z / r;   // 外向
+      const bx = p.x + ox * 0.62, bz = p.z + oz * 0.62;
       const pole = new THREE.Mesh(
         new THREE.CylinderGeometry(0.035, 0.035, 1.0, 12),
         new THREE.MeshStandardMaterial({ color: 0xefe0bd, roughness: 0.7, metalness: 0.15 })
       );
-      p.x += sx * 0.62;
-      p.z += sz * 0.62;
-      pole.position.set(p.x - 0.32, 0.22 + h + 0.5, p.z);
+      pole.position.set(bx, 0.22 + h + 0.5, bz);
       pole.castShadow = true;
       ringGroup.add(pole);
 
@@ -439,7 +465,8 @@ function buildRing(board) {
         new THREE.PlaneGeometry(0.5, 0.35),
         new THREE.MeshStandardMaterial({ map: toTexture(flagCanvas), transparent: true, side: THREE.DoubleSide, roughness: 0.85 })
       );
-      flag.position.set(p.x - 0.06, 0.22 + h + 0.86, p.z);
+      // 旗面沿著邊的方向伸出（內建的斜角旗形不用改）
+      flag.position.set(bx + oz * 0.26, 0.22 + h + 0.86, bz - ox * 0.26);
       flag.castShadow = true;
       ringGroup.add(flag);
     }
@@ -567,9 +594,10 @@ function buildPawn() {
 
 function resetPawnGroup() {
   if (!pawnGroup) return;
-  // 第 0 格（出發）就站在第 24 格「起點／終點」那個角落
-  const target = ringPos(pos <= 0 ? 23 : Math.min(23, pos - 1));
-  const sq = data ? data.board.squares[pos <= 0 ? 23 : Math.min(23, pos - 1)] : null;
+  // 第 0 格（出發）就站在第 32 格「起點／終點」那個角落
+  const idx = pos <= 0 ? RING.length - 1 : Math.min(RING.length - 1, pos - 1);
+  const target = ringPos(idx);
+  const sq = data ? data.board.squares[idx] : null;
   const y = 0.30 + (sq ? cellHeight(sq) : 0);
   pawnGroup.position.set(target.x, y, target.z);
   if (suitcase) suitcase.position.copy(CASE_HOME);
@@ -694,9 +722,9 @@ export function initBoard3d(container_, board) {
     // 依水平／垂直視角較窄的那一邊，算出能框住整個棋盤的距離
     const halfV = (camera.fov * Math.PI) / 360;
     const halfH = Math.atan(Math.tan(halfV) * camera.aspect);
-    const r = OUTER + 0.65;
-    // 左右用 1.12 倍保險：靠近鏡頭的下排因透視會比較寬
-    const dist = Math.max(((r * Math.sin(view.tilt) * 1.08) / Math.tan(halfV)) * CAM_FIT, (r * (layoutMobile ? 1.08 : 1.26)) / Math.tan(halfH));
+    const r = RING_R + 0.65;
+    // 左右用 1.3 倍保險：靠近鏡頭的下排因透視會比較寬，五邊形的角也會往外伸
+    const dist = Math.max(((r * Math.sin(view.tilt) * 1.15) / Math.tan(halfV)) * CAM_FIT, (r * (layoutMobile ? 1.12 : 1.3)) / Math.tan(halfH));
     view.fitDist = dist;
     applyCamera();
     camera.updateProjectionMatrix();
