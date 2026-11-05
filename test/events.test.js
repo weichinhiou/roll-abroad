@@ -34,9 +34,9 @@ function play(seed) {
   return s;
 }
 
-test("77 張事件 ID 唯一，選項效果與所有連鎖目標有效",()=>{
-  assert.equal(events.cards.length,77);
-  assert.equal(byId.size,77);
+test("84 張事件 ID 唯一，選項效果與所有連鎖目標有效",()=>{
+  assert.equal(events.cards.length,84);
+  assert.equal(byId.size,84);
   const keys=new Set(["time","money","energy","knowledge","penalty","flagLoss"]);
   for(const c of events.cards){
     assert.ok(["chance","fate"].includes(c.deck));assert.ok(c.choices.length>=2);
@@ -64,7 +64,7 @@ test("口報問答只在口報前情之後出現，兩個選項都排入後續",
   }
 });
 
-test("1,000 局：死局 0、77 張都抽得到、路線正確、資源合法",t=>{
+test("1,000 局：死局 0、84 張都抽得到、路線正確、資源合法",t=>{
   const seen=new Set(),endings={},routes={},rolls=[];
   for(let i=0;i<1000;i++){
     const s=play(`events-36-${i}`);s.drawn.forEach(id=>seen.add(id));
