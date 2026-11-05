@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-05（台灣時間），OpenCode。Task 24（上方章節列改掛牌橫幅圖，plan D21）**本機已 commit，未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-05（台灣時間），OpenCode。Task 24（上方章節列改掛牌橫幅圖，plan D21）本機 `main` 在 `c215b2b`，**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
