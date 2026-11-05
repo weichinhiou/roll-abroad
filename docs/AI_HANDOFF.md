@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-05（台灣時間），OpenCode。**Task 25（旅程結算畫面基礎版）本機已 commit、未 push**；下一步是等 Jean 的 GPT 底版圖，到手跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]` 就換好（規格固定、不用改程式）。Task 24（上方章節掛牌橫幅＋桌機／手機底板換新圖＋左上標題品牌 Logo，plan D21）本機已 commit（掛牌 `c215b2b`、底板 `637d2c5`、logo `1e3fadb`），**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-05（台灣時間），OpenCode。**Task 25（旅程結算畫面基礎版）本機 `main` 在 `40114a4`，未 push**；下一步是等 Jean 的 GPT 底版圖，到手跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]` 就換好（規格固定、不用改程式）。Task 24（上方章節掛牌橫幅＋桌機／手機底板換新圖＋左上標題品牌 Logo，plan D21）本機已 commit（掛牌 `c215b2b`、底板 `637d2c5`、logo `1e3fadb`），**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -77,7 +77,7 @@ Jean 給去背標題圖 `大赴翁：Roll Abroad.png`（1536×1024），換掉�
 
 **驗證過（logo）：** `npm.cmd test` **41 項全過**（原 39＋新 2）；CDP 無頭 Chrome **九種版型**（1920×1080、1440×900、1100×820、760×900、1280×600 矮螢幕、`prefers-reduced-motion` 2D、390×844／360×740／390×650 手機）截圖＋量測：logo 顯示尺寸 170–232px 寬（桌機）／103–109px（手機），與掛牌、設定鈕、資源列、棋盤**重疊面積全 0**、無頁面溢出、console 0 錯誤；手機 logo 底緣 y=65、掛牌 y=68 起，各留 3px。**沒驗證：** 手機實機、真 GPU、SR 對 h1 內圖片 alt 的朗讀。
 
-### Task 25：旅程結算畫面（基礎版，2026-11-05，尚未 commit／push）
+### Task 25：旅程結算畫面（基礎版，2026-11-05，本機 commit `40114a4`，未 push）
 
 Jean 說「做一個基礎版給我，底版圖我會讓 GPT 生，你把架構做出來」。**資料→畫面分三層**：
 
