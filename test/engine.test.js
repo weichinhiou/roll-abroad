@@ -249,3 +249,42 @@ test("1,000 局模擬：死局 0、每張卡都抽得到、擲骰平均 10–25 
     assert.ok((r.endings[id] || 0) >= 50, `結局 ${id} 只出現 ${r.endings[id] || 0} 次`);
   }
 });
+
+// ── 旅程結算（結算畫面吃的純資料）─────────────────────────
+test("結算資料：四項資源給起訖與增減、路線名稱、四項統計", () => {
+  const d = E.settlement({ ...at(32, { route: "oral" }), res: { time: 5, money: 8, energy: 3, knowledge: 12 }, rolls: 18, strain: 1 });
+  assert.deepEqual(d.res.map((r) => r.key), ["time", "money", "energy", "knowledge"]);
+  const t = d.res.find((r) => r.key === "time");
+  assert.deepEqual({ start: t.start, value: t.value, delta: t.delta }, { start: 8, value: 5, delta: -3 });
+  assert.equal(d.res.find((r) => r.key === "knowledge").start, 0);
+  assert.equal(d.route, "口報路線");
+  assert.deepEqual(d.stats.map((s) => s.label), ["擲骰次數", "走過格數", "抽過的卡", "資源耗盡"]);
+  assert.ok(d.ending && d.ending.title && d.ending.text);
+});
+
+test("承諾章：帶回＝待追蹤、滿載而歸選了才算已兌現、都沒有＝未帶回", () => {
+  const s0 = { ...at(32), flags: { pub_pending: true, mentor: true } };
+  const cp = data.checkpoints.final;
+  const s1 = E.applyChoice(s0, { ...cp, id: "final" }, choice(cp, "把出國前幫你的那位，回饋回去"), data);
+  const by = Object.fromEntries(E.settlement(s1).promises.map((p) => [p.key, p]));
+  assert.deepEqual(
+    { brought: by.mentor.brought, kept: by.mentor.kept },
+    { brought: true, kept: true }
+  );
+  assert.deepEqual(
+    { brought: by.pub_pending.brought, kept: by.pub_pending.kept },
+    { brought: true, kept: false }
+  );
+  assert.deepEqual(
+    { brought: by.network.brought, kept: by.network.kept },
+    { brought: false, kept: false }
+  );
+});
+
+test("結算資料是純函式：不改 state、沒跑完的局也會結算", () => {
+  const s = at(20, { flags: { network: true } });
+  const raw = JSON.stringify(s);
+  const d = E.settlement(s);
+  assert.equal(JSON.stringify(s), raw, "settlement 動到了傳入的 state");
+  assert.ok(d.ending.id && d.promises.length === 4, "沒跑完的局也要給得出結算資料");
+});

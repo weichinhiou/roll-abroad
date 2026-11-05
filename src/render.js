@@ -1,7 +1,7 @@
 // 渲染層：把 state 畫到 DOM。不做判斷、不碰規則。
 // 3D 棋盤是畫面的「棋盤那一層」；WebGL 不可用或「減少動態效果」時退回 2D。
 // 骰子：3D 播動畫；2D 或減少動態效果只在面板顯一行「擲出 X」。
-import { MILESTONES, resName } from "./engine.js";
+import { MILESTONES, resName, settlement } from "./engine.js";
 import { initBoard3d, updateBoard3d, rollDice, teleportPawn, onDieClick } from "./board3d.js";
 import { ART, CHAPTER_BANNERS } from "./art.js";
 
@@ -122,6 +122,7 @@ export function render(state, board, items, lastResult = null) {
   renderItems(state, items);
   renderPanel(state, lastResult);
   renderDialog(state, board, lastResult);
+  renderSettlement(state, lastResult);
   renderLog(state);
   renderDiceBadge();
 }
@@ -265,6 +266,14 @@ function renderPanel(state, lastResult) {
     b.textContent = "擲骰";
     panel.appendChild(b);
   }
+  if (state.status === "done") {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "roll";
+    b.dataset.action = "settlement";
+    b.textContent = "旅程結算";
+    panel.appendChild(b);
+  }
   const hint = $("#die-hint");
   if (hint) hint.hidden = state.status !== "ready" || !!lastResult;
 }
@@ -275,17 +284,14 @@ function renderDialog(state, board, lastResult) {
   dialog.innerHTML = "";
   const block = state.pendingEvent || state.pendingCheckpoint;
   if (state.status === "done") {
-    const cat = document.createElement("img");
-    cat.src = ART.cat;
-    cat.alt = "黑貓旅伴陪你完成旅程";
-    cat.className = "ending-cat";
-    dialog.appendChild(cat);
-    if (lastResult) dialog.appendChild(resultBox(lastResult));
-    const end = document.createElement("div");
-    end.innerHTML = `<h2>${state.ending.title}</h2><p>${state.ending.text}</p>
-      <p class="hint">本局關鍵抉擇：${state.keyChoices.map((k) => `${k.card}→${k.choice}`).join("、") || "尚無"}</p>`;
-    dialog.appendChild(end);
-    dialog.appendChild(actionButton("再玩一次", "restart"));
+    // 結局內容交給「旅程結算」畫面；這裡只留最後一張卡的結果當過場
+    if (lastResult) {
+      dialog.appendChild(resultBox(lastResult));
+      dialog.appendChild(actionButton("看旅程結算", "settlement"));
+    } else {
+      if (dialog.open) dialog.close();
+      return;
+    }
   } else if (block) {
     const sq = board.squares.find((s) => s.n === state.pos);
     fillEvent(dialog, block, sq?.chapter || 1);
@@ -310,6 +316,80 @@ function actionButton(text, action) {
   b.dataset.action = action;
   b.textContent = text;
   return b;
+}
+
+// ── 旅程結算畫面（全螢幕）────────────────────────────────
+// 純資料來自 engine.settlement()，這裡只負責組 DOM。每局自動開一次，
+// 關掉後靠面板的「旅程結算」按鈕重開。
+let settlementSeen = false;
+
+export function openSettlement(state) {
+  const dialog = $("#settlement");
+  if (!dialog) return;
+  if (state) fillSettlement(state);
+  settlementSeen = true;
+  if (!dialog.open) dialog.showModal();
+  dialog.scrollTop = 0;
+  dialog.querySelector("button")?.focus();
+}
+
+function renderSettlement(state, lastResult) {
+  const dialog = $("#settlement");
+  if (!dialog) return;
+  if (state.status !== "done") {
+    settlementSeen = false;
+    if (dialog.open) dialog.close();
+    return;
+  }
+  fillSettlement(state);
+  // 還有最後一張卡的結果沒看完時先讓它出完，玩家按「看旅程結算」再開
+  if (!settlementSeen && !lastResult) openSettlement();
+}
+
+function fillSettlement(state) {
+  const dialog = $("#settlement");
+  const d = settlement(state);
+  const stamp = (p) => `
+    <li class="promise${p.kept ? " kept" : p.brought ? " brought" : " none"}">
+      <span class="stamp" aria-hidden="true">${p.kept ? "已兌現" : p.brought ? "待追蹤" : "未帶回"}</span>
+      <span class="plabel">${p.label}</span>
+    </li>`;
+  const bar = (r) => `
+    <li class="setres">
+      <span class="sname">${r.name}</span>
+      <span class="sbar"><i style="width:${Math.min(100, (r.value / 10) * 100)}%"></i></span>
+      <span class="sval">${r.value}</span>
+      <span class="sdiff">${r.delta > 0 ? "+" : ""}${r.delta}</span>
+    </li>`;
+  dialog.innerHTML = `
+    <div class="set-hero">
+      <p class="set-eyebrow">旅程結算${d.route ? `・${d.route}` : ""}</p>
+      <h2 class="set-title">${d.ending.title}</h2>
+      <p class="set-text">${d.ending.text}</p>
+      <img class="set-cat" src="${ART.cat}" alt="黑貓旅伴陪你完成旅程" width="106" height="106" />
+    </div>
+    <div class="set-body">
+      <section class="set-block set-promises">
+        <h3>承諾・回院之後的兌現清單</h3>
+        <ol class="promises">${d.promises.map(stamp).join("")}</ol>
+      </section>
+      <section class="set-block set-res">
+        <h3>四項資源結算</h3>
+        <ul class="setres-list">${d.res.map(bar).join("")}</ul>
+      </section>
+      <section class="set-block set-stats">
+        <h3>這一趟</h3>
+        <ul>${d.stats.map((s) => `<li><b>${s.value}</b><span>${s.label}</span></li>`).join("")}</ul>
+      </section>
+      <section class="set-block set-recap">
+        <h3>關鍵抉擇</h3>
+        <p class="hint">${d.keyChoices.map((k) => `${k.card}→${k.choice}`).join("、") || "尚無"}</p>
+      </section>
+    </div>
+    <div class="set-actions">
+      <button type="button" class="roll" data-action="restart">再玩一次</button>
+      <button type="button" class="ghost" data-action="close-settlement">關閉</button>
+    </div>`;
 }
 
 function fillEvent(dialog, block, currentChapter) {

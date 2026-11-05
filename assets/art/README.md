@@ -64,6 +64,18 @@ Jean 提供的原圖 `大赴翁：Roll Abroad.png`（1536×1024 去背 RGBA，1,
 - 桌機 `height:clamp(76px,9.8vh,104px)`、手機（`@media(max-width:759px)`）`clamp(46px,12.5vw,58px)`，寬跟圖走（比例約 2.23:1）。
 - 換圖重跑 `python tools/build-brand-logo.py [原圖]`，尺寸有變要同步 `index.html` 的 `width`/`height`。
 
+### ending-backdrop.webp ＋ ending-backdrop-mobile.webp（旅程結算畫面底版）
+
+結算畫面（`#settlement`）的底版圖，桌機 1600×900／手機 900×1600，WebP q80／q78。**目前是占位漸層**（共約 9KB），等 Jean 用 GPT 生好圖丟過來，重跑：
+
+```
+python tools\build-ending-bg.py "C:\Users\office\Downloads\桌機圖.png" "C:\Users\office\Downloads\手機圖.png"
+```
+
+- 腳本等比縮放＋置中裁切到固定規格，不會變形；手機原圖可省略（改從桌機圖裁中央直式，但比例差多時另生直式圖比較好）。
+- 規格固定，換圖不用改 CSS 也不用改程式；`test/art.test.js` 會擋尺寸跑掉與體積超標（兩張 <500KB）。
+- 要放字的地區留低對比（左上到中央），上方暗角由 CSS 疊加，圖本身不用壓暗。
+
 ## 維護
 
 - `src/art.js` 是檔名清單；`scene-art.js` 依四章圖集的固定位置讀取。

@@ -227,6 +227,10 @@ export function applyChoice(state, card, choice, data) {
     notes.push(choice.route === "poster" ? "取得「備份隨身碟」。" : "取得「名片」。");
   }
   if (choice.flags) Object.assign(next.flags, choice.flags);
+  // 「滿載而歸」兌現承諾：記下玩家用哪個承諾收尾，結算畫面蓋「已兌現」章
+  if (card.id === "final" && choice.requires) {
+    next.kept = [...(next.kept || []), choice.requires];
+  }
   if (choice.chain) {
     next.pending.push(choice.chain);
     notes.push(`（後續：這件事還沒結束……）`);
@@ -289,4 +293,46 @@ const data_endings = {
 
 export function resName(k) {
   return { time: "時間", money: "經費", energy: "精力", knowledge: "學術收穫" }[k] || k;
+}
+
+// ── 旅程結算（結算畫面吃的純資料）───────────────────────
+// 承諾清單＝「滿載而歸」那一關 requires 掛的旗標，跟 data/checkpoints.json 對得上。
+export const PROMISES = Object.freeze([
+  { key: "pub_pending", label: "三年內把稿子真的送出去" },
+  { key: "network", label: "回覆那封說「有興趣繼續合作」的信" },
+  { key: "oral_qa", label: "把被問倒的問題查個水落石出" },
+  { key: "mentor", label: "把出國前幫你的那位，回饋回去" },
+]);
+
+const RES_START = { time: 8, money: 8, energy: 8, knowledge: 0 };
+const SET_RES = ["time", "money", "energy", "knowledge"];
+
+// 純函式：把一局 state 壓成結算畫面要顯示的資料，不碰 DOM。
+export function settlement(state) {
+  const s = state.status === "done" ? state : settle(state);
+  const kept = s.kept || [];
+  return {
+    ending: s.ending,
+    route: s.route ? { poster: "壁報路線", oral: "口報路線" }[s.route] : null,
+    res: SET_RES.map((k) => ({
+      key: k,
+      name: resName(k),
+      start: RES_START[k],
+      value: s.res[k],
+      delta: s.res[k] - RES_START[k],
+    })),
+    // brought＝路上把承諾帶回來（立過旗標）；kept＝到「滿載而歸」真的兌現了
+    promises: PROMISES.map((p) => ({
+      ...p,
+      brought: !!s.flags[p.key],
+      kept: kept.includes(p.key),
+    })),
+    stats: [
+      { label: "擲骰次數", value: s.rolls },
+      { label: "走過格數", value: `${s.pos}/32` },
+      { label: "抽過的卡", value: (s.drawn || []).length },
+      { label: "資源耗盡", value: `${s.strain || 0} 次` },
+    ],
+    keyChoices: (s.keyChoices || []).slice(-3),
+  };
 }

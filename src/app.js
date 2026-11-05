@@ -10,6 +10,7 @@ import {
   showDice,
   clearDiceBadge,
   setDieClick,
+  openSettlement,
 } from "./render.js";
 import { save, load, clearSave } from "./storage.js";
 import { loadBoardArt, preloadChapterBanners } from "./art.js";
@@ -116,6 +117,14 @@ function wire() {
       lastResult = null;
       clearDiceBadge();
       return draw();
+    }
+    if (t.dataset.action === "settlement") {
+      document.getElementById("modal")?.close();
+      return openSettlement(S);
+    }
+    if (t.dataset.action === "close-settlement") {
+      document.getElementById("settlement")?.close();
+      return;
     }
     if (t.id === "restart" || t.dataset.action === "restart") {
       clearSave();

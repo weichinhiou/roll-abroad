@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-05（台灣時間），OpenCode。Task 24（上方章節掛牌橫幅＋桌機／手機底板換新圖＋左上標題品牌 Logo，plan D21）本機已 commit（掛牌 `c215b2b`、底板 `637d2c5`、logo `1e3fadb`），**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-05（台灣時間），OpenCode。**Task 25（旅程結算畫面基礎版）本機已 commit、未 push**；下一步是等 Jean 的 GPT 底版圖，到手跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]` 就換好（規格固定、不用改程式）。Task 24（上方章節掛牌橫幅＋桌機／手機底板換新圖＋左上標題品牌 Logo，plan D21）本機已 commit（掛牌 `c215b2b`、底板 `637d2c5`、logo `1e3fadb`），**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -76,6 +76,22 @@ Jean 再給兩張同場景新圖（桌機橫式 1672×941、手機直式 941×16
 Jean 給去背標題圖 `大赴翁：Roll Abroad.png`（1536×1024），換掉原本用 CSS 文字＋藍色陰影寫的「大赴翁 Roll Abroad」。轉檔 `tools/build-brand-logo.py`：依 alpha 裁透明邊、上限寬 900 → `assets/art/brand-logo.webp` **900×403、105KB**（WebP q90）。`index.html` 的 `<h1>大赴翁 <span>…</span></h1>` 改 `<h1><img class="brand-logo" src="assets/art/brand-logo.webp" alt="大赴翁 Roll Abroad" width="900" height="403" /></h1>`（h1 留語意，alt 給螢幕閱讀器）；`game-art.css` 清掉舊文字樣式（`h1{margin:0;line-height:0}`＋`.brand-logo{height:clamp(...)}`）、手機段（`@media(max-width:759px)`）另給 `clamp(46px,12.5vw,58px)`。`test/art.test.js` 加兩項：WebP 有透明且尺寸對得上 HTML、兩個版型都定高且 h1 舊樣式清乾淨。
 
 **驗證過（logo）：** `npm.cmd test` **41 項全過**（原 39＋新 2）；CDP 無頭 Chrome **九種版型**（1920×1080、1440×900、1100×820、760×900、1280×600 矮螢幕、`prefers-reduced-motion` 2D、390×844／360×740／390×650 手機）截圖＋量測：logo 顯示尺寸 170–232px 寬（桌機）／103–109px（手機），與掛牌、設定鈕、資源列、棋盤**重疊面積全 0**、無頁面溢出、console 0 錯誤；手機 logo 底緣 y=65、掛牌 y=68 起，各留 3px。**沒驗證：** 手機實機、真 GPU、SR 對 h1 內圖片 alt 的朗讀。
+
+### Task 25：旅程結算畫面（基礎版，2026-11-05，尚未 commit／push）
+
+Jean 說「做一個基礎版給我，底版圖我會讓 GPT 生，你把架構做出來」。**資料→畫面分三層**：
+
+- **資料**：`src/engine.js` 的 `settlement(state)`（純函式）回傳 `{ending, route, res[4], promises[4], stats[4], keyChoices}`；`PROMISES` 對齊 `data/checkpoints.json` 的 `final` 關卡 `requires` 旗標。另外 `applyChoice` 新增：選 `final` 關卡具 `requires` 的選項時記 `state.kept`，用來分辨「已兌現」跟只「帶回承諾」。
+- **畫面**：`index.html` 的 `<dialog id="settlement" class="settlement">`；`src/render.js` 的 `fillSettlement()`／`renderSettlement()`／`openSettlement()`，用 `settlement()` 的資料組 HTML（結局＋黑貓／承諾蓋章清單／四資源條／四項統計／關鍵抉擇／再玩一次＋關閉）。
+- **開合**：遊戲結束（`status==="done"`）自動開一次（`settlementSeen` 防重複）；還有最後一張卡結果時先在 `#modal` 顯示並給「看旅程結算」按鈕；關掉後面板留「旅程結算」按鈕可重開；`再玩一次` 走既有 `restart`。按鈕分派在 `src/app.js`（`settlement`／`close-settlement`）。
+
+**底版圖預留**：`assets/art/ending-backdrop.webp`（1600×900）＋`ending-backdrop-mobile.webp`（900×1600），現在是占位漸層（共 9KB）。GPT 圖到手後跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]`（等比縮放＋置中裁切，規格固定，不用改 CSS／程式）。
+
+**樣式**：`game-art.css` 尾段 `.settlement` 系列。桌機雙欄、手機單欄（`@media(max-width:759px)` 換手機底版、黑貓改静态置中避免壓字）。地雷記一筆：資源條**不能沿用 `.bar` 類別**（全域 `.bar` 是絕對定位的 HUD 條，會蓋掉右邊數字），已改名 `.sbar` 並有測試守著。
+
+**驗證過：** `npm.cmd run check` 過、`npm.cmd test` **46 項全過**（新增 3 項 engine 結算資料／承諾章／純函式，2 項底版圖與接線）；CDP 無頭 Chrome **實玩流程**（擺第 31 格→擲骰停 32→四項承諾選項都在→選「稿子」→過場視窗→「看旅程結算」開啟→「關閉」→面板重開→「再玩一次」回第 0 格）全對，`kept`／`brought` 判別正確；五種版型截圖（1920×1080、1440×900、1280×800、1100×820、390×844、360×740）桌機不需捲動、手機可捲動、無版面溢出、console 錯誤 0。**沒驗證：** 手機實機、真實 GPU、四種結局的實際文案配置（只用 stage 打樣）、Actions 線上樣貌。
+
+
 
 ### Task 23：OG 分享圖與 Favicon（2026-11-05，已 commit `70994fc` 並 push）
 

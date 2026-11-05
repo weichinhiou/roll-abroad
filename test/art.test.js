@@ -141,6 +141,33 @@ test("標題 logo 接得上：h1 內的圖與 alt、兩個版型都用 clamp 定
   assert.match(mobile, /\.brand-logo\{[^}]*height:clamp/, "手機標題 logo 沒另外定高");
 });
 
+// ── 旅程結算畫面底版圖 ────────────────────────────────────
+test("結算底版：桌機 1600×900、手機 900×1600，都是 WebP 且在體積預算內", async () => {
+  let bytes = 0;
+  for (const [name, w, h] of [["ending-backdrop.webp", 1600, 900], ["ending-backdrop-mobile.webp", 900, 1600]]) {
+    const buf = await readFile(new URL(`../assets/art/${name}`, import.meta.url));
+    assert.deepEqual(webpSize(buf), { w, h }, `${name} 實際尺寸不符（改圖重跑 tools/build-ending-bg.py）`);
+    bytes += buf.length;
+  }
+  assert.ok(bytes < 500 * 1024, `結算底版共 ${bytes} bytes，太重`);
+});
+
+test("結算畫面接得上：dialog、兩個版型的底版圖、engine.settlement 與按鈕", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const css = await readFile(new URL("../game-art.css", import.meta.url), "utf8");
+  const js = await readFile(new URL("../src/render.js", import.meta.url), "utf8");
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  assert.match(html, /<dialog id="settlement" class="settlement"/, "index.html 缺結算 dialog");
+  assert.match(css, /\.settlement\{[^}]*ending-backdrop\.webp/, "桌機底版圖沒接上 .settlement");
+  const mobile = css.slice(css.indexOf("@media(max-width:759px)"));
+  assert.match(mobile, /ending-backdrop-mobile\.webp/, "手機底版圖沒接上");
+  assert.match(js, /import \{[^}]*settlement[^}]*\} from "\.\/engine\.js"/, "render.js 沒引 engine.settlement");
+  assert.match(js, /data-action="restart"/, "結算畫面缺「再玩一次」");
+  assert.match(app, /dataset\.action === "settlement"/, "app.js 沒接結算開關");
+  // 資源條刻意不叫 .bar：全域 .bar 是絕對定位的 HUD 條，會蓋掉右邊數字
+  assert.match(css, /\.setres \.sbar\{[^}]*position:relative/, "結算資源條不该沿用 .bar 類別");
+});
+
 test("index.html 的 icon 與 OG 指向的品牌檔都存在，部署檔清單有涵蓋", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const paths = [...html.matchAll(/(?:href|content)="((?:assets\/brand\/[^"]+|https:[^"]*assets\/brand\/[^"]+))"/g)]
