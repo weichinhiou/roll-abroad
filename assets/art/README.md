@@ -56,6 +56,14 @@ Jean 提供的五張去背 PNG（`Roll_Abroad_五章節_立體去背Banner.zip`�
 - 圖裡的字是畫在圖上的（第一章・投稿…第五章・回院之後），所以 `alt` 由 `render.js` 寫入；清單與尺寸在 `src/art.js` 的 `CHAPTER_BANNERS`，尺寸同時是介面預留位置，改了要同步。
 - 兩張圖由 `<picture>` 的 media query 挑，`src/render.js` 換章時一起換 `src`／`srcset`／`alt`；`src/app.js` 開局先預載十張，換章才不會閃白。
 
+### brand-logo.webp（左上標題品牌 Logo）
+
+Jean 提供的原圖 `大赴翁：Roll Abroad.png`（1536×1024 去背 RGBA，1,483KB），非 image_gen 產出。取代原本用 CSS 文字＋陰影畫的標題。轉檔：`tools/build-brand-logo.py`，依 alpha 裁掉透明邊（bbox 105,239→1422,828）、上限寬 900 → **900×403、105KB**，WebP quality 90（標題字要銳利，比底板抓高）。
+
+- 圖裡有字（大赴翁／Roll Abroad），`alt` 給螢幕閱讀器；`index.html` 是 `<h1><img class="brand-logo">`——h1 留語意、圖當內容，CSS 的 `h1{margin:0;line-height:0}` 清掉舊文字樣式。
+- 桌機 `height:clamp(76px,9.8vh,104px)`、手機（`@media(max-width:759px)`）`clamp(46px,12.5vw,58px)`，寬跟圖走（比例約 2.23:1）。
+- 換圖重跑 `python tools/build-brand-logo.py [原圖]`，尺寸有變要同步 `index.html` 的 `width`/`height`。
+
 ## 維護
 
 - `src/art.js` 是檔名清單；`scene-art.js` 依四章圖集的固定位置讀取。

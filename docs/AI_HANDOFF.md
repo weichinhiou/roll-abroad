@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-05（台灣時間），OpenCode。Task 24（上方章節掛牌橫幅＋桌機／手機底板換新圖，plan D21）本機 `main` 在 `c215b2b`（掛牌）＋`637d2c5`（底板），**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-05（台灣時間），OpenCode。Task 24（上方章節掛牌橫幅＋桌機／手機底板換新圖＋左上標題品牌 Logo，plan D21）本機已 commit（掛牌 `c215b2b`、底板 `637d2c5`、logo 見 Task 24 續二），**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -70,6 +70,12 @@
 Jean 再給兩張同場景新圖（桌機橫式 1672×941、手機直式 941×1672，PNG 都 2.5MB 級）。轉檔腳本 `tools/build-backgrounds.py`（底板原始碼）：WebP 桌機 q78 → 180KB、手機縮寬 900 後 q74 → 123KB（原圖的 1/15）。**答案：要轉 WebP**，而且舊底板本來就是 WebP，這次只是沿用同一条產線。CSS 引用路徑沒變（`game-art.css` 的 `body` 與手機段），所以沒動程式碼。
 
 **驗證過（底板）：** `npm.cmd test` 39 項全過；四種版型無頭 Chrome 截圖（1440×900、1920×1080 第三章、390×844、360×740 第五章）——新底板與掛牌／資源列／棋盤都不打架（重疊仍 0、無溢出、console 0 錯誤），棋盤落在新圖的低對比海面區。**沒驗證：** 手機實機、真 GPU。
+
+#### 續做：左上標題改品牌 Logo（同日，Task 24 續二）
+
+Jean 給去背標題圖 `大赴翁：Roll Abroad.png`（1536×1024），換掉原本用 CSS 文字＋藍色陰影寫的「大赴翁 Roll Abroad」。轉檔 `tools/build-brand-logo.py`：依 alpha 裁透明邊、上限寬 900 → `assets/art/brand-logo.webp` **900×403、105KB**（WebP q90）。`index.html` 的 `<h1>大赴翁 <span>…</span></h1>` 改 `<h1><img class="brand-logo" src="assets/art/brand-logo.webp" alt="大赴翁 Roll Abroad" width="900" height="403" /></h1>`（h1 留語意，alt 給螢幕閱讀器）；`game-art.css` 清掉舊文字樣式（`h1{margin:0;line-height:0}`＋`.brand-logo{height:clamp(...)}`）、手機段（`@media(max-width:759px)`）另給 `clamp(46px,12.5vw,58px)`。`test/art.test.js` 加兩項：WebP 有透明且尺寸對得上 HTML、兩個版型都定高且 h1 舊樣式清乾淨。
+
+**驗證過（logo）：** `npm.cmd test` **41 項全過**（原 39＋新 2）；CDP 無頭 Chrome **九種版型**（1920×1080、1440×900、1100×820、760×900、1280×600 矮螢幕、`prefers-reduced-motion` 2D、390×844／360×740／390×650 手機）截圖＋量測：logo 顯示尺寸 170–232px 寬（桌機）／103–109px（手機），與掛牌、設定鈕、資源列、棋盤**重疊面積全 0**、無頁面溢出、console 0 錯誤；手機 logo 底緣 y=65、掛牌 y=68 起，各留 3px。**沒驗證：** 手機實機、真 GPU、SR 對 h1 內圖片 alt 的朗讀。
 
 ### Task 23：OG 分享圖與 Favicon（2026-11-05，已 commit `70994fc` 並 push）
 

@@ -60,7 +60,7 @@ Jean 要求「多加 8 格都在回院之後」。定案：**前 24 格一格不
 
 ### D21：畫面上方章節列改用掛牌橫幅圖（Jean 給圖，2026-11-05）
 
-Jean 提供五張「第 N 章・章名」立體去背掛牌 PNG，取代原本用 CSS 畫的金黃文字條。定案：**一章兩張圖**——含繩版（669–766 × 308–311）給桌機與 760–1100px，銅環上緣截斷的短版（高 222–225）給手機（上方沒有吊繩子的空間），由 `<picture>` 的 media query 選圖；`render.js` 換章時一次換 `src`／`srcset`／`alt`，`app.js` 開局預載十張。尺寸用 CSS `height:clamp(...)` 依視窗高縮、`object-fit:contain` 護比例，寬度跟著圖走，所以字最多的第五章自然較寬。**不**把章名用 CSS 疊在圖上（圖裡已有字）、**不**做 SVG（來源是位圖）。轉檔與裁切邏輯在 `tools/build-chapter-banners.py`（視為素材的原始碼），清單與尺寸在 `src/art.js` 的 `CHAPTER_BANNERS`。連帶把手機資源列推到 138px、3D 棋盤推到 196px，避免掛牌壓到 HUD。
+Jean 提供五張「第 N 章・章名」立體去背掛牌 PNG，取代原本用 CSS 畫的金黃文字條。定案：**一章兩張圖**——含繩版（669–766 × 308–311）給桌機與 760–1100px，銅環上緣截斷的短版（高 222–225）給手機（上方沒有吊繩子的空間），由 `<picture>` 的 media query 選圖；`render.js` 換章時一次換 `src`／`srcset`／`alt`，`app.js` 開局預載十張。尺寸用 CSS `height:clamp(...)` 依視窗高縮、`object-fit:contain` 護比例，寬度跟著圖走，所以字最多的第五章自然較寬。**不**把章名用 CSS 疊在圖上（圖裡已有字）、**不**做 SVG（來源是位圖）。轉檔與裁切邏輯在 `tools/build-chapter-banners.py`（視為素材的原始碼），清單與尺寸在 `src/art.js` 的 `CHAPTER_BANNERS`。連帶把手機資源列推到 138px、3D 棋盤推到 196px，避免掛牌壓到 HUD。同一批美術換新還包括：桌機／手機**底板**換新圖（WebP q78／q74，180KB／123KB，`tools/build-backgrounds.py`）與左上**標題改品牌 logo**（Jean 給去背圖，`brand-logo.webp` 900×403 105KB，`<h1><img>` 保語意、alt 給文字，`tools/build-brand-logo.py`）。**這個專案的美術圖一律轉 WebP**（原 PNG 都 2.5MB 級、不進 repo），每張都有對應的 `tools/*.py` 轉檔腳本當原始碼。
 
 ## 2. 遊戲設計（MVP）
 

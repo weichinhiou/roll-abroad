@@ -119,6 +119,28 @@ test("掛牌接得上：初始 HTML、兩個版型的尺寸、render.js 的換�
   assert.match(yml, /assets\/art\/\*\.webp/, "部署流程沒抓 art 資料夾的 WebP");
 });
 
+// ── 左上標題（品牌 Logo）─────────────────────────────────────
+test("標題 logo：WebP 有透明、尺寸對得上 HTML、體積在預算內", async () => {
+  const buf = await readFile(new URL("../assets/art/brand-logo.webp", import.meta.url));
+  const size = webpSize(buf);
+  assert.deepEqual(size, { w: 900, h: 403 }, "brand-logo.webp 實際尺寸與 HTML 宣告不符（改圖要同步 width/height）");
+  assert.ok(buf.length < 150 * 1024, `brand-logo.webp ${buf.length} bytes，太重`);
+});
+
+test("標題 logo 接得上：h1 內的圖與 alt、兩個版型都用 clamp 定高", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const css = await readFile(new URL("../game-art.css", import.meta.url), "utf8");
+  assert.match(
+    html,
+    /<h1><img class="brand-logo" src="assets\/art\/brand-logo\.webp" alt="大赴翁 Roll Abroad" width="900" height="403" \/><\/h1>/,
+    "index.html 的標題沒換成品牌 logo（h1 裡的 img／alt／尺寸缺）"
+  );
+  assert.match(css, /\.brand-logo\{[^}]*height:clamp/, "桌機標題 logo 沒用 clamp 定高");
+  assert.match(css, /h1\{margin:0;line-height:0\}/, "h1 還留著舊文字標題樣式，會把圖撐出空隙");
+  const mobile = css.slice(css.indexOf("@media(max-width:759px)"));
+  assert.match(mobile, /\.brand-logo\{[^}]*height:clamp/, "手機標題 logo 沒另外定高");
+});
+
 test("index.html 的 icon 與 OG 指向的品牌檔都存在，部署檔清單有涵蓋", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const paths = [...html.matchAll(/(?:href|content)="((?:assets\/brand\/[^"]+|https:[^"]*assets\/brand\/[^"]+))"/g)]
