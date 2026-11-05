@@ -744,14 +744,14 @@
       "title": "兩份東西，兩個窗口",
       "text": "回國滿三週。同事提醒你：心得報告和學術會議資料登錄，都要在返國一個月內交，而且是交給兩個不同單位。",
       "choices": [
-        { "label": "兩份各交給誰，一次問清楚", "effects": {"time": -1, "energy": 1, "knowledge": 2}, "note": "兩個窗口、兩份清單，貼在螢幕邊。" },
+        { "label": "兩份各交給誰，一次問清楚", "effects": {"time": -1, "energy": 1, "knowledge": 2}, "flags": {"admin_N42": true}, "note": "兩個窗口、兩份清單，貼在螢幕邊。" },
         { "label": "先交心得，登錄晚點再說", "effects": {"energy": -1}, "note": "心得過關了，登錄的期限還在前面倒數。" }
       ] },
     { "id": "N43", "deck": "chance", "tone": "real", "route": "both", "chapters": [4, 5],
       "title": "學術活動登錄總表",
       "text": "學術活動的 Excel 登錄總表要填好，寄給教研部承辦人。你出國時留下的資料，剛好夠填。",
       "choices": [
-        { "label": "趁記憶還新，這週填完寄出", "effects": {"energy": 1, "knowledge": 2}, "note": "寄出去的那一刻，這趟旅程的行政才算收尾。" },
+        { "label": "趁記憶還新，這週填完寄出", "effects": {"energy": 1, "knowledge": 2}, "flags": {"admin_N43": true}, "note": "寄出去的那一刻，這趟旅程的行政才算收尾。" },
         { "label": "放到最後一週再填", "effects": {"energy": -1}, "note": "日期和題目，要靠翻信箱才想得起來。" }
       ] },
     { "id": "N44", "deck": "fate", "tone": "real", "route": "both", "chapters": [4, 5],
@@ -765,14 +765,14 @@
       "title": "出發前 45 天，先到人事室",
       "text": "同事提醒你：因公出國的公假，要在出發前 45 天向人事室上簽。你算了一下，那一天就在這週。",
       "choices": [
-        { "label": "這週就備齊申請表、議程、大會同意函（附中文翻譯）和摘要上簽", "effects": {"time": -1, "energy": 1, "knowledge": 2}, "note": "簽核跑完，出發前不用再慌。同意函也順手存進專屬資料夾。" },
+        { "label": "這週就備齊申請表、議程、大會同意函（附中文翻譯）和摘要上簽", "effects": {"time": -1, "energy": 1, "knowledge": 2}, "flags": {"admin_N45": true}, "note": "簽核跑完，出發前不用再慌。同意函也順手存進專屬資料夾。" },
         { "label": "等機票訂好再說", "effects": {"energy": -1}, "note": "倒數的日子一天天逼近，手上還缺一份文件。" }
       ] },
     { "id": "N46", "deck": "fate", "tone": "real", "route": "both", "chapters": [2],
       "title": "排好的行程，臨時要取消",
       "text": "年度預算的名額通過了，公假也奉核了。出發前你發現會議日期和一件走不開的臨床工作撞期。",
       "choices": [
-        { "label": "馬上通知承辦，依規定走專簽", "effects": {"knowledge": 1}, "note": "話說在前面，名額盤點後可以釋出給候補的同仁。" },
+        { "label": "馬上通知承辦，依規定走專簽", "effects": {"knowledge": 1}, "flags": {"admin_N46": true}, "note": "話說在前面，名額盤點後可以釋出給候補的同仁。" },
         { "label": "先拖著，看看有沒有轉機", "effects": {"energy": -1}, "note": "候補的同仁一直等不到消息，名額卡著。" }
       ] },
     { "id": "N47", "deck": "chance", "tone": "real", "route": "both", "chapters": [2],
@@ -786,7 +786,7 @@
       "title": "核銷用的匯率，是出國前一天的",
       "text": "註冊費收據是外幣。你用刷卡那天的匯率算好了核銷金額，承辦說：正式核銷用的是出國日期前一天的匯率。",
       "choices": [
-        { "label": "照承辦的規則重算", "effects": {"energy": 1, "knowledge": 1}, "note": "數字重算一次，表格一次就過。" },
+        { "label": "照承辦的規則重算", "effects": {"energy": 1, "knowledge": 1}, "flags": {"admin_N48": true}, "note": "數字重算一次，表格一次就過。" },
         { "label": "照自己算的送出去", "effects": {"energy": -1}, "note": "被請你重填一次。" }
       ] }
   ]

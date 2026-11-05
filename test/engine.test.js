@@ -282,6 +282,31 @@ test("承諾章：帶回＝待追蹤、滿載而歸選了才算已兌現、都�
   );
 });
 
+test("風格稱號：由旗標推出，不影響結局；admin_ 旗標要三面才算", () => {
+  const style = (flags, extra = {}) => E.settlement({ ...at(32, { route: "oral" }), flags, ...extra }).style;
+  assert.equal(style({ network: true }).id, "network");
+  assert.equal(style({ mentor: true }).id, "mentor");
+  assert.equal(style({ pub_pending: true, oral_qa: true }).id, "research");
+  // 兩面 admin 不夠，退回路線稱號；三面才是行政模範
+  assert.equal(style({ admin_N42: true, admin_N43: true }).id, "oral");
+  assert.equal(style({ admin_N42: true, admin_N43: true, admin_N45: true }).id, "admin");
+  // 到「滿載而歸」真的兌現的承諾，比只是帶回來的分數高
+  assert.equal(style({ network: true, mentor: true }, { kept: ["mentor"] }).id, "mentor");
+  // 沒有任何旗標：依路線；連路線都沒有就是探索的旅人
+  assert.equal(style({}).id, "oral");
+  assert.equal(E.settlement({ ...at(32, { route: "poster" }), flags: {} }).style.id, "poster");
+  assert.equal(E.settlement({ ...at(32), flags: {} }).style.id, "none");
+  // 結局不受稱號影響
+  const a = E.settlement({ ...at(32, { route: "oral" }), flags: {} });
+  const b = E.settlement({ ...at(32, { route: "oral" }), flags: { network: true } });
+  assert.equal(a.ending.id, b.ending.id);
+});
+
+test("行政卡的好選項會記 admin_ 旗標，全部對得上 STYLES 規則", () => {
+  const flagged = data.events.cards.flatMap((c) => c.choices.flatMap((ch) => Object.keys(ch.flags || {}).filter((k) => k.startsWith("admin_"))));
+  assert.deepEqual(flagged.sort(), ["admin_N42", "admin_N43", "admin_N45", "admin_N46", "admin_N48"]);
+});
+
 test("結算資料是純函式：不改 state、沒跑完的局也會結算", () => {
   const s = at(20, { flags: { network: true } });
   const raw = JSON.stringify(s);

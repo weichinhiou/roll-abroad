@@ -291,6 +291,39 @@ const data_endings = {
   safe: { title: "平安就是福", text: "人回來了、單核銷了，收穫就留在路上吧。" },
 };
 
+// ── 風格稱號（第二維度）─────────────────────────────────
+// 結局（上面四個）看的是分數與資源，風格稱號看的是「這一趟走的是哪種路」，
+// 由既有旗標推出來，不影響結局。行政模範：N42/43/45/46/48 的好選項各記一面 admin_ 旗標，累積三面才算。
+export const STYLES = Object.freeze({
+  admin: { title: "行政模範生", text: "公假、登錄、佐證一次到位，承辦人都記得你。" },
+  research: { title: "研究實踐派", text: "稿子與問題都帶回來，這趟不只是旅行。" },
+  network: { title: "人脈收藏家", text: "名片換了一疊，那封信也真的回了。" },
+  mentor: { title: "接棒傳承者", text: "當年有人帶你，現在換你帶人。" },
+});
+const STYLE_FALLBACK = Object.freeze({
+  poster: { id: "poster", title: "壁報耕耘者", text: "站在自己的海報前，把路過的人聊成同行。" },
+  oral: { id: "oral", title: "上台挑戰者", text: "八分鐘站上去，問題也都接下來了。" },
+  none: { id: "none", title: "一路探索的旅人", text: "還沒定下風格，下一趟換條路走走看。" },
+});
+const STYLE_ORDER = ["admin", "research", "network", "mentor"]; // 同分時的優先順序
+
+export function styleOf(state) {
+  const f = state.flags || {};
+  const kept = state.kept || [];
+  const has = (k) => (f[k] ? 1 : 0) + (kept.includes(k) ? 1 : 0); // 立過旗標 +1，到「滿載而歸」真的兌現再 +1
+  const adminCount = Object.keys(f).filter((k) => k.startsWith("admin_") && f[k]).length;
+  const score = {
+    admin: adminCount >= 3 ? adminCount : 0,
+    research: has("pub_pending") + has("oral_qa"),
+    network: has("network"),
+    mentor: has("mentor"),
+  };
+  let best = null;
+  for (const id of STYLE_ORDER) if (score[id] > 0 && (best === null || score[id] > score[best])) best = id;
+  if (best) return { id: best, ...STYLES[best] };
+  return STYLE_FALLBACK[state.route] || STYLE_FALLBACK.none;
+}
+
 export function resName(k) {
   return { time: "時間", money: "經費", energy: "精力", knowledge: "學術收穫" }[k] || k;
 }
@@ -313,6 +346,7 @@ export function settlement(state) {
   const kept = s.kept || [];
   return {
     ending: s.ending,
+    style: styleOf(s),
     seed: s.seed ?? "未命名",
     route: s.route ? { poster: "壁報路線", oral: "口報路線" }[s.route] : null,
     res: SET_RES.map((k) => ({

@@ -386,6 +386,7 @@ function fillSettlement(d) {
       <p class="set-eyebrow">旅程結算${d.route ? `・${d.route}` : ""}${d.demo ? "・示範" : ""}</p>
       <h2 class="set-title">${d.ending.title}</h2>
       <p class="set-text">${d.ending.text}</p>
+      <p class="set-style"><b>${d.style.title}</b>・${d.style.text}</p>
       <img class="set-cat" src="${ART.cat}" alt="黑貓旅伴陪你完成旅程" width="106" height="106" />
     </div>
     <div class="set-body">

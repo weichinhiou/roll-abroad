@@ -62,6 +62,8 @@ body{min-height:650px;background-image:url('assets/art/world-mobile.webp');backg
 .set-eyebrow{margin:0 0 6px;font-size:13px;font-weight:800;letter-spacing:3px;color:#ffe180;text-shadow:0 1px 3px #0d3a5c99}
 .set-title{margin:0;font-size:clamp(26px,4vw,38px);color:#ffda4b;-webkit-text-stroke:1px #694522;paint-order:stroke fill;text-shadow:3px 3px 0 #fff,5px 5px 0 #204975}
 .set-text{margin:8px auto 0;max-width:34em;font-size:15px;line-height:1.8;color:#fff;text-shadow:0 1px 3px #0d3a5c99}
+.set-style{margin:8px auto 0;max-width:34em;font-size:14px;line-height:1.7;color:#fff;text-shadow:0 1px 3px #0d3a5c99}
+.set-style b{color:#ffe180;font-weight:900;letter-spacing:1px}
 .set-cat{position:absolute;right:16px;bottom:-4px;width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 4px 6px #0d3f6580)}
 .set-body{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:10px 18px 4px}
 .set-block{background:#f7fcffee;border:3px solid #307aa7;border-radius:16px;padding:10px 16px;color:#25475f}

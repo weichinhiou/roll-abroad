@@ -65,10 +65,11 @@ export async function drawReportCard(canvas, d, opts = {}) {
   c.fillStyle = "#eaf6ff";
   c.font = `400 22px ${FONT}`;
   let y = wrap(c, d.ending.text, 56, 162, 620, 32);
-  if (d.route) {
+  const tag = [d.route, d.style && d.style.title].filter(Boolean).join("・");
+  if (tag) {
     c.fillStyle = "#ffd166";
     c.font = `700 20px ${FONT}`;
-    c.fillText(d.route, 56, y + 4);
+    c.fillText(tag, 56, y + 4);
     y += 40;
   }
 
