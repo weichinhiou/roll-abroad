@@ -313,6 +313,7 @@ export function settlement(state) {
   const kept = s.kept || [];
   return {
     ending: s.ending,
+    seed: s.seed ?? "未命名",
     route: s.route ? { poster: "壁報路線", oral: "口報路線" }[s.route] : null,
     res: SET_RES.map((k) => ({
       key: k,

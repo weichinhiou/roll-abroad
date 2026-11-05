@@ -87,9 +87,14 @@ Jean 說「做一個基礎版給我，底版圖我會讓 GPT 生，你把架構�
 
 **底版圖預留**：`assets/art/ending-backdrop.webp`（1600×900）＋`ending-backdrop-mobile.webp`（900×1600），現在是占位漸層（共 9KB）。GPT 圖到手後跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]`（等比縮放＋置中裁切，規格固定，不用改 CSS／程式）。
 
+**展示用出口（續做，同 commit `40114a4` 之後）**
+- **設定裡の「預覽旅程結算」**：`index.html` 設定選單一顆 `data-action="demo-settlement"`，走 `render.showSettlementDemo()` 開同一個畫面，資料是 `app.js` 的 `DEMO_STATE`（假的已完成一局，仍過 `engine.settlement()`）。示範版頂部標「示範」、底部改註記「玩到第 32 格會看到你自己這一趟」，不給「再玩一次」以免誤刪玩家進度；`demoOpen` 旗標讓它不會被下次 `draw()` 誤關，重新開始時由 `closeSettlement()` 收掉。
+- **`?settle=demo`**：開場直接叫出同一個示範畫面（`boot()` 尾端判 URL 參數），展示不用玩到第 32 格。
+- **成績單 PNG**：`src/share-card.js` 把結算資料畫在 1200×630 canvas（跟 OG 圖同規格），「下載成績單」按鈕走 `downloadReportCard()`（`toBlob`＋`a.download=大赴翁-成績單-<seed>.png`）。內容：結局＋評語＋路線、四資源、四項承諾（圓章同配色語彙）、四項統計、旅程代碼與民國日期。純本機產製，不連外部服務。`settlement()` 因此多回傳 `seed`。`package.json` 的 `check` 加入 `src/share-card.js`。
+
 **樣式**：`game-art.css` 尾段 `.settlement` 系列。桌機雙欄、手機單欄（`@media(max-width:759px)` 換手機底版、黑貓改静态置中避免壓字）。地雷記一筆：資源條**不能沿用 `.bar` 類別**（全域 `.bar` 是絕對定位的 HUD 條，會蓋掉右邊數字），已改名 `.sbar` 並有測試守著。
 
-**驗證過：** `npm.cmd run check` 過、`npm.cmd test` **46 項全過**（新增 3 項 engine 結算資料／承諾章／純函式，2 項底版圖與接線）；CDP 無頭 Chrome **實玩流程**（擺第 31 格→擲骰停 32→四項承諾選項都在→選「稿子」→過場視窗→「看旅程結算」開啟→「關閉」→面板重開→「再玩一次」回第 0 格）全對，`kept`／`brought` 判別正確；五種版型截圖（1920×1080、1440×900、1280×800、1100×820、390×844、360×740）桌機不需捲動、手機可捲動、無版面溢出、console 錯誤 0。**沒驗證：** 手機實機、真實 GPU、四種結局的實際文案配置（只用 stage 打樣）、Actions 線上樣貌。
+**驗證過：** `npm.cmd run check` 過、`npm.cmd test` **46 項全過**（新增 3 項 engine 結算資料／承諾章／純函式，2 項底版圖與接線）；CDP 無頭 Chrome **實玩流程**（擺第 31 格→擲骰停 32→四項承諾選項都在→選「稿子」→過場視窗→「看旅程結算」開啟→「關閉」→面板重開→「再玩一次」回第 0 格）全對，`kept`／`brought` 判別正確；五種版型截圖（1920×1080、1440×900、1280×800、1100×820、390×844、360×740）桌機不需捲動、手機可捲動、無版面溢出、console 錯誤 0。示範出口與成績單另驗：`?settle=demo` 與設定鈕都叫得出示範版（頂部標「示範」、無「再玩一次」）、關閉後不殘留；`drawReportCard()` 產出 1200×630、按「下載成績單」真的落地 `大赴翁-成績單-demo-settlement.png`（約 260KB），手機 390／360 三個按鈕不溢出。**沒驗證：** 手機實機、真實 GPU、四種結局的實際文案配置（只用 stage 打樣）、手機瀏覽器實際存檔行為（HEAD 版 Chrome 模擬）。
 
 
 

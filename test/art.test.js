@@ -163,7 +163,13 @@ test("結算畫面接得上：dialog、兩個版型的底版圖、engine.settlem
   assert.match(mobile, /ending-backdrop-mobile\.webp/, "手機底版圖沒接上");
   assert.match(js, /import \{[^}]*settlement[^}]*\} from "\.\/engine\.js"/, "render.js 沒引 engine.settlement");
   assert.match(js, /data-action="restart"/, "結算畫面缺「再玩一次」");
+  assert.match(js, /data-action="report-card"/, "結算畫面缺「下載成績單」");
+  assert.match(html, /data-action="demo-settlement"/, "設定裡缺「預覽旅程結算」");
   assert.match(app, /dataset\.action === "settlement"/, "app.js 沒接結算開關");
+  const card = await readFile(new URL("../src/share-card.js", import.meta.url), "utf8");
+  assert.match(card, /const W = 1200;/, "成績單寬不是 1200（要跟 OG 圖同規格）");
+  assert.match(card, /const H = 630;/, "成績單高不是 630");
+  assert.match(card, /toBlob/, "成績單沒走 toBlob 下載");
   // 資源條刻意不叫 .bar：全域 .bar 是絕對定位的 HUD 條，會蓋掉右邊數字
   assert.match(css, /\.setres \.sbar\{[^}]*position:relative/, "結算資源條不该沿用 .bar 類別");
 });

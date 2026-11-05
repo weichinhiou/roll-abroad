@@ -320,17 +320,37 @@ function actionButton(text, action) {
 
 // ── 旅程結算畫面（全螢幕）────────────────────────────────
 // 純資料來自 engine.settlement()，這裡只負責組 DOM。每局自動開一次，
-// 關掉後靠面板的「旅程結算」按鈕重開。
+// 關掉後靠面板的「旅程結算」按鈕重開；設定裡的示範鈕走 showSettlementDemo()。
 let settlementSeen = false;
+let demoOpen = false;
+let lastSettlement = null;
 
-export function openSettlement(state) {
+export function settlementData() {
+  return lastSettlement;
+}
+
+export function openSettlement(data) {
   const dialog = $("#settlement");
-  if (!dialog) return;
-  if (state) fillSettlement(state);
+  if (!dialog || !data) return;
+  lastSettlement = data;
+  fillSettlement(data);
   settlementSeen = true;
   if (!dialog.open) dialog.showModal();
   dialog.scrollTop = 0;
   dialog.querySelector("button")?.focus();
+}
+
+// 展示用：還沒玩完也能叫出結算畫面（設定的示範鈕、?settle=demo）
+export function showSettlementDemo(data) {
+  demoOpen = true;
+  openSettlement({ ...data, demo: true });
+  const dialog = $("#settlement");
+  dialog.addEventListener("close", () => { demoOpen = false; }, { once: true });
+}
+
+export function closeSettlement() {
+  demoOpen = false;
+  $("#settlement")?.close();
 }
 
 function renderSettlement(state, lastResult) {
@@ -338,17 +358,17 @@ function renderSettlement(state, lastResult) {
   if (!dialog) return;
   if (state.status !== "done") {
     settlementSeen = false;
-    if (dialog.open) dialog.close();
+    if (dialog.open && !demoOpen) dialog.close();
     return;
   }
-  fillSettlement(state);
+  const data = settlement(state);
+  fillSettlement(data);
   // 還有最後一張卡的結果沒看完時先讓它出完，玩家按「看旅程結算」再開
-  if (!settlementSeen && !lastResult) openSettlement();
+  if (!settlementSeen && !lastResult) openSettlement(data);
 }
 
-function fillSettlement(state) {
+function fillSettlement(d) {
   const dialog = $("#settlement");
-  const d = settlement(state);
   const stamp = (p) => `
     <li class="promise${p.kept ? " kept" : p.brought ? " brought" : " none"}">
       <span class="stamp" aria-hidden="true">${p.kept ? "已兌現" : p.brought ? "待追蹤" : "未帶回"}</span>
@@ -363,7 +383,7 @@ function fillSettlement(state) {
     </li>`;
   dialog.innerHTML = `
     <div class="set-hero">
-      <p class="set-eyebrow">旅程結算${d.route ? `・${d.route}` : ""}</p>
+      <p class="set-eyebrow">旅程結算${d.route ? `・${d.route}` : ""}${d.demo ? "・示範" : ""}</p>
       <h2 class="set-title">${d.ending.title}</h2>
       <p class="set-text">${d.ending.text}</p>
       <img class="set-cat" src="${ART.cat}" alt="黑貓旅伴陪你完成旅程" width="106" height="106" />
@@ -387,7 +407,8 @@ function fillSettlement(state) {
       </section>
     </div>
     <div class="set-actions">
-      <button type="button" class="roll" data-action="restart">再玩一次</button>
+      ${d.demo ? `<p class="set-demo-note">示範資料・玩到第 32 格會看到你自己這一趟</p>` : `<button type="button" class="roll" data-action="restart">再玩一次</button>`}
+      <button type="button" class="ghost" data-action="report-card">下載成績單</button>
       <button type="button" class="ghost" data-action="close-settlement">關閉</button>
     </div>`;
 }

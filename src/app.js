@@ -11,14 +11,44 @@ import {
   clearDiceBadge,
   setDieClick,
   openSettlement,
+  showSettlementDemo,
+  closeSettlement,
+  settlementData,
 } from "./render.js";
+import { downloadReportCard } from "./share-card.js";
 import { save, load, clearSave } from "./storage.js";
-import { loadBoardArt, preloadChapterBanners } from "./art.js";
+import { ART, loadBoardArt, preloadChapterBanners } from "./art.js";
 
 let DATA = null;
 let S = null;
 let rolling = false;
 let lastResult = null; // 剛選完的結果，只給畫面用，不進存檔
+
+// 設定的「示範」鈕與 ?settle=demo：假的已完成一局，走同一條 settlement() 產線，
+// 讓結算畫面與成績單不用玩到第 32 格也能看。
+const DEMO_STATE = {
+  seed: "demo-settlement",
+  rng: 1,
+  route: "oral",
+  pos: 32,
+  rolls: 17,
+  res: { time: 5, money: 8, energy: 3, knowledge: 12 },
+  items: {},
+  flags: { pub_pending: true, network: true, oral_qa: true, mentor: true },
+  kept: ["mentor"],
+  drawn: new Array(16).fill({ id: "demo" }),
+  log: [],
+  keyChoices: [
+    { card: "審查意見", choice: "補實驗也補人馬", note: "" },
+    { card: "海報現場", choice: "把被問倒的那題記下來", note: "" },
+  ],
+  strain: 1,
+  status: "done",
+  pendingEvent: null,
+  pendingCheckpoint: null,
+  ending: { id: "stage", title: "國際舞台新面孔", text: "收穫滿行囊，資源也留得住。下次可以直接排兩場。" },
+  over: null,
+};
 
 async function boot() {
   const [board, events, items, cps] = await Promise.all(
@@ -39,6 +69,10 @@ async function boot() {
   draw();
   // 讀到存檔時，棋子直接出現在存下來的那一格（不播動畫）
   relocatePiece(S.pos);
+  // ?settle=demo：展示用，開場直接叫出結算畫面（設定的示範鈕同一條路）
+  if (new URLSearchParams(location.search).get("settle") === "demo") {
+    showSettlementDemo(E.settlement(DEMO_STATE));
+  }
 }
 
 function startGame(seed) {
@@ -120,13 +154,24 @@ function wire() {
     }
     if (t.dataset.action === "settlement") {
       document.getElementById("modal")?.close();
-      return openSettlement(S);
+      return openSettlement(E.settlement(S));
+    }
+    if (t.dataset.action === "demo-settlement") {
+      return showSettlementDemo(E.settlement(DEMO_STATE));
     }
     if (t.dataset.action === "close-settlement") {
-      document.getElementById("settlement")?.close();
-      return;
+      return closeSettlement();
+    }
+    if (t.dataset.action === "report-card") {
+      const data = settlementData();
+      if (!data) return;
+      t.disabled = true;
+      return downloadReportCard(data, { catSrc: ART.cat }).then(() => {
+        t.disabled = false;
+      });
     }
     if (t.id === "restart" || t.dataset.action === "restart") {
+      closeSettlement();
       clearSave();
       lastResult = null;
       clearDiceBadge();

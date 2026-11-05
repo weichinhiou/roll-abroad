@@ -258,6 +258,7 @@ test("結算資料：四項資源給起訖與增減、路線名稱、四項統�
   assert.deepEqual({ start: t.start, value: t.value, delta: t.delta }, { start: 8, value: 5, delta: -3 });
   assert.equal(d.res.find((r) => r.key === "knowledge").start, 0);
   assert.equal(d.route, "口報路線");
+  assert.equal(d.seed, "unit", "結算資料要帶 seed，成績單才印得出旅程代碼");
   assert.deepEqual(d.stats.map((s) => s.label), ["擲骰次數", "走過格數", "抽過的卡", "資源耗盡"]);
   assert.ok(d.ending && d.ending.title && d.ending.text);
 });
