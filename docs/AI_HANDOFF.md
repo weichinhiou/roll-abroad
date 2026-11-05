@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-05（台灣時間），OpenCode。**Task 25（旅程結算畫面基礎版）本機 `main` 在 `40114a4`，未 push**；下一步是等 Jean 的 GPT 底版圖，到手跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]` 就換好（規格固定、不用改程式）。Task 24（上方章節掛牌橫幅＋桌機／手機底板換新圖＋左上標題品牌 Logo，plan D21）本機已 commit（掛牌 `c215b2b`、底板 `637d2c5`、logo `1e3fadb`），**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-05（台灣時間），OpenCode。**Task 25（旅程結算畫面基礎版＋示範出口＋成績單）本機 `main` 在 `40114a4`＋`86c0781`，已連同 Task 24 一起 push 上 main**；下一步是等 Jean 的 GPT 底版圖，到手跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]` 就換好（規格固定、不用改程式）。Task 24（上方章節掛牌橫幅＋桌機／手機底板換新圖＋左上標題品牌 Logo，plan D21）本機已 commit（掛牌 `c215b2b`、底板 `637d2c5`、logo `1e3fadb`），**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -56,7 +56,7 @@
 
 ## Tasks
 
-### Task 24：上方章節列改掛牌橫幅圖（2026-11-05，本機已 commit，未 push）
+### Task 24：上方章節列改掛牌橫幅圖（2026-11-05，已 push）
 
 - Jean 給五張「第 N 章・章名」立體去背 PNG（`Roll_Abroad_五章節_立體去背Banner.zip`，原檔留製作機 `Downloads` 不進 repo），換掉原本用 CSS 畫的金黃文字條。取捨見 plan D21。
 - 十張 WebP 進 `assets/art/`：`chapter-banner-N.webp`（含繩，桌機與 760–1100px）＋`chapter-banner-N-norope.webp`（銅環上緣 12px 處截斷的短版，手機），共約 539KB。自動裁切（alpha bbox ＋「每列不透明度覆蓋率」分繩子 6%／牌面 >60%）與轉檔在 `tools/build-chapter-banners.py`，視為素材的原始碼。
@@ -77,7 +77,7 @@ Jean 給去背標題圖 `大赴翁：Roll Abroad.png`（1536×1024），換掉�
 
 **驗證過（logo）：** `npm.cmd test` **41 項全過**（原 39＋新 2）；CDP 無頭 Chrome **九種版型**（1920×1080、1440×900、1100×820、760×900、1280×600 矮螢幕、`prefers-reduced-motion` 2D、390×844／360×740／390×650 手機）截圖＋量測：logo 顯示尺寸 170–232px 寬（桌機）／103–109px（手機），與掛牌、設定鈕、資源列、棋盤**重疊面積全 0**、無頁面溢出、console 0 錯誤；手機 logo 底緣 y=65、掛牌 y=68 起，各留 3px。**沒驗證：** 手機實機、真 GPU、SR 對 h1 內圖片 alt 的朗讀。
 
-### Task 25：旅程結算畫面（基礎版，2026-11-05，本機 commit `40114a4`，未 push）
+### Task 25：旅程結算畫面（基礎版，2026-11-05，本機 commit `40114a4`＋`86c0781`，已 push）
 
 Jean 說「做一個基礎版給我，底版圖我會讓 GPT 生，你把架構做出來」。**資料→畫面分三層**：
 
@@ -87,7 +87,7 @@ Jean 說「做一個基礎版給我，底版圖我會讓 GPT 生，你把架構�
 
 **底版圖預留**：`assets/art/ending-backdrop.webp`（1600×900）＋`ending-backdrop-mobile.webp`（900×1600），現在是占位漸層（共 9KB）。GPT 圖到手後跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]`（等比縮放＋置中裁切，規格固定，不用改 CSS／程式）。
 
-**展示用出口（續做，同 commit `40114a4` 之後）**
+**展示用出口（續做，commit `86c0781`）**
 - **設定裡の「預覽旅程結算」**：`index.html` 設定選單一顆 `data-action="demo-settlement"`，走 `render.showSettlementDemo()` 開同一個畫面，資料是 `app.js` 的 `DEMO_STATE`（假的已完成一局，仍過 `engine.settlement()`）。示範版頂部標「示範」、底部改註記「玩到第 32 格會看到你自己這一趟」，不給「再玩一次」以免誤刪玩家進度；`demoOpen` 旗標讓它不會被下次 `draw()` 誤關，重新開始時由 `closeSettlement()` 收掉。
 - **`?settle=demo`**：開場直接叫出同一個示範畫面（`boot()` 尾端判 URL 參數），展示不用玩到第 32 格。
 - **成績單 PNG**：`src/share-card.js` 把結算資料畫在 1200×630 canvas（跟 OG 圖同規格），「下載成績單」按鈕走 `downloadReportCard()`（`toBlob`＋`a.download=大赴翁-成績單-<seed>.png`）。內容：結局＋評語＋路線、四資源、四項承諾（圓章同配色語彙）、四項統計、旅程代碼與民國日期。純本機產製，不連外部服務。`settlement()` 因此多回傳 `seed`。`package.json` 的 `check` 加入 `src/share-card.js`。
