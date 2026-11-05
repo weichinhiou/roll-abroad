@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-05（台灣時間），OpenCode。Task 23（OG 分享圖與 Favicon，`assets/brand/`）**改動完成、未 commit**，等 Jean 授權後 push 發佈（驗證見 Task 23）。`main` 在 `34592e3`—Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-05（台灣時間），OpenCode。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -56,7 +56,7 @@
 
 ## Tasks
 
-### Task 23：OG 分享圖與 Favicon（2026-11-05，改動完成未 commit，等 Jean 授權）
+### Task 23：OG 分享圖與 Favicon（2026-11-05，已 commit `70994fc` 並 push）
 
 - Jean 給兩張 AI 生成原圖：「大赴翁：環球旅途啟程.png」（1672×941）做 OG 圖、「復古旅行骰子郵戳徽章.png」（1254×1254 四角透明）做 Favicon。原檔留製作機 `Downloads`，不進 repo。
 - 成品放 `assets/brand/`：`og-cover.jpg`（1200×630、183 KB）、`favicon.ico`（16/20/24/32/48/64 六級、32bit PNG 條目、22 KB）、`icon-512.png`（59 KB、256 色調色板）、`apple-touch-icon.png`（180×180、四角補米色底、11 KB）。製作紀要見 `assets/brand/README.md`。
