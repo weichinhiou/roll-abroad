@@ -3,12 +3,30 @@
 // 骰子：3D 播動畫；2D 或減少動態效果只在面板顯一行「擲出 X」。
 import { MILESTONES, resName } from "./engine.js";
 import { initBoard3d, updateBoard3d, rollDice, teleportPawn, onDieClick } from "./board3d.js";
-import { ART } from "./art.js";
+import { ART, CHAPTER_BANNERS } from "./art.js";
 
 const CH_NAMES = { 1: "投稿", 2: "出國準備", 3: "國際會議", 4: "返國", 5: "回院之後" };
 const CH_ORD = ["一", "二", "三", "四", "五"];
 const REDUCED_MQ = "(prefers-reduced-motion: reduce)";
+const NARROW_MQ = "(max-width: 759px)";
 const $ = (sel) => document.querySelector(sel);
+const BANNER = Object.fromEntries(CHAPTER_BANNERS.map((b) => [b.n, b]));
+
+// 上方掛牌：換章時一起換桌機／手機兩張圖與 alt（圖已預載，不會閃白）。
+// 實際顯示哪張由 CSS 的 media query 決定，這裡只是讓預留尺寸跟當前版型一致。
+function renderChapterBanner(chapter) {
+  const b = BANNER[chapter] || BANNER[1];
+  const box = $("#chapter");
+  if (!box) return;
+  const img = box.querySelector("img"), source = box.querySelector("source");
+  const compact = typeof matchMedia === "function" && matchMedia(NARROW_MQ).matches;
+  box.dataset.chapter = String(chapter);
+  img.src = b.full;
+  img.alt = `第${CH_ORD[chapter - 1]}章・${CH_NAMES[chapter]}`;
+  img.width = compact ? b.sw : b.w;
+  img.height = compact ? b.sh : b.h;
+  if (source) source.srcset = b.compact;
+}
 
 let mode = null; // "3d" | "2d"
 
@@ -147,7 +165,7 @@ function renderResources(state) {
 function renderJourney(state, board) {
   const square = board.squares.find((s) => s.n === state.pos);
   const chapter = square?.chapter || 1;
-  $("#chapter").textContent = `第${CH_ORD[chapter - 1]}章・${CH_NAMES[chapter]}`;
+  renderChapterBanner(chapter);
   $("#rollinfo").textContent = `${state.pos === 0 ? "起點・準備出發" : `第 ${state.pos}/${board.squares.length} 格・${square.label}`}　｜　擲骰 ${state.rolls} 次`;
   const note = $("#companion-note");
   // 開局（擲過骰前）由黑貓輪流說兩句：操作提示↔催擲骰。擲過骰就改講行程相關。

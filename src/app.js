@@ -12,7 +12,7 @@ import {
   setDieClick,
 } from "./render.js";
 import { save, load, clearSave } from "./storage.js";
-import { loadBoardArt } from "./art.js";
+import { loadBoardArt, preloadChapterBanners } from "./art.js";
 
 let DATA = null;
 let S = null;
@@ -25,6 +25,7 @@ async function boot() {
   );
   DATA = { board, events, items, checkpoints: cps.checkpoints };
   await loadBoardArt();
+  preloadChapterBanners();
   initBoard(DATA.board);
   const saved = load();
   if (saved) {

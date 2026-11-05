@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-05（台灣時間），OpenCode。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-05（台灣時間），OpenCode。Task 24（上方章節列改掛牌橫幅圖，plan D21）**本機已 commit，未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -55,6 +55,15 @@
 | `data/items.json` | 5 種道具：plan、consult、door、usb（壁報線送）、badge（口報線送） |
 
 ## Tasks
+
+### Task 24：上方章節列改掛牌橫幅圖（2026-11-05，本機已 commit，未 push）
+
+- Jean 給五張「第 N 章・章名」立體去背 PNG（`Roll_Abroad_五章節_立體去背Banner.zip`，原檔留製作機 `Downloads` 不進 repo），換掉原本用 CSS 畫的金黃文字條。取捨見 plan D21。
+- 十張 WebP 進 `assets/art/`：`chapter-banner-N.webp`（含繩，桌機與 760–1100px）＋`chapter-banner-N-norope.webp`（銅環上緣 12px 處截斷的短版，手機），共約 539KB。自動裁切（alpha bbox ＋「每列不透明度覆蓋率」分繩子 6%／牌面 >60%）與轉檔在 `tools/build-chapter-banners.py`，視為素材的原始碼。
+- `index.html`：`<div class="chapter-ribbon">` 換成 `<picture id="chapter">`（`<source media="(max-width:759px)">` ＋ `<img>`）。`src/art.js` 新增 `CHAPTER_BANNERS`（路徑＋尺寸）與 `preloadChapterBanners()`（`app.js` 開局呼叫，換章不閃白）。`src/render.js` 新增 `renderChapterBanner()`：換 `src`／`srcset`／`alt`（章名靠 alt 給螢幕閱讀器）。`game-art.css`：掛牌用 `height:clamp` 定高＋`object-fit:contain` 護比例；為讓位，手機資源列 125→138px、手機 3D 棋盤 185→196px、手機 2D 棋盤 196→206px、桌機 2D 棋盤 110→138px，矮螢幕（高 ≤740px）另給掛牌高度。
+- `test/art.test.js` 加兩項：十張都是 WebP、實際尺寸對得上 `CHAPTER_BANNERS`、無繩版裁切比例抓得對、總量 <700KB；以及 HTML／CSS／JS 接線（初始圖、兩個版型都定高、`object-fit`、部署檔清單有涵蓋）。
+
+**驗證過：** `npm.cmd run check` 通過、`npm.cmd test` **39 項全過**（原 37＋新 2）；CDP 驅動的無頭 Chrome **九種版型截圖**（1920×1080、1440×900、1100×820、760×900、1280×600 矮螢幕、`prefers-reduced-motion` 的 2D 退回、390×844／360×740／390×650 手機）：掛牌與資源列／標題／設定鈕／狀態列／道具列**重疊面積皆 0**、無頁面溢出、五章的圖與 alt 都正確、手機確實改抓無繩版；**實玩**到第 7 格（擲 4 次）掛牌由 `chapter-banner-1.webp` 換成 `chapter-banner-2.webp`；十張本機都 200／`image/webp`；console 錯誤 0。**沒驗證：** 手機實機（只模擬 viewport）、真實 GPU 表現、`aria-live` 對 `<picture>` 內 alt 變更的朗讀行為（各 SR 不一致）、Actions 發佈後的線上樣貌（尚未 push）。
 
 ### Task 23：OG 分享圖與 Favicon（2026-11-05，已 commit `70994fc` 並 push）
 

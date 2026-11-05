@@ -30,7 +30,11 @@
       <img class="traveler-portrait" src="assets/art/traveler.webp" alt="帶著背包的學術旅人" width="100" height="100" />
       <h1>大赴翁 <span>Roll Abroad</span></h1>
     </header>
-    <div class="chapter-ribbon" id="chapter" aria-live="polite">第一章・投稿</div>
+    <!-- 章節掛牌：手機改無繩版（由 source 的 media query 挑），src/srcset/alt 由 render.js 換 -->
+    <picture class="chapter-ribbon" id="chapter" aria-live="polite">
+      <source media="(max-width:759px)" srcset="assets/art/chapter-banner-1-norope.webp" />
+      <img src="assets/art/chapter-banner-1.webp" alt="第一章・投稿" width="669" height="311" />
+    </picture>
     <details class="settings">
       <summary>⚙ 設定</summary>
       <div class="toolbar">

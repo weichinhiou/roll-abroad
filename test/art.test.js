@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile, stat } from "node:fs/promises";
-import { ART } from "../src/art.js";
+import { ART, CHAPTER_BANNERS } from "../src/art.js";
 
 test("共用美術全部隨網站保存為可部署的 WebP，總量不超過 2.5 MiB", async () => {
   let bytes = 0;
@@ -65,6 +65,58 @@ test("Favicon 全家桶：ico 六級尺寸、512 與 apple-touch 180", async () 
   }
   assert.deepEqual(pngSize(await readFile(brand("icon-512.png"))), { w: 512, h: 512 });
   assert.deepEqual(pngSize(await readFile(brand("apple-touch-icon.png"))), { w: 180, h: 180 });
+});
+
+// ── 章節掛牌橫幅（畫面上方那面木牌）───────────────────────────
+// WebP 寬高：有透明的是 VP8X（畫布尺寸在第 24 起，3 位元組小端序、要 +1）；無透明走 VP8 影格標頭。
+function webpSize(buf) {
+  assert.equal(buf.subarray(0, 4).toString(), "RIFF", "不是 WebP");
+  assert.equal(buf.subarray(8, 12).toString(), "WEBP", "不是 WebP");
+  const tag = buf.subarray(12, 16).toString();
+  if (tag === "VP8X") {
+    const le3 = (o) => buf[o] | (buf[o + 1] << 8) | (buf[o + 2] << 16);
+    return { w: le3(24) + 1, h: le3(27) + 1 };
+  }
+  assert.equal(tag, "VP8 ", `未支援的 WebP 封裝：${tag}`);
+  return { w: buf.readUInt16LE(26) & 0x3fff, h: buf.readUInt16LE(28) & 0x3fff };
+}
+
+test("五張章節掛牌齊備：含繩版給桌機、無繩版給手機，尺寸對得上 art.js，總量在預算內", async () => {
+  assert.equal(CHAPTER_BANNERS.length, 5);
+  let bytes = 0;
+  for (const b of CHAPTER_BANNERS) {
+    const sizes = {};
+    for (const [key, w, h] of [["full", b.w, b.h], ["compact", b.sw, b.sh]]) {
+      const buf = await readFile(new URL(b[key]));
+      sizes[key] = webpSize(buf);
+      assert.deepEqual(sizes[key], { w, h }, `第 ${b.n} 章 ${key} 的實際尺寸與 art.js 宣告不符`);
+      bytes += buf.length;
+    }
+    // 無繩版必須真的裁掉繩子、又留整块牌面（繩區佔整體 30–45% 高）
+    const cut = 1 - sizes.compact.h / sizes.full.h;
+    assert.ok(cut > 0.2 && cut < 0.5, `第 ${b.n} 章無繩版裁切比例 ${cut} 不對`);
+    assert.equal(sizes.compact.w, sizes.full.w, "無繩版不該動到寬度");
+  }
+  assert.ok(bytes < 700 * 1024, `掛牌共 ${bytes} bytes，太重`);
+});
+
+test("掛牌接得上：初始 HTML、兩個版型的尺寸、render.js 的換圖", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const css = await readFile(new URL("../game-art.css", import.meta.url), "utf8");
+  const js = await readFile(new URL("../src/render.js", import.meta.url), "utf8");
+  assert.match(
+    html,
+    /<picture class="chapter-ribbon"[^>]*>[\s\S]*?<source media="\(max-width:759px\)" srcset="assets\/art\/chapter-banner-1-norope\.webp"[\s\S]*?<img src="assets\/art\/chapter-banner-1\.webp"[^>]*alt="第一章・投稿"/,
+    "index.html 的掛牌初始圖沒接好（手機 source 或桌機 img 缺）"
+  );
+  assert.match(js, /renderChapterBanner\(chapter\)/, "render.js 換章時沒換掛牌");
+  assert.match(js, /source\.srcset = b\.compact/, "render.js 沒換手機版掛牌圖");
+  assert.match(css, /\.chapter-ribbon\{[^}]*height:clamp/, "桌機掛牌沒用 clamp 定高");
+  assert.match(css, /\.chapter-ribbon img\{[^}]*object-fit:contain/, "掛牌沒設 object-fit，寬度會被拉变形");
+  const mobile = css.slice(css.indexOf("@media(max-width:759px)"));
+  assert.match(mobile, /\.chapter-ribbon\{[^}]*height:clamp/, "手機掛牌沒另外定高");
+  const yml = await readFile(new URL("../.github/workflows/deploy.yml", import.meta.url), "utf8");
+  assert.match(yml, /assets\/art\/\*\.webp/, "部署流程沒抓 art 資料夾的 WebP");
 });
 
 test("index.html 的 icon 與 OG 指向的品牌檔都存在，部署檔清單有涵蓋", async () => {
