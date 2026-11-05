@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-04（台灣時間），OpenCode。`main` 在 `ed3bb25`＋文件 `144484b`（Task 22：棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正），**已發佈上線**（Actions run #9 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-05（台灣時間），OpenCode。Task 23（OG 分享圖與 Favicon，`assets/brand/`）**改動完成、未 commit**，等 Jean 授權後 push 發佈（驗證見 Task 23）。`main` 在 `34592e3`—Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -55,6 +55,15 @@
 | `data/items.json` | 5 種道具：plan、consult、door、usb（壁報線送）、badge（口報線送） |
 
 ## Tasks
+
+### Task 23：OG 分享圖與 Favicon（2026-11-05，改動完成未 commit，等 Jean 授權）
+
+- Jean 給兩張 AI 生成原圖：「大赴翁：環球旅途啟程.png」（1672×941）做 OG 圖、「復古旅行骰子郵戳徽章.png」（1254×1254 四角透明）做 Favicon。原檔留製作機 `Downloads`，不進 repo。
+- 成品放 `assets/brand/`：`og-cover.jpg`（1200×630、183 KB）、`favicon.ico`（16/20/24/32/48/64 六級、32bit PNG 條目、22 KB）、`icon-512.png`（59 KB、256 色調色板）、`apple-touch-icon.png`（180×180、四角補米色底、11 KB）。製作紀要見 `assets/brand/README.md`。
+- `index.html` head 補：`description`／`theme-color`／三組 icon link／`og:*`（含 `og:image` 絕對 URL 1200×630）／`twitter:card: summary_large_image`。
+- `server.mjs` MIME 補 `.jpg`/`.jpeg`；`deploy.yml` 發佈清單改抓 `assets/brand/*.ico|*.png|*.jpg`（README 不發佈）；`test/art.test.js` 加三支品牌檔測試（JPEG SOF／PNG IHDR／ICO 目錄解析＋head 引用都存在＋deploy.yml 有涵蓋）。**`npm.cmd test` 37 項全過**。
+- 製作坑（紀錄在 brand README）：Pillow 存 ICO 寫 BMP 條目且讀不回各級尺寸 → **手寫 ICO 容器**（目錄從第 6 byte 起，PNG 條目）；紙紋小尺寸會糊 → 每級降採樣後 Contrast 1.14＋Color 1.10＋UnsharpMask；全彩 PNG 肥到 480 KB → 256 色量化。
+- **驗證過：** `npm.cmd run check`＋37 項測試；本機 4191 Playwright 開站實測四檔 200 且 Content-Type 正確（`image/x-icon`／`image/png`×2／`image/jpeg`）、head 標籤齊備、console 錯誤 0／4xx 0。**沒驗證：** headless Chrome 不抓 favicon（分頁圖示實際顯示＝ICO 結構測試＋模擬分頁列截圖），社群平台實際抓 OG 圖要上線後用 Facebook Sharing Debugger／LINE 預覽工具驗。
 
 ### Task 22：棋盤 24→32 格、五邊形棋盤、第五章「回院之後」（2026-11-04，已 commit `6796992`＋`ed3bb25` 並 push，已發佈上線）
 

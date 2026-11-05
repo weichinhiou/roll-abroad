@@ -21,10 +21,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: 備妥網站檔
         run: |
-          mkdir -p dist/assets/art
+          mkdir -p dist/assets/art dist/assets/brand
           cp index.html styles.css game-art.css dist/
           cp -r src data vendor dist/
           cp assets/art/*.webp assets/art/*.glb dist/assets/art/
+          cp assets/brand/*.ico assets/brand/*.png assets/brand/*.jpg dist/assets/brand/   # OG 分享圖與 Favicon（README 不發佈）
           echo "發佈內容：" && find dist -type f | sort
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4

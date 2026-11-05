@@ -41,6 +41,7 @@ Jean 提供的原圖 `國際學術旅港灣全景.png`（941×1672 直式），�
 ## 維護
 
 - `src/art.js` 是檔名清單；`scene-art.js` 依四章圖集的固定位置讀取。
+- 社群分享圖與 Favicon 在**隔壁** `assets/brand/`（不做 WebP，規格由社群平台與瀏覽器指定），製作與重製紀錄見 `assets/brand/README.md`。
 - HUD 圖集順序對應 `render.js` 與 `game-art.css`，不可只換順序而不改對應。
 - 改圖後執行 `npm test`，並在本機檢查桌機/375px/2D 備援。總檔案大小測試是部署預算，不是畫質評分。
 - 素材不代表真實發生的案例；個別卡片是否顯示「📌 真實改編」仍由原 `trueStory` 欄位決定。
