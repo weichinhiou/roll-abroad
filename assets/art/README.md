@@ -30,13 +30,21 @@ One square atlas, exact 2×2 equal quadrants without gutters/margins. Original d
 
 One square atlas, exact 3×3 equal cells, genuinely transparent background, no gutters/margins, no text or UI chrome. Nine centered vivid polished 3D toy icons with generous consistent padding: row 1 stopwatch, gold coins, green/yellow lightning bolt; row 2 purple graduation cap, blue calendar with orange tab, blue shield with a friendly adviser silhouette; row 3 turquoise open door, purple backup USB flash drive, coral business-card holder. Center positions align exactly to 1/6, 1/2, 5/6 on each axis. Icons never cross cells, readable at 24–40px.
 
-### world-desktop.webp（桌機背景）
+### world-desktop.webp（桌機底板）
 
-Jean 提供的原圖 `學術港灣與世界地標全景.png`（1672×941），非 image_gen 產出。轉檔 WebP quality 82（約 172KB）。內容：學術港灣＋世界地標全景，中央水面低對比留給 3D 棋盤。掛在 `game-art.css` 的 `body` 背景，桌機與 ≥760px 版型共用。
+Jean 提供的原圖 `ChatGPT 圖像 2026年11月5日 下午12_36_20.png`（1672×941，2,661KB），非 image_gen 產出。轉檔：`tools/build-backgrounds.py`，WebP quality 78 → **180KB**。內容：學術港灣＋世界地標全景，中央水面低對比留給 3D 棋盤。掛在 `game-art.css` 的 `body` 背景，桌機與 ≥760px 版型共用。
+（2026-11-05 第一次用的是 `學術港灣與世界地標全景.png`，同尺寸、WebP 172KB；同日被下面這張換掉。）
 
-### world-mobile.webp（手機背景）
+### world-mobile.webp（手機底板）
 
-Jean 提供的原圖 `國際學術旅港灣全景.png`（941×1672 直式），非 image_gen 產出。轉檔時縮到寬 900（900×1599）、WebP quality 82（約 115KB）。掛在 `game-art.css` 的 `@media(max-width:759px)` body 背景段，`background-position:center top`。
+Jean 提供的原圖 `大學旅港水彩全景.png`（941×1672 直式，2,486KB），非 image_gen 產出。轉檔：`tools/build-backgrounds.py`，縮到寬 900（900×1599）、WebP quality 74 → **123KB**。掛在 `game-art.css` 的 `@media(max-width:759px)` body 背景段，`background-position:center top`（直式圖上方是港灣地標，下方大片低對比海面正好讓給 3D 棋盤）。
+
+### 底板轉檔原則（兩張共用）
+
+- **一律 WebP**：原 PNG 都 2.5MB 級，是整個網站最大的一檔，走 PNG 會拖慢首屏；WebP 壓到 120–180KB 級（壓縮率約 1/15）。品質桌機 78／手機 74，實測與原圖看不出差異（背景大面積漸層與海面最吃空間，78 以上差異肉眼不可辨）。
+- 只縮不裁：桌機上限寬 1680（1366–1920 都靠 `background-size: cover` 裁切），手機上限寬 900（手機視窗 360–430、2 倍 dpr 夠用）。
+- 沒做響應式兩張以上：本來桌機手機就各掛一張（同一 media query），再多切尺寸對這個畫面尺寸沒收益。
+- 換圖重跑 `python tools/build-backgrounds.py [桌機原圖] [手機原圖]`。
 
 ### chapter-banner-1…5.webp ＋ chapter-banner-1…5-norope.webp（上方章節掛牌）
 

@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-05（台灣時間），OpenCode。Task 24（上方章節列改掛牌橫幅圖，plan D21）本機 `main` 在 `c215b2b`，**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-05（台灣時間），OpenCode。Task 24（上方章節掛牌橫幅＋桌機／手機底板換新圖，plan D21）本機 `main` 在 `c215b2b`，**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -64,6 +64,12 @@
 - `test/art.test.js` 加兩項：十張都是 WebP、實際尺寸對得上 `CHAPTER_BANNERS`、無繩版裁切比例抓得對、總量 <700KB；以及 HTML／CSS／JS 接線（初始圖、兩個版型都定高、`object-fit`、部署檔清單有涵蓋）。
 
 **驗證過：** `npm.cmd run check` 通過、`npm.cmd test` **39 項全過**（原 37＋新 2）；CDP 驅動的無頭 Chrome **九種版型截圖**（1920×1080、1440×900、1100×820、760×900、1280×600 矮螢幕、`prefers-reduced-motion` 的 2D 退回、390×844／360×740／390×650 手機）：掛牌與資源列／標題／設定鈕／狀態列／道具列**重疊面積皆 0**、無頁面溢出、五章的圖與 alt 都正確、手機確實改抓無繩版；**實玩**到第 7 格（擲 4 次）掛牌由 `chapter-banner-1.webp` 換成 `chapter-banner-2.webp`；十張本機都 200／`image/webp`；console 錯誤 0。**沒驗證：** 手機實機（只模擬 viewport）、真實 GPU 表現、`aria-live` 對 `<picture>` 內 alt 變更的朗讀行為（各 SR 不一致）、Actions 發佈後的線上樣貌（尚未 push）。
+
+#### 續做：桌機與手機底板換新圖（同日）
+
+Jean 再給兩張同場景新圖（桌機橫式 1672×941、手機直式 941×1672，PNG 都 2.5MB 級）。轉檔腳本 `tools/build-backgrounds.py`（底板原始碼）：WebP 桌機 q78 → 180KB、手機縮寬 900 後 q74 → 123KB（原圖的 1/15）。**答案：要轉 WebP**，而且舊底板本來就是 WebP，這次只是沿用同一条產線。CSS 引用路徑沒變（`game-art.css` 的 `body` 與手機段），所以沒動程式碼。
+
+**驗證過（底板）：** `npm.cmd test` 39 項全過；四種版型無頭 Chrome 截圖（1440×900、1920×1080 第三章、390×844、360×740 第五章）——新底板與掛牌／資源列／棋盤都不打架（重疊仍 0、無溢出、console 0 錯誤），棋盤落在新圖的低對比海面區。**沒驗證：** 手機實機、真 GPU。
 
 ### Task 23：OG 分享圖與 Favicon（2026-11-05，已 commit `70994fc` 並 push）
 
