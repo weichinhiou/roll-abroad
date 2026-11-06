@@ -76,6 +76,29 @@ python tools\build-ending-bg.py "C:\Users\office\Downloads\桌機圖.png" "C:\Us
 - 規格固定，換圖不用改 CSS 也不用改程式；`test/art.test.js` 會擋尺寸跑掉與體積超標（兩張 <500KB）。
 - 要放字的地區留低對比（左上到中央），上方暗角由 CSS 疊加，圖本身不用壓暗。
 
+#### 給生成模型的提示詞（GPT 生圖用，桌機＋手機各出一張）
+
+**Why（版面遮擋，決定留白）**：結算面板是半透明白卡會蓋掉中央約 65%，上面 25% 疊「旅程結算」標題與金色稱號（有 CSS 深色漸層＋文字陰影），下面 20% 放按鈕，右上角被小黑貓疊住，四角 23px 圓角＋4px 木框。所以：**重要元素只放四邊緣帶與天空／海面的留白**，主體離任何邊至少 10%（腳本置中裁切）。
+
+**桌機版（16:9）**
+
+> Production full-screen game UI backdrop, landscape 16:9 (target 1600×900). Vivid stylized 3D cartoon academic-travel world in the same family as a cyan turquoise harbour: golden-hour return-home mood, sunset harbour pier with one moored boat, distant simplified world landmarks and a glass conference hall pushed to the outer edges, a small white aircraft and fluffy clouds high in the sky, small suitcase and luggage cart silhouettes on the far left and right. Warm gold and cyan palette, crisp polished toy forms, high colour separation, soft painterly depth of field, warm rim light on the horizon.
+>
+> Layout constraints (follow strictly): keep the central 65 percent calm, open and low-contrast — only soft sky-to-sea gradient, faint reflected light, no detail; keep the top 25 percent clean and low contrast for a large gold headline, do NOT pre-darken or vignette it yourself; keep the bottom 20 percent quiet and simple for buttons; the top-right corner must stay quiet; nothing important inside 10 percent of any edge. Monochrome-free, no foggy mush — still vivid and cheerful, just low contrast where the UI sits.
+>
+> No text, no lettering, no numbers, no signage, no logos, no stamps, no banners, no frames, no people or faces, no dice, no game tiles, no chess board, no UI elements, no watermark.
+
+**手機版（9:16 直式）**
+
+> Same scene, same lighting and same colour palette, vertical portrait composition (target 900×1600, aspect 9:16). Tall variant: sunset sky and clouds with a small aircraft occupy the top third, the cyan harbour and distant landmarks descend through the middle, a quiet foreground pier with a moored boat at the bottom. Central vertical band stays calm and low contrast all the way down, because a translucent results card is rendered on top in code; keep the upper quarter clean and low contrast for a gold headline, keep the bottom fifth simple for buttons, and nothing important inside 10 percent of any edge. Same toy-form style and same golden cyan palette as the landscape version. No text, lettering, numbers, signage, logos, stamps, frames, people, faces, dice, tiles or UI, no watermark.
+
+**紅線（最容易踩的）**
+- **兩張都不要有字**（標題稱號是程式疊的，圖裡的字會重疊）。
+- **不要預先壓暗、不要自己做暗角**（CSS 已疊一層深藍漸層，疊兩次會髒）。
+- **不要拿橫式圖裁去用**：16:9 裁到 9:16 只剩中央 31% 寬，主體會被砍光，一定要生直式。
+- GPT 常出 1536×1024（橫）／1024×1536（直），都可以，腳本會 cover 置中裁；但**主體請離邊 ≥10%**，否則裁掉。
+- 色調對齊本站既有美術（青綠海、暖金陽光、玩具式 3D 卡通），別改風格方向。
+
 ## 維護
 
 - `src/art.js` 是檔名清單；`scene-art.js` 依四章圖集的固定位置讀取。
