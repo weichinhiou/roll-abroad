@@ -66,15 +66,17 @@ Jean 提供的原圖 `大赴翁：Roll Abroad.png`（1536×1024 去背 RGBA，1,
 
 ### ending-backdrop.webp ＋ ending-backdrop-mobile.webp（旅程結算畫面底版）
 
-結算畫面（`#settlement`）的底版圖，桌機 1600×900／手機 900×1600，WebP q80／q78。**目前是占位漸層**（共約 9KB），等 Jean 用 GPT 生好圖丟過來，重跑：
+結算畫面（`#settlement`）的底版圖，桌機 1600×900／手機 900×1600，WebP q80／q78。
 
+**現行版（2026-11-09）**：Jean 的 GPT 圖 `夢幻夕陽港灣旅行水彩畫.png`（1672×941，2,267KB，原檔留製作機 `Downloads`），轉檔後 **93KB／48KB**（共 141KB）。手機那張沒另生直式圖——腳本從桌機圖裁中央直式，裁出來的正好是落日與海面，黑貓坐在海面上，效果可接受。重跑：
 ```
 python tools\build-ending-bg.py "C:\Users\office\Downloads\桌機圖.png" "C:\Users\office\Downloads\手機圖.png"
 ```
 
 - 腳本等比縮放＋置中裁切到固定規格，不會變形；手機原圖可省略（改從桌機圖裁中央直式，但比例差多時另生直式圖比較好）。
 - 規格固定，換圖不用改 CSS 也不用改程式；`test/art.test.js` 會擋尺寸跑掉與體積超標（兩張 <500KB）。
-- 要放字的地區留低對比（左上到中央），上方暗角由 CSS 疊加，圖本身不用壓暗。
+- **圖本身不要壓暗／不要暗角**：上方那條由 CSS 疊（`.set-hero` 的深藍漸層＋文字陰影），疊兩次會髒。實測遮擋：桌機 hero 22%／白卡 62%／按鈕 14%，手機 31%／56%／13%（还要捲）；`cover` 置中裁切讓左右各約 10–11% 看不見 → 主體離邊 ≥15%。對照圖跑 `python tools\build-bg-guide.py`。
+- **白字要站得住**：這圖上方是天空＋落日（中央亮度實測 ~204），所以 `.set-hero` 疊 `linear-gradient(180deg,#0d3a5c66,...)`、`.set-text`／`.set-style` 用雙層 text-shadow；換更亮的圖要先截圖驗可讀性。
 
 #### 給生成模型的提示詞（GPT 生圖用，桌機＋手機各出一張）
 

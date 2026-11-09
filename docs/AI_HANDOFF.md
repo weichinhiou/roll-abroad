@@ -1,6 +1,6 @@
 # AI Handoff
 
-> 更新：2026-11-05（台灣時間），OpenCode。**Task 25（旅程結算畫面基礎版＋示範出口＋成績單）本機 `main` 在 `40114a4`＋`86c0781`，已連同 Task 24 一起 push 上 main**；下一步是等 Jean 的 GPT 底版圖，到手跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]` 就換好（規格固定、不用改程式）。Task 24（上方章節掛牌橫幅＋桌機／手機底板換新圖＋左上標題品牌 Logo，plan D21）本機已 commit（掛牌 `c215b2b`、底板 `637d2c5`、logo `1e3fadb`），**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
+> 更新：2026-11-09（台灣時間），OpenCode。**Task 25（旅程結算畫面＋示範出口＋成績單）已發佈；2026-11-09 換上 Jean 的 GPT 結算底版圖（`夢幻夕陽港灣旅行水彩畫.png`→WebP 93KB／48KB）並加深 `.set-hero` 漸層讓白字站得住**，換圖只跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]`（規格固定、不用改程式）。Task 24（上方章節掛牌橫幅＋桌機／手機底板換新圖＋左上標題品牌 Logo，plan D21）本機已 commit（掛牌 `c215b2b`、底板 `637d2c5`、logo `1e3fadb`），**未 push**（等 Jean 授權），驗證見 Task 24。Task 23（OG 分享圖與 Favicon，`assets/brand/`）`main` 在 `70994fc`，**已 commit 並 push**，部署驗證見 Task 23。Task 22（棋盤 24→32 格、五邊形棋盤、第五章「回院之後」＋回院後卡 N33–N41＋章節門檻＋桌機手機背景換圖＋介面修正）**已發佈上線**（Actions run #10 success，線上驗證見 Task 22）。Task 18～20（建築、Pages 部署、旅人棋子）都已 merge 並發佈到線上。
 > 換機器、換工具（Claude Code／Codex）或換 session 時，先讀這份，再讀 [plan.md](plan.md)。
 
 ## Project
@@ -85,7 +85,7 @@ Jean 說「做一個基礎版給我，底版圖我會讓 GPT 生，你把架構�
 - **畫面**：`index.html` 的 `<dialog id="settlement" class="settlement">`；`src/render.js` 的 `fillSettlement()`／`renderSettlement()`／`openSettlement()`，用 `settlement()` 的資料組 HTML（結局＋黑貓／承諾蓋章清單／四資源條／四項統計／關鍵抉擇／再玩一次＋關閉）。
 - **開合**：遊戲結束（`status==="done"`）自動開一次（`settlementSeen` 防重複）；還有最後一張卡結果時先在 `#modal` 顯示並給「看旅程結算」按鈕；關掉後面板留「旅程結算」按鈕可重開；`再玩一次` 走既有 `restart`。按鈕分派在 `src/app.js`（`settlement`／`close-settlement`）。
 
-**底版圖預留**：`assets/art/ending-backdrop.webp`（1600×900）＋`ending-backdrop-mobile.webp`（900×1600），現在是占位漸層（共 9KB）。GPT 圖到手後跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]`（等比縮放＋置中裁切，規格固定，不用改 CSS／程式）。
+**底版圖**：`assets/art/ending-backdrop.webp`（1600×900）＋`ending-backdrop-mobile.webp`（900×1600）。**2026-11-09 換上 Jean 的 GPT 圖** `夢幻夕陽港灣旅行水彩畫.png`（1672×941），轉檔後 93KB／48KB；手機沒另生直式圖，由桌機圖裁中央（裁到落日＋海面，可用）。換圖只跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]`（等比縮放＋置中裁切，規格固定，不用改 CSS／程式）。**配套改動**：`.set-hero` 深藍漸層加深（`#0d3a5c44`→`#0d3a5c66`）、`.set-text`／`.set-style` 加雙層 text-shadow——新圖上方是天空＋落日太亮（中央亮度實測 ~204），白字會糊。
 
 **展示用出口（續做，commit `86c0781`）**
 - **設定裡の「預覽旅程結算」**：`index.html` 設定選單一顆 `data-action="demo-settlement"`，走 `render.showSettlementDemo()` 開同一個畫面，資料是 `app.js` 的 `DEMO_STATE`（假的已完成一局，仍過 `engine.settlement()`）。示範版頂部標「示範」、底部改註記「玩到第 32 格會看到你自己這一趟」，不給「再玩一次」以免誤刪玩家進度；`demoOpen` 旗標讓它不會被下次 `draw()` 誤關，重新開始時由 `closeSettlement()` 收掉。
