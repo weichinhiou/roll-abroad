@@ -166,7 +166,7 @@ function wire() {
       const data = settlementData();
       if (!data) return;
       t.disabled = true;
-      return downloadReportCard(data, { catSrc: ART.cat }).then(() => {
+      return downloadReportCard(data, { catSrc: ART.cat, bgSrc: ART.reportCardBg }).then(() => {
         t.disabled = false;
       });
     }

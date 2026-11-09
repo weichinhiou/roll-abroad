@@ -5,6 +5,7 @@ export const ART = Object.freeze({
   board: asset("travel-plaza"),
   traveler: asset("traveler"),
   cat: asset("black-cat"),
+  reportCardBg: asset("report-card-bg"),
   chapters: asset("chapter-emblems"),
   hud: asset("hud-icons"),
 });

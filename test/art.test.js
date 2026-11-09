@@ -152,6 +152,15 @@ test("結算底版：桌機 1600×900、手機 900×1600，都是 WebP 且在體
   assert.ok(bytes < 500 * 1024, `結算底版共 ${bytes} bytes，太重`);
 });
 
+test("成績單背景：1200×630（與成績單畫布同規格）、WebP、-share-card 有接 bgSrc", async () => {
+  const buf = await readFile(new URL("../assets/art/report-card-bg.webp", import.meta.url));
+  assert.deepEqual(webpSize(buf), { w: 1200, h: 630 }, "report-card-bg.webp 尺寸要跟成績單畫布一致");
+  assert.ok(buf.length < 200 * 1024, `成績單背景 ${buf.length} bytes，下載時會等太久`);
+  const card = await readFile(new URL("../src/share-card.js", import.meta.url), "utf8");
+  assert.match(card, /opts\.bgSrc/, "share-card.js 沒接背景圖參數");
+  assert.match(card, /drawImage\(bg,/, "share-card.js 沒把背景圖蓋到畫布上");
+});
+
 test("結算畫面接得上：dialog、兩個版型的底版圖、engine.settlement 與按鈕", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const css = await readFile(new URL("../game-art.css", import.meta.url), "utf8");

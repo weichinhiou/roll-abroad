@@ -30,28 +30,49 @@ function wrap(c, text, x, y, maxW, lh) {
 const STAMP = { kept: ["已兌現", "#ff7b6b"], brought: ["待追蹤", "#ffd166"], none: ["未帶回", "#9fc0d4"] };
 
 // d = engine.settlement(state) 的回傳值＋ seed；opts.at = 日期（預設今天）
+const loadImg = (src) =>
+  src
+    ? new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      })
+    : Promise.resolve(null);
+
 export async function drawReportCard(canvas, d, opts = {}) {
   canvas.width = W;
   canvas.height = H;
   const c = canvas.getContext("2d");
+  const deep = "#0b3457";
   const g = c.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, "#0b3457");
+  g.addColorStop(0, deep);
   g.addColorStop(1, "#1a7ba6");
   c.fillStyle = g;
   c.fillRect(0, 0, W, H);
-  c.fillStyle = "#ffffff10";
-  c.beginPath();
-  c.arc(W - 70, H - 40, 190, 0, Math.PI * 2);
-  c.fill();
 
-  const cat = opts.catSrc
-    ? await new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => resolve(null);
-        img.src = opts.catSrc;
-      })
-    : null;
+  // 背景圖與黑貓一起載；圖沒到就留上面的純漸層（成績單不能開天窗）
+  const [bg, cat] = await Promise.all([loadImg(opts.bgSrc), loadImg(opts.catSrc)]);
+  if (bg) {
+    const s = Math.max(W / bg.width, H / bg.height); // cover：等比縮放＋置中裁切
+    const dw = bg.width * s;
+    const dh = bg.height * s;
+    c.drawImage(bg, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    // 圖左半是低對比海面但仍偏亮（實測亮度 183），白字要壓一層深藍才站得住
+    c.fillStyle = deep + "50";
+    c.fillRect(0, 0, W, H);
+    const sh = c.createLinearGradient(0, 0, W, 0);
+    sh.addColorStop(0, deep + "a6"); // 左：稱號與評語
+    sh.addColorStop(0.52, deep + "4d");
+    sh.addColorStop(1, deep + "1a"); // 右：船與地標要看得見
+    c.fillStyle = sh;
+    c.fillRect(0, 0, W, H);
+  } else {
+    c.fillStyle = "#ffffff10";
+    c.beginPath();
+    c.arc(W - 70, H - 40, 190, 0, Math.PI * 2);
+    c.fill();
+  }
   if (cat) c.drawImage(cat, W - 176, 34, 132, 132);
 
   c.textBaseline = "top";
@@ -121,8 +142,13 @@ export async function drawReportCard(canvas, d, opts = {}) {
     wrap(c, p.label, px + 68, ry + 12, 420, 26);
   });
 
-  // 右欄下：這一行程的數字
+  // 右欄下：這一行程的數字（鋪圖時這區落在船與海面的亮帶上，墊一張半透明卡才看得清）
   const sy = 86 + d.promises.length * 74 + 10;
+  if (bg) {
+    roundRect(c, px - 18, sy - 16, W - px - 22, 132, 16);
+    c.fillStyle = deep + "59";
+    c.fill();
+  }
   c.fillStyle = "#bfe4f7";
   c.font = `700 18px ${FONT}`;
   c.fillText("這一趟", px, sy);
