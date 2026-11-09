@@ -85,7 +85,7 @@ Jean 說「做一個基礎版給我，底版圖我會讓 GPT 生，你把架構�
 - **畫面**：`index.html` 的 `<dialog id="settlement" class="settlement">`；`src/render.js` 的 `fillSettlement()`／`renderSettlement()`／`openSettlement()`，用 `settlement()` 的資料組 HTML（結局＋黑貓／承諾蓋章清單／四資源條／四項統計／關鍵抉擇／再玩一次＋關閉）。
 - **開合**：遊戲結束（`status==="done"`）自動開一次（`settlementSeen` 防重複）；還有最後一張卡結果時先在 `#modal` 顯示並給「看旅程結算」按鈕；關掉後面板留「旅程結算」按鈕可重開；`再玩一次` 走既有 `restart`。按鈕分派在 `src/app.js`（`settlement`／`close-settlement`）。
 
-**底版圖**：`assets/art/ending-backdrop.webp`（1600×900）＋`ending-backdrop-mobile.webp`（900×1600）。**2026-11-09 換上 Jean 的 GPT 圖** `夢幻夕陽港灣旅行水彩畫.png`（1672×941），轉檔後 93KB／48KB；手機沒另生直式圖，由桌機圖裁中央（裁到落日＋海面，可用）。換圖只跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]`（等比縮放＋置中裁切，規格固定，不用改 CSS／程式）。**配套改動**：`.set-hero` 深藍漸層加深（`#0d3a5c44`→`#0d3a5c66`）、`.set-text`／`.set-style` 加雙層 text-shadow——新圖上方是天空＋落日太亮（中央亮度實測 ~204），白字會糊。
+**底版圖**：`assets/art/ending-backdrop.webp`（1600×900）＋`ending-backdrop-mobile.webp`（900×1600）。**2026-11-09 換上 Jean 的 GPT 圖**，現行是第二次構圖修正版 `水彩夕照下的夢幻港灣.png`→93KB 級（實測 103KB／53KB）；手機沒另生直式圖，由桌機圖裁中央（裁到落日＋海面，黑貓坐落日前方）。第一版 `夢幻夕陽港灣旅行水彩畫.png`（93KB／48KB）因評語白字压在落日亮區、右上地標被黑貓蓋住而退到備用。換圖只跑 `python tools\build-ending-bg.py [桌機圖] [手機圖]`（等比縮放＋置中裁切，規格固定，不用改 CSS／程式）。**配套改動**：`.set-hero` 深藍漸層加深（`#0d3a5c44`→`#0d3a5c66`）、`.set-text`／`.set-style` 加雙層 text-shadow——底版圖上方是天空＋落日太亮（第一版中央亮度 204），白字會糊。
 
 **展示用出口（續做，commit `86c0781`）**
 - **設定裡の「預覽旅程結算」**：`index.html` 設定選單一顆 `data-action="demo-settlement"`，走 `render.showSettlementDemo()` 開同一個畫面，資料是 `app.js` 的 `DEMO_STATE`（假的已完成一局，仍過 `engine.settlement()`）。示範版頂部標「示範」、底部改註記「玩到第 32 格會看到你自己這一趟」，不給「再玩一次」以免誤刪玩家進度；`demoOpen` 旗標讓它不會被下次 `draw()` 誤關，重新開始時由 `closeSettlement()` 收掉。
