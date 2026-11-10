@@ -98,6 +98,15 @@ Jean 說「做一個基礎版給我，底版圖我會讓 GPT 生，你把架構�
 
 
 
+### Task 26：開場介紹面板（2026-11-10，本機 commit，尚未 push）
+
+Jean 說「整個遊戲缺少一個介紹面板」，並给了三項學習目標（看見完整流程／資源取捨／前輩經驗）。
+
+- **跟結算面板共用一套殼**：`game-art.css` 把 `.settlement` 的選擇器改成 `.settlement,.intro`（底版圖、木框、backdrop、手機換直式圖全共用），intro 沿用 `.set-hero`／`.set-body`／`.set-block`／`.set-actions`，只新增 `.intro-steps`／`.intro-res`／`.intro-rule`／`.endings`／`.takeaway`／`.intro-note` 六個小類別。代價：原本断言 `.settlement{` 的測試要同步改成 `.settlement,.intro{`。
+- **內容寫死在 `index.html`**（不像結算要 JS 組），五個區塊：三行破題 → 怎麼玩三步＋資源歸零鐵律 → 四項資源（借用 HUD 的 `hud-0…3` icon，序號與 `render.js` 的 `iconIndex` 一致）→ 四種結局＋四種風格稱號（**刻意不寫門檻數字**，寫出來玩家會開始刷分，取捨的痛就没了）→ 三件帶得走的事（Jean 的學習目標改写成玩家視角）。
+- **開場時機**：`app.js` 只在**沒有存檔**時自動擋一次（`firstRun`），老玩家不打擾；設定選單新增「玩法說明」（`data-action="rules"`）隨時可開，`?intro=1` 供展示強制開。出口兩顆：`開始旅程`／`先看看棋盤`，同一個 `close-intro`。
+- **驗證過**：`npm.cmd test` **50 項全過**（新增開場面板一條：四項資源、八個稱號、出口與開場時機都在）；CDP 五個情境全對——第一次進來自動開（焦點在「開始旅程」）、關掉後面板留「擲骰」不擋路、有存檔再進來不自動開、設定鈕可重開、`?intro=1` 可開；1440×900 不用捲動、390×844 單欄可捲、console 錯誤 0。手機標題會被折行，已加 `@media(max-width:759px){.intro .set-title}` 縮字級。**沒驗證**：手機實機、真實 GPU。
+
 ### Task 23：OG 分享圖與 Favicon（2026-11-05，已 commit `70994fc` 並 push）
 
 - Jean 給兩張 AI 生成原圖：「大赴翁：環球旅途啟程.png」（1672×941）做 OG 圖、「復古旅行骰子郵戳徽章.png」（1254×1254 四角透明）做 Favicon。原檔留製作機 `Downloads`，不進 repo。

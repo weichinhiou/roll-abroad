@@ -40,6 +40,7 @@
       <div class="toolbar">
         <label>旅程代碼 <input id="seed" value="demo-1109" size="12" /></label>
         <button id="restart" class="ghost">重新開始</button>
+        <button class="ghost" data-action="rules">玩法說明</button>
         <button class="ghost" data-action="demo-settlement">預覽旅程結算</button>
         <small>相同代碼與選擇，可以重現同一趟旅程。</small>
       </div>
@@ -73,6 +74,53 @@
     <dialog id="modal" class="modal" tabindex="-1" aria-label="事件與結果"></dialog>
     <!-- 旅程結算：整局的成績單；底版圖 assets/art/ending-backdrop{,-mobile}.webp -->
     <dialog id="settlement" class="settlement" tabindex="-1" aria-label="旅程結算"></dialog>
+    <!-- 開場介紹：沒有存檔時自動開，設定裡「玩法說明」隨時可開。內容寫死在 HTML，不需要 JS 組 -->
+    <dialog id="intro" class="intro" tabindex="-1" aria-label="玩法說明">
+      <div class="set-hero">
+        <p class="set-eyebrow">大赴翁 Roll Abroad</p>
+        <h2 class="set-title">走一趟 32 格的出國開會旅程</h2>
+        <p class="set-text">取材自院內同仁歷年的出國開會心得：投稿、核准、搭機、會場提問、海報前被問倒、回院核銷——每一格都是真實會發生的情境。時間、經費、精力與學術收穫，你不可能全都留得住。</p>
+      </div>
+      <div class="set-body">
+        <section class="set-block">
+          <h3>怎麼玩</h3>
+          <ol class="intro-steps">
+            <li>擲骰前進，停在事件格或里程碑</li>
+            <li>每張卡都有兩個以上的抉擇，選了就有代價，也會連出後續</li>
+            <li>走到第 32 格「滿載而歸」，看你帶回什麼、又兌現了哪一條承諾</li>
+          </ol>
+          <p class="intro-rule"><b>鐵律</b>：任一資源歸零不會出局，你會勉強撐過去，但學術收穫 −2——這就是「撐過去」的代價。</p>
+        </section>
+        <section class="set-block">
+          <h3>四項資源</h3>
+          <ul class="intro-res">
+            <li><span class="hud-icon hud-0" aria-hidden="true"></span><span><b>時間 8</b><small>你擠得出多少晚上與假日</small></span></li>
+            <li><span class="hud-icon hud-1" aria-hidden="true"></span><span><b>經費 8</b><small>補助與自墊的空間</small></span></li>
+            <li><span class="hud-icon hud-2" aria-hidden="true"></span><span><b>精力 8</b><small>體力，與還想繼續的意願</small></span></li>
+            <li><span class="hud-icon hud-3" aria-hidden="true"></span><span><b>學術收穫 0</b><small>唯一不會歸零、也不會自己長出來的東西</small></span></li>
+          </ul>
+        </section>
+        <section class="set-block">
+          <h3>你會成為哪一種旅人</h3>
+          <ul class="endings"><li>國際舞台新面孔</li><li>穩健的學術旅人</li><li>高張力完成者</li><li>平安就是福</li></ul>
+          <p class="intro-note">看你最後帶回多少、路上狼狽過幾次。</p>
+          <ul class="endings alt"><li>行政模範生</li><li>研究實踐派</li><li>人脈收藏家</li><li>接棒傳承者</li></ul>
+          <p class="intro-note">風格稱號看你把力氣花在哪。</p>
+        </section>
+        <section class="set-block">
+          <h3>玩完你會帶走三件事</h3>
+          <ul class="takeaway">
+            <li><b>看見完整流程</b><span>哪些關卡會卡人、錯過就得不償失</span></li>
+            <li><b>資源取捨</b><span>沒有「全都要」的選法，只有你想要哪一條</span></li>
+            <li><b>前輩經驗</b><span>標著「真實改編」的卡，是同仁真的遇過的事</span></li>
+          </ul>
+        </section>
+      </div>
+      <div class="set-actions">
+        <button type="button" class="roll" data-action="close-intro">開始旅程</button>
+        <button type="button" class="ghost" data-action="close-intro">先看看棋盤</button>
+      </div>
+    </dialog>
 
     <footer>
       本遊戲供練習與理解，不取代正式規範；精確金額與期限請上無界任意門查詢。

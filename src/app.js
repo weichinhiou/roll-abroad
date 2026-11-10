@@ -59,6 +59,7 @@ async function boot() {
   preloadChapterBanners();
   initBoard(DATA.board);
   const saved = load();
+  const firstRun = !saved;
   if (saved) {
     S = saved;
   } else {
@@ -69,10 +70,21 @@ async function boot() {
   draw();
   // 讀到存檔時，棋子直接出現在存下來的那一格（不播動畫）
   relocatePiece(S.pos);
+  // 開場介紹：只有第一次玩（沒有存檔）自動擋一次；?intro=1 讓展示時一定能叫出來
+  if (firstRun || new URLSearchParams(location.search).get("intro") === "1") openIntro();
   // ?settle=demo：展示用，開場直接叫出結算畫面（設定的示範鈕同一條路）
   if (new URLSearchParams(location.search).get("settle") === "demo") {
     showSettlementDemo(E.settlement(DEMO_STATE));
   }
+}
+
+// 開場介紹面板（內容寫在 index.html，這裡只管開合）
+function openIntro() {
+  const d = document.getElementById("intro");
+  if (!d) return;
+  if (!d.open) d.showModal();
+  d.scrollTop = 0;
+  d.querySelector(".set-actions button")?.focus();
 }
 
 function startGame(seed) {
@@ -155,6 +167,12 @@ function wire() {
     if (t.dataset.action === "settlement") {
       document.getElementById("modal")?.close();
       return openSettlement(E.settlement(S));
+    }
+    if (t.dataset.action === "rules") {
+      return openIntro();
+    }
+    if (t.dataset.action === "close-intro") {
+      return document.getElementById("intro")?.close();
     }
     if (t.dataset.action === "demo-settlement") {
       return showSettlementDemo(E.settlement(DEMO_STATE));

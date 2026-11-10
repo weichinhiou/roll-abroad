@@ -152,6 +152,24 @@ test("結算底版：桌機 1600×900、手機 900×1600，都是 WebP 且在體
   assert.ok(bytes < 500 * 1024, `結算底版共 ${bytes} bytes，太重`);
 });
 
+test("開場介紹面板：與結算共用殼、四項資源與結局都在、開場與設定都有出口", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const css = await readFile(new URL("../game-art.css", import.meta.url), "utf8");
+  const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  const intro = html.slice(html.indexOf('<dialog id="intro"'), html.indexOf("</dialog>", html.indexOf('<dialog id="intro"')));
+  assert.ok(intro.length > 200, "index.html 缺開場介紹 dialog");
+  assert.match(css, /\.settlement,\.intro\{/, "開場面板沒共用結算那套殼");
+  // 四項資源（icon 序號跟 HUD 一致）、結局與風格稱號、學習目標都要在
+  for (const k of ["hud-0", "hud-1", "hud-2", "hud-3", "endings", "takeaway", "intro-steps", "intro-rule"]) {
+    assert.ok(intro.includes(k), `開場介紹缺 ${k}`);
+  }
+  assert.match(css, /\.intro-steps\{/, "開場介紹的步驟樣式缺失");
+  assert.match(html, /data-action="close-intro"/, "開場介紹缺「開始旅程」出口");
+  assert.match(html, /data-action="rules"/, "設定裡缺「玩法說明」");
+  assert.match(app, /dataset\.action === "rules"/, "app.js 沒接「玩法說明」");
+  assert.match(app, /firstRun \|\| .*get\("intro"\) === "1"\) openIntro\(\)/, "沒有存檔時不會自動開、或 ?intro=1 沒接");
+});
+
 test("成績單背景：1200×630（與成績單畫布同規格）、WebP、-share-card 有接 bgSrc", async () => {
   const buf = await readFile(new URL("../assets/art/report-card-bg.webp", import.meta.url));
   assert.deepEqual(webpSize(buf), { w: 1200, h: 630 }, "report-card-bg.webp 尺寸要跟成績單畫布一致");
@@ -167,7 +185,7 @@ test("結算畫面接得上：dialog、兩個版型的底版圖、engine.settlem
   const js = await readFile(new URL("../src/render.js", import.meta.url), "utf8");
   const app = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert.match(html, /<dialog id="settlement" class="settlement"/, "index.html 缺結算 dialog");
-  assert.match(css, /\.settlement\{[^}]*ending-backdrop\.webp/, "桌機底版圖沒接上 .settlement");
+  assert.match(css, /\.settlement,\.intro\{[^}]*ending-backdrop\.webp/, "桌機底版圖沒接上結算／開場殼");
   const mobile = css.slice(css.indexOf("@media(max-width:759px)"));
   assert.match(mobile, /ending-backdrop-mobile\.webp/, "手機底版圖沒接上");
   assert.match(js, /import \{[^}]*settlement[^}]*\} from "\.\/engine\.js"/, "render.js 沒引 engine.settlement");
